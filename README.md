@@ -52,7 +52,7 @@ streamlit run main.py
 
 * Open your browser and navigate to http://localhost:8501.
 
-
+![Alt Text](images/app_screen.png)
 
 ## **Building and Searching the Index**
 
