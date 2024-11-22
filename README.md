@@ -52,6 +52,8 @@ streamlit run main.py
 
 * Open your browser and navigate to http://localhost:8501.
 
+
+
 ## **Building and Searching the Index**
 
 * Place your documents in the resources/ folder.
