@@ -43,12 +43,7 @@ class GenerativeAI:
         else:
             prompt = query
 
-        print(f"Generating response for the query: '{query}' with prompt:\n{prompt}")
-
         payload = {"model": self.model_name, "prompt": prompt}
-
-        print(f"Making request to: {self.api_url}/api/generate")
-        print(f"Payload: {payload}")
         response = requests.post(f"{self.api_url}/api/generate", json=payload)
 
         if response.status_code == 200:
