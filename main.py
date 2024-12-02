@@ -14,13 +14,15 @@ query = st.text_input("Enter your search query:")
 
 if st.button("Search"):
     if query:
+        # Perform search
         results = search_tool.search(query)
-        st.write("Search Results:")
-        for i, result in enumerate(results):
-            st.markdown(f"{i + 1}. {result}")
+        # st.write("Search Results:")
+        # for i, result in enumerate(results):
+        #     st.markdown(f"{i + 1}. {result}")
 
+        # Generate AI response with context from search results
         st.write("\n**Generating AI insights...**")
-        ai_response = gen_ai.generate_response(query)
+        ai_response = gen_ai.generate_response(query, results)
         st.write(f"**AI Response:** {ai_response}")
     else:
         st.warning("Please enter a query.")
