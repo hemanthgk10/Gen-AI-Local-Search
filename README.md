@@ -54,6 +54,11 @@ streamlit run main.py
 
 ![Alt Text](images/app_screen.png)
 
+* Search Results
+![Alt Text](images/search_result_1.png)
+![Alt Text](images/search_result_2.png)
+
+
 ## **Building and Searching the Index**
 
 * Place your documents in the resources/ folder.
