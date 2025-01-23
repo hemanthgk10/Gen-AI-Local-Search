@@ -1,0 +1,72 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure master authorized networks is set to enabled in GKE clusters
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+  #### Description
+  Authorized networks are a way of specifying a restricted range of IP addresses that are permitted to access your container cluster's Kubernetes master endpoint. Kubernetes Engine uses both Transport Layer Security (TLS) and authentication to provide secure access to your container cluster's Kubernetes master endpoint from the public internet. This provides you the flexibility to administer your cluster from anywhere; however, you might want to further restrict access to a set of IP addresses that you control. You can set this restriction by specifying an authorized network.
+
+  #### Rationale
+  By Enabling, Master authorized networks blocks untrusted IP addresses from outside Google Cloud Platform and Addresses from inside GCP (such as traffic from Compute Engine VMs) can reach your master through HTTPS provided that they have the necessary Kubernetes credentials.
+
+  Restricting access to an authorized network can provide additional security benefits for your container cluster, including
+    * Better Protection from Outsider Attacks: Authorized networks provide an additional layer of security by limiting external, non-GCP access to a specific set of addresses you designate, such as those that originate from your premises. This helps protect access to your cluster in the case of a vulnerability in the cluster's authentication or authorization mechanism
+    * Better Protection from Insider Attacks: Authorized networks help protect your cluster from accidental leaks of master certificates from your company's premises. Leaked certificates used from outside GCP and outside the authorized IP ranges--for example, from addresses outside your company--are still denied access.
+
+  #### Remediation
+  By default, Master authorized networks is disabled when you create a new cluster using the gcloud command-line tool or Google Cloud Platform Console.
+
+  Make sure that `master_authorized_networks_config` is set to some value.
+
+  Terraform example
+  ```
+  resource "google_container_cluster" "primary" {
+      name               = "marcellus-wallace"
+      location           = "us-central1-a"
+      initial_node_count = 3
+
+  +   master_authorized_networks_config  {
+  +       cidr_blocks = [{
+  +           cidr_block = "192.168.1.0/22"
+  +           name       = "example-cidr"
+  +       }]
+  +   }
+
+      ...
+      ...
+  }
+  ```
+
+  Using *Console*
+    1. Go to [Kubernetes GCP Console](https://console.cloud.google.com/kubernetes/list)
+    2. Select reported Kubernetes clusters for which Master authorized networks is disabled.
+    3. Click on EDIT button and Set `Master authorized networks (beta)` to Enabled.
+
+  Using *Command Line*
+
+  To enable Master authorized networks for an existing cluster, run the following command:
+  ```
+  gcloud container clusters update [CLUSTER_NAME] --zone [COMPUTE_ZONE] --enable-master-authorized-networks
+  ```
+
+  Along with this, you can list authorized networks using the `--master-authorizednetworks` flag which contains a list of up to 20 external networks that are allowed to connect to your cluster's Kubernetes master through HTTPS. You provide these networks as a comma-separated list of addresses in CIDR notation (such as 192.168.100.0/24).
+
+  #### References
+  * https://cloud.google.com/kubernetes-engine/docs/how-to/authorized-networks?hl=en_US
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#master_authorized_networks_config
+
+  #### Notes
+  This is a Beta release of Specifying master authorized networks. This feature is not covered by any GCP SLA or deprecation policy and might be subject to backward-incompatible changes.
+lwid:
+  - GCP_CIS_7_4
+  - GCP_K8S_1_4
+provider: GCP
+ruleId: CKV_GCP_20
+severity: High
+sid: ckv-gcp-20
+title: Ensure master authorized networks is set to enabled in GKE clusters

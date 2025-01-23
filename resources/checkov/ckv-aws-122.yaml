@@ -1,0 +1,84 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon SageMaker is a fully managed machine learning service. With SageMaker, data scientists and developers can quickly and easily build and train machine learning models, and then directly deploy them into a production-ready hosted environment. It provides an integrated Jupyter authoring notebook instance for easy access to your data sources for exploration and analysis, so you don't have to manage servers.\n\
+    Amazon SageMaker notebook instances can be launched with or without your Virtual Private Cloud (VPC) attached. When launched with your VPC attached, the notebook can either be configured with or without direct internet access. Direct internet access means that the Amazon SageMaker service is providing a network interface that allows for the notebook to talk to the internet through a VPC managed by the service. "
+extra:
+  entity: aws_sagemaker_notebook_instance
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon SageMaker is a fully managed machine learning service. With SageMaker, data scientists and developers can quickly and easily build and train machine learning models, and then directly deploy them into a production-ready hosted environment. It provides an integrated Jupyter authoring notebook instance for easy access to your data sources for exploration and analysis, so you don't have to manage servers.
+
+    Amazon SageMaker notebook instances can be launched with or without your Virtual Private Cloud (VPC) attached. When launched with your VPC attached, the notebook can either be configured with or without direct internet access. Direct internet access means that the Amazon SageMaker service is providing a network interface that allows for the notebook to talk to the internet through a VPC managed by the service.
+
+    #### Rationale
+    When your AWS SageMaker notebook instances are publicly accessible, any machine outside the VPC can establish a connection to these instances, increasing the attack surface and the opportunity for malicious activity.
+
+    #### Remediation
+    Set the `direct_internet_access` flag to `Disabled`, to disable internet access to AWS SageMaker notebooks. If set to `Disabled`, the notebook instance will be able to access resources only in your VPC, and will not be able to connect to Amazon SageMaker training and endpoint services unless your configure a NAT Gateway in your VPC.
+
+    Terraform example
+    ```
+    resource "aws_sagemaker_code_repository" "example" {
+        code_repository_name = "my-notebook-instance-code-repo"
+
+        git_config {
+          repository_url = "https://github.com/hashicorp/terraform-provider-aws.git"
+        }
+    }
+
+    resource "aws_sagemaker_notebook_instance" "ni" {
+        name                    = "my-notebook-instance"
+        role_arn                = aws_iam_role.role.arn
+        instance_type           = "ml.t2.medium"
+        default_code_repository = aws_sagemaker_code_repository.example.code_repository_name
+
+        tags = {
+          Name = "foo"
+        }
+    +   direct_internet_access  = "Disabled"
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+        "Type" : "AWS::SageMaker::NotebookInstance",
+        "Properties" : {
+            "DefaultCodeRepository" : "ni",
+            "InstanceType" : "ml.t2.medium",
+            "KmsKeyId" : "my-kms-key",
+            "VolumeSizeInGB" : 20,
+    +       "DirectInternetAccess": "Disabled",
+            ...
+            ...
+          }
+          ...
+          ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sagemaker_notebook_instance#direct_internet_access
+    * https://aws.amazon.com/blogs/machine-learning/understanding-amazon-sagemaker-notebook-instance-networking-configurations-and-advanced-routing-options/
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_122
+severity: High
+sid: ckv-aws-122
+title: "Ensure that direct internet access is disabled for an Amazon SageMaker Notebook Instance"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: direct_internet_access
+    resourceAttributeType: string
+    resourceAttributeValue: "Disabled"
+    resourceType: [ "aws_sagemaker_notebook_instance" ]

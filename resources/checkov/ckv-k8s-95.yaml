@@ -1,0 +1,107 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The Kubernetes API is the front end of the Kubernetes control plane and is how users interact with their Kubernetes cluster. The API (application programming interface) server determines if a request is valid and then processes it.
+
+    In essence, the API is the interface used to manage, create, and configure Kubernetes clusters. It's how the users, external components, and parts of your cluster all communicate with each other.
+
+    At the center of the Kubernetes control plane is the Kubernetes API server and the HTTP API that it exposes, allowing you to query and manipulate the state of Kubernetes objects. Users should set the `--request-timeout` field on these Kubernetes API Servers appropriately based on their requirements.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The Kubernetes API is the front end of the Kubernetes control plane and is how users interact with their Kubernetes cluster. The API (application programming interface) server determines if a request is valid and then processes it.
+
+    In essence, the API is the interface used to manage, create, and configure Kubernetes clusters. It's how the users, external components, and parts of your cluster all communicate with each other.
+
+    At the center of the Kubernetes control plane is the Kubernetes API server and the HTTP API that it exposes, allowing you to query and manipulate the state of Kubernetes objects. Users should set the `--request-timeout` field on these Kubernetes API Servers appropriately based on their requirements.
+
+    #### Rationale
+    Setting global request timeout allows extending the Kubernetes API server request timeout limit to a duration appropriate to the user's connection speed. By default, it is set to 60 seconds which might be problematic on slower connections making cluster resources inaccessible once the data volume for requests exceeds what can be transmitted in 60 seconds. But, setting this timeout limit to be too large can exhaust the API server resources making it prone to Denial-of-Service attack. Hence, it is recommended to set this limit as appropriate and change the default limit of 60 seconds only if needed.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-apiserver
+    ```
+    Verify that the `--request-timeout` argument is either not set or set to an appropriate value.
+
+    #### Remediation
+    Edit the API server pod specification file `/etc/kubernetes/manifests/kube-apiserver.yaml` on the master node and set the below parameter as appropriate and if needed. For example,
+    ```
+      --request-timeout=300s
+    ```
+
+    By default, auditing is not enabled.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          scheduler.alpha.kubernetes.io/critical-pod: ""
+        labels:
+          component: kube-apiserver
+          tier: control-plane
+        name: kube-apiserver
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - kube-apiserver
+          - --admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,ResourceQuota
+          - --etcd-servers=http://127.0.0.1:2379
+          - --authorization-mode=Node,RBAC
+          - --admission-control-config-file=admission-config.yaml
+          - --enable-admission-plugins=NodeRestriction,NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota
+          - --secure-port=6443
+          - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+          - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+          - --audit-log-path=/var/log/apiserver/audit.log
+          - --audit-log-maxage=30
+          - --audit-log-maxbackup=10
+          - --audit-log-maxsize=100
+    +     - --request-timeout=60
+          ...
+          ...
+
+          image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.0
+          livenessProbe:
+            failureThreshold: 8
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: 6443
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+          name: kube-apiserver
+          resources:
+            requests:
+              cpu: 250m
+          volumeMounts:
+          - mountPath: /etc/kubernetes/pki
+            name: k8s-certs
+            readOnly: true
+          ...
+          ...
+    ```
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-apiserver/
+    * https://github.com/kubernetes/kubernetes/pull/51415
+provider: Kubernetes
+ruleId: CKV_K8S_95
+severity: Low
+sid: ckv-k8s-95
+title: "Ensure that the --request-timeout argument is set as appropriate"

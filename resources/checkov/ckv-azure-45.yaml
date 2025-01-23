@@ -1,0 +1,48 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: Ensure that no sensitive credentials are exposed in VM custom_data
+extra:
+  entity: azurerm_virtual_machine
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure no hard coded credentials & secret keys exists in Azure VM's user data. You can hard-code secrets into your application, but you’re faced with the added responsibility of distributing them to the instance securely and then the management headache of regularly rotating them within large, autoscaling fleets. Instead of embedding long-term static credentials in your code, you can use the IAM Roles to automatically get the credentials you need to access other Azure resources.
+
+  #### Rationale
+  Do not provide any static credentials in the Azure VM user-data. Hard-coding credentials poses a risk of exposing your secrets or sensitive information.
+
+  #### Remediation
+  Do not pass any credentials or secrets in the `os_profile.custom_data`.
+
+  Terraform example
+
+  ```
+  resource "azurerm_virtual_machine" "main" {
+      name                  = "${var.prefix}-vm"
+      location              = azurerm_resource_group.main.location
+      resource_group_name   = azurerm_resource_group.main.name
+      network_interface_ids = [azurerm_network_interface.main.id]
+      vm_size               = "Standard_DS1_v2"
+
+      os_profile {
+         computer_name  = "hostname"
+         admin_username = "testadmin"
+         admin_password = "Password1234!"
+  -      custom_data    =  "my-secret"
+      }
+      ...
+      ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine#os_profile
+  * https://azure.microsoft.com/en-in/blog/custom-data-and-cloud-init-on-windows-azure/
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_45
+severity: High
+sid: ckv-azure-45
+title: Ensure that no sensitive credentials are exposed

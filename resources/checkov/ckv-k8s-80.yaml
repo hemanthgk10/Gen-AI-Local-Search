@@ -1,0 +1,105 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes has emerged as the de facto standard in container orchestrators thanks to its flexibility, scalability, and ease of use. Kubernetes also provides a range of features that secure production workloads. A more recent introduction in security features is a set of plugins called `admission controllers.`
+
+    An admission controller is a piece of code that intercepts requests to the Kubernetes API server prior to persistence of the object, but after the request is authenticated and authorized. The controllers consist of the [list](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#what-does-each-admission-controller-do), are compiled into the kube-apiserver binary, and may only be configured by the cluster administrator.
+
+    The Kubernetes API server flag `enable-admission-plugins` takes a comma-delimited list of admission control plugins to invoke prior to modifying objects in the cluster.
+
+    The `AlwaysPullImages` admission controller modifies every new Pod to force the image pull policy to Always.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes has emerged as the de facto standard in container orchestrators thanks to its flexibility, scalability, and ease of use. Kubernetes also provides a range of features that secure production workloads. A more recent introduction in security features is a set of plugins called `admission controllers.`
+
+    An admission controller is a piece of code that intercepts requests to the Kubernetes API server prior to persistence of the object, but after the request is authenticated and authorized. The controllers consist of the [list](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#what-does-each-admission-controller-do), are compiled into the kube-apiserver binary, and may only be configured by the cluster administrator.
+
+    The Kubernetes API server flag `enable-admission-plugins` takes a comma-delimited list of admission control plugins to invoke prior to modifying objects in the cluster.
+
+    The `AlwaysPullImages` admission controller modifies every new Pod to force the image pull policy to Always.
+
+    #### Rationale
+    In a multi-tenant cluster, users can be assured that their private images can only be used by those who have the credentials to pull them. Without this admission control policy, once an image has been pulled to a node, any pod from any user can use it simply by knowing the image’s name, without any authorization check against the image ownership. When this plug-in is enabled, images are always pulled prior to starting containers, which means valid credentials are required.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-apiserver
+    ```
+    Verify that if the `--enable-admission-plugins` argument is set to a value that includes `AlwaysPullImages`.
+
+    #### Remediation
+    Edit the API server pod specification file `/etc/kubernetes/manifests/kube-apiserver.yaml` on the master node and set the `--enable-admission-plugins` parameter to include `AlwaysPullImages`.
+
+    By default, `AlwaysPullImages` is not set.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          scheduler.alpha.kubernetes.io/critical-pod: ""
+        labels:
+          component: kube-apiserver
+          tier: control-plane
+        name: kube-apiserver
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - kube-apiserver
+          - --admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,ResourceQuota
+          - --etcd-servers=http://127.0.0.1:2379
+          - --kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt
+          - --kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key
+          - --kubelet-certificate-authority=/etc/kubernetes/pki/ca.crt
+          - --authorization-mode=Node,RBAC
+          - --admission-control-config-file=admission-config.yaml
+    -     - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota
+    +     - --enable-admission-plugins=AlwaysPullImages,NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota
+          ...
+          ...
+
+          image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.0
+          livenessProbe:
+            failureThreshold: 8
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: 6443
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+          name: kube-apiserver
+          resources:
+            requests:
+              cpu: 250m
+          volumeMounts:
+          - mountPath: /etc/kubernetes/pki
+            name: k8s-certs
+            readOnly: true
+          ...
+          ...
+    ```
+
+    #### Impact
+    Credentials would be required to pull the private images every time. Also, in trusted environments, this might increases load on network, registry, and decreases speed.
+
+    This setting could impact offline or isolated clusters, which have images pre-loaded and do not have access to a registry to pull in-use images. This setting is not appropriate for clusters which use this configuration.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-apiserver/
+    * https://kubernetes.io/docs/admin/admission-controllers/#alwayspullimages
+provider: Kubernetes
+ruleId: CKV_K8S_80
+severity: Low
+sid: ckv-k8s-80
+title: "Ensure that the admission control plugin AlwaysPullImages is set"

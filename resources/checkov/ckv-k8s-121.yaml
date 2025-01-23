@@ -1,0 +1,122 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    Kubernetes uses a popular key-value pair datastore (ETCD) for persisting the data in the cluster. ETCD is a strongly consistent, distributed key-value store that provides a reliable way to store data that needs to be accessed by a distributed system or cluster of machines.
+
+    As ETCD might have sensitive information like tokens etc, so it should be configured to check for peer authentication. When `peer-client-cert-auth` flag is set on ETCD, ETCD will check all incoming peer requests from the cluster for valid client certificates signed by the supplied CA.
+extra:
+  entity: Pod
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    Kubernetes uses a popular key-value pair datastore (ETCD) for persisting the data in the cluster. ETCD is a strongly consistent, distributed key-value store that provides a reliable way to store data that needs to be accessed by a distributed system or cluster of machines.
+
+    As ETCD might have sensitive information like tokens etc, so it should be configured to check for peer authentication. When `peer-client-cert-auth` flag is set on ETCD, ETCD will check all incoming peer requests from the cluster for valid client certificates signed by the supplied CA.
+
+    #### Rationale
+    ETCD is a highly-available key value store used by Kubernetes deployments for persistent storage of all of its REST API objects. These objects are sensitive in nature and should be accessible only by authenticated etcd peers in the ETCD cluster.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep etcd
+    ```
+    Verify that the `--peer-client-cert-auth` argument is set to `true`.
+
+    **Note:** This recommendation is applicable only for etcd clusters. If you are using only one etcd server in your environment then this recommendation is not applicable.
+
+    #### Remediation
+    Edit the etcd pod specification file `/etc/kubernetes/manifests/etcd.yaml` on the master node and set the below parameter.
+    ```
+        --peer-client-cert-auth=true
+    ```
+
+    By default, `--peer-client-cert-auth` argument is set to `false`.
+
+    **Note:** Note: This recommendation is applicable only for etcd clusters. If you are using only one etcd server in your environment then this recommendation is not applicable.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          scheduler.alpha.kubernetes.io/critical-pod: ""
+        labels:
+          component: etcd
+          tier: control-plane
+        name: etcd
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - etcd
+          - --advertise-client-urls=https://192.168.20.9:2379
+          - --cert-file=/etc/kubernetes/pki/etcd/server.crt
+          - --key-file=/etc/kubernetes/pki/etcd/server.key
+          - --client-cert-auth=true
+    +     - --peer-client-cert-auth=true
+          - --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
+          - --data-dir=/var/lib/etcd
+          - --initial-advertise-peer-urls=https://192.168.20.9:2380
+          - --initial-cluster=test-master-01=https://192.168.20.9:2380
+          - --listen-client-urls=https://192.168.20.9:2379
+          - --listen-peer-urls=https://192.168.20.9:2380
+          - --name=test-master-01
+          - --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
+
+          - --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+          - --snapshot-count=10000
+          - --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+          ...
+          ...
+          image: k8s.gcr.io/etcd-amd64:3.2.18
+          imagePullPolicy: IfNotPresent
+          name: etcd
+          volumeMounts:
+          - mountPath: /var/lib/etcd
+            name: etcd-data
+          - mountPath: /etc/kubernetes/pki/etcd
+            name: etcd-certs
+        hostNetwork: true
+        priorityClassName: system-cluster-critical
+        volumes:
+        - hostPath:
+            path: /var/lib/etcd
+            type: DirectoryOrCreate
+          name: etcd-data
+        - hostPath:
+            path: /etc/kubernetes/pki/etcd
+            type: DirectoryOrCreate
+          name: etcd-certs
+        ...
+        ...
+    ```
+
+    #### Impact
+    ETCD cluster peers would need to set up TLS for their communication.
+
+    #### References
+    * https://coreos.com/etcd/docs/latest/op-guide/security.html
+    * https://kubernetes.io/docs/admin/etcd/
+    * https://coreos.com/etcd/docs/latest/op-guide/configuration.html#peer-client-cert-auth
+
+    #### CIS Controls:
+    **Version 6**
+      *14.4 Protect Information With Access Control Lists* -- All information stored on systems shall be protected with file system, network share, claims, application, or database specific access control lists. These controls will enforce the principle that only authorized individuals should have access to the information based on their need to access the information as a part of their responsibilities.
+
+    **Version 7**
+      *14.6 Protect Information through Access Control Lists* -- Protect all information stored on systems with file system, network share, claims, application, or database specific access control lists. These controls will enforce the principle that only authorized individuals should have access to the information based on their need to access the information as a part of their responsibilities.
+provider: Kubernetes
+ruleId: CKV_K8S_121
+severity: High
+sid: ckv-k8s-121
+title: "Ensure that the --peer-client-cert-auth argument is set to true"

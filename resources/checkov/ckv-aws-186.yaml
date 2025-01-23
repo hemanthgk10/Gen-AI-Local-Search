@@ -1,0 +1,45 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon S3 is an object storage service that stores data as objects within buckets. Objects are the fundamental entities stored in Amazon S3. Objects consist of object data and metadata. The metadata is a set of name-value pairs that describe the object.
+
+    Server-side encryption is about protecting data at rest. Server-side encryption encrypts only the object data, not object metadata. Using server-side encryption with customer-provided encryption keys (SSE-C) allows you to set your own encryption keys.
+extra:
+  entity: aws_s3_bucket_object
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon S3 is an object storage service that stores data as objects within buckets. Objects are the fundamental entities stored in Amazon S3. Objects consist of object data and metadata. The metadata is a set of name-value pairs that describe the object.
+
+    Server-side encryption is about protecting data at rest. Server-side encryption encrypts only the object data, not object metadata. Using server-side encryption with customer-provided encryption keys (SSE-C) allows you to set your own encryption keys.
+
+    #### Rationale
+    Encryption helps you protect your stored data against unauthorized access and other security risks.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_s3_bucket_object`.
+
+    Terraform example
+    ```
+    resource "aws_s3_bucket_object" "test" {
+        bucket     = "your_bucket_name"
+        key        = "new_object_key"
+        source     = "path/to/file"
+    +   kms_key_id = ${aws_kms_key.example.arn}
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_object#kms_key_id
+    * https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerSideEncryptionCustomerKeys.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_186
+severity: High
+sid: ckv-aws-186
+title: "Ensure S3 bucket Object is encrypted by KMS using a customer managed Key (CMK)"

@@ -1,0 +1,69 @@
+---
+autofix: true
+category: Network
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "The Kubernetes object type NetworkPolicy should be defined to have opportunity allow or block traffic to pods, as in a Kubernetes cluster configured with default settings, all pods can discover and communicate with each other without any restrictions."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/azu006.go"
+guidelines: |-
+    #### Description
+    NetworkPolicies are an application-centric construct which allow you to specify how a pod is allowed to communicate with various network entities over the network.
+
+    #### Rationale
+    When you run, microservices-based applications in Kubernetes, you often want to control which components can communicate with each other. All pods in an AKS cluster can send and receive traffic without limitations, by default. To improve security, you can define rules that control the flow of traffic. So you need network policy defined in the AKS cluster.
+
+    #### Remediation
+    Set the `network_profile` field in `azurerm_kubernetes_cluster`. Supported values are `calico` and `azure`.
+
+    Terraform example:
+    ```
+    resource "azurerm_resource_group" "example" {
+       name     = "example-resources"
+       location = "West Europe"
+    }
+
+    resource "azurerm_kubernetes_cluster" "example" {
+        name                = "example-aks1"
+        location            = azurerm_resource_group.example.location
+        resource_group_name = azurerm_resource_group.example.name
+
+    +  	network_profile {
+    +  	  network_policy = "calico"
+    +  	}
+        ...
+        ...
+    }
+    ```
+
+    #### Note
+    Changing the network policy forces a new resource to be created.
+
+    #### References
+    * https://www.terraform.io/docs/providers/azurerm/r/kubernetes_cluster.html#network_policy
+    * https://docs.microsoft.com/en-us/azure/aks/use-network-policies
+    * https://kubernetes.io/docs/concepts/services-networking/network-policies
+    * https://microsoft.github.io/AzureTipsAndTricks/blog/tip238.html
+lwid: []
+provider: Azure
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: network_profile
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            network_profile {
+               network_policy  = "calico"
+            }
+        resourceType:
+          - azurerm_kubernetes_cluster
+ruleId: AZU006
+severity: High
+sid: tfsec-azu006
+title: "Ensure AKS cluster has Network Policy configured"

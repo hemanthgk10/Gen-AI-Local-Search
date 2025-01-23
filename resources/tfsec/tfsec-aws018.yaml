@@ -1,0 +1,68 @@
+---
+autofix: true
+category: Security
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Security groups and security group rules should include a description for auditing purposes. Simplifies auditing, debugging, and managing security groups."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws018.go"
+guidelines: |-
+    #### Description
+    Ensure every security group and security group rules has a description. As the number of security groups grow to keep resources isolated causes huge confusion on the purpose of the security group. Having a some description of it elimates any operational errors.
+
+    #### Rationale
+    Ensure that all the rules defined for your Amazon security groups have a description to help understand the use of that specific group. Adding descriptive text for security group rules will allow you to store locally useful information such as wiki links to the complete description of the group or store basic information it locally without any external links.
+
+    #### Remediation
+    Add `description` argument to `aws_security_group`, `aws_security_group_rule`, `aws_db_security_group`, `aws_elasticache_security_group` & `aws_redshift_security_group`.
+
+    Terraform example
+    ```
+    resource "aws_security_group" "allow_tls" {
+        name        = "allow_tls"
+    +   description = "Allow TLS inbound traffic"
+        vpc_id      = aws_vpc.main.id
+
+        ingress {
+    +     description = "TLS from VPC"
+          from_port   = 443
+          to_port     = 443
+          protocol    = "tcp"
+          cidr_blocks = [aws_vpc.main.cidr_block]
+        }
+
+        egress {
+    +     description = "Egress for example"
+          from_port   = 0
+          to_port     = 0
+          protocol    = "-1"
+          cidr_blocks = ["0.0.0.0/0"]
+        }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group#description
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: description
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide a valid description that makes it clear the usage of this security group>"
+        resourceType:
+          - aws_security_group
+ruleId: AWS018
+severity: Low
+sid: tfsec-aws018
+title: "Missing description for security group/security group rule"

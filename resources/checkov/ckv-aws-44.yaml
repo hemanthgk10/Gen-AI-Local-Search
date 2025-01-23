@@ -1,0 +1,72 @@
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: Neptune is a fast, scalable, highly secure and fully-managed graph database
+  service that makes it easy to build and run applications that work with deeply connected
+  datasets. Encryption provides an additional layer of protection by securing your
+  Neptune databases from unauthorized access to the underlying storage.
+extra:
+  entity: AWS::Neptune::DBCluster
+  type: resource
+guidelines: |-
+  #### Description
+  Neptune is a fast, scalable, highly secure and fully-managed graph database service that makes it easy to build and run applications that work with deeply connected datasets. Encryption provides an additional layer of protection by securing your Neptune databases from unauthorized access to the underlying storage.
+
+  #### Rationale
+  Ensure that the data available on your Amazon Neptune database instances is encrypted in order to meet regulatory requirements and prevent unauthorized users from accessing sensitive information.
+
+  #### Remediation
+  Set the argument `storage_encrypted` to true and also provide `kms_key_arn`.
+
+  Terraform example:
+  ```
+  resource "aws_neptune_cluster" "default" {
+      cluster_identifier                  = "neptune-cluster-demo"
+      engine                              = "neptune"
+  +   storage_encrypted                   = true
+  +   kms_key_arn                         = "arn:aws:kms:us-west-2:111122223333:key/example"
+      ...
+      ...
+  }
+  ```
+
+  CloudFormation example:
+  ```json
+  {
+    "Type" : "AWS::RDS::DBInstance",
+    "Properties" : {
+  +     "StorageEncrypted" : true,
+  +     "KmsKeyId"         : "arn:aws:kms:us-west-2:111122223333:key/example"
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://docs.aws.amazon.com/neptune/latest/userguide/encrypt.html
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/neptune_cluster#storage_encrypted
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-rds-database-instance.html#cfn-rds-dbinstance-storageencrypted
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_44
+severity: High
+sid: ckv-aws-44
+title: Ensure Neptune storage is securely encrypted
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: storage_encrypted
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_neptune_cluster" ]
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: kms_key_arn
+    resourceAttributeType: string
+    resourceAttributeValue: "<Provide the ARN of the default SSL server certificate>"
+    resourceType: [ "aws_neptune_cluster" ]

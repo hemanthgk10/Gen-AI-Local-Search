@@ -1,0 +1,56 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Cloud Storage offers usage logs and storage logs in the form of CSV files that you can download and view. Usage logs provide information for all of the requests made on a specified bucket and are created hourly. Storage logs provide information about the storage consumption of that bucket for the last day and are created daily.
+
+    Once set up, usage logs and storage logs are automatically created as new objects in a bucket that you specify. It is recommended that the bucket specified is not the same bucket for which the logs are being setup for.
+extra:
+  entity: google_storage_bucket
+  type: resource
+guidelines: |-
+    #### Description
+    Cloud Storage offers usage logs and storage logs in the form of CSV files that you can download and view. Usage logs provide information for all of the requests made on a specified bucket and are created hourly. Storage logs provide information about the storage consumption of that bucket for the last day and are created daily.
+
+    Once set up, usage logs and storage logs are automatically created as new objects in a bucket that you specify. It is recommended that the bucket specified is not the same bucket for which the logs are being setup for.
+
+    #### Rationale
+    Storing the access logs in the same bucket can cause data loss, when the bucket is accidentally deleted. We will also loose the essential debugging information on who deleted the bucket.
+
+    #### Remediation
+    We shouldn't configure the `google_storage_bucket` logging to store in itself. Create a new bucket and configure that to store the logs of the bucket required.
+
+    Terraform example
+    ```
+    resource "google_storage_bucket" "example_bucket" {
+        name          = "example-store.com"
+        location      = "EU"
+        force_destroy = true
+        logging {
+    -      log_bucket        = "example_bucket"
+    +      log_bucket        = "${google_storage_bucket.example_log_bucket.url}"
+           log_object_prefix = "primary-cloudtrail-logs"
+        }
+        ...
+        ...
+    }
+
+    + resource "google_storage_bucket" "example_log_bucket" {
+    +    name          = "example-store.com"
+    +    location      = "EU"
+    +    ...
+    +    ...
+    + }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket#logging
+    * https://cloud.google.com/storage/docs/access-logs
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_63
+severity: Low
+sid: ckv-gcp-63
+title: "Bucket should not log to itself"

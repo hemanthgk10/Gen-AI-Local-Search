@@ -1,0 +1,71 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon S3 Glacier is a secure, durable, and extremely low-cost Amazon S3 storage class for data archiving and long-term backup. A vault is a container for storing archives. When you create a vault, you specify a vault name and the AWS Region in which you want to create the vault.
+
+    AWS Backup vault is a container that stores and organizes your backups. These backups should be accessible only to a specific group / users rather than making it public to everyone.
+extra:
+  entity: aws_glacier_vault
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon S3 Glacier is a secure, durable, and extremely low-cost Amazon S3 storage class for data archiving and long-term backup. A vault is a container for storing archives. When you create a vault, you specify a vault name and the AWS Region in which you want to create the vault.
+
+    AWS Backup vault is a container that stores and organizes your backups. These backups should be accessible only to a specific group / users rather than making it public to everyone.
+
+    #### Rationale
+    Backup vault can contain sensitive information, so it should be restricted from public access.
+
+    #### Remediation
+    Do not set the `Principal` in the access policy to `*`. This will enable access to everyone.
+
+    Terraform example
+    ```
+    resource "aws_glacier_vault" "my_archive" {
+        name = "MyArchive"
+
+        notification {
+          sns_topic = aws_sns_topic.aws_sns_topic.arn
+          events    = ["ArchiveRetrievalCompleted", "InventoryRetrievalCompleted"]
+        }
+
+        access_policy = <<EOF
+        {
+            "Version":"2012-10-17",
+            "Statement":[
+               {
+                  "Sid": "add-read-only-perm",
+    -             "Principal": "*",
+    +             "Principal": {
+    +             "AWS": [
+    +                "arn:aws:iam::123456789012:test-user"
+    +             ]},
+                  "Effect": "Allow",
+                  "Action": [
+                     "glacier:InitiateJob",
+                     "glacier:GetJobOutput"
+                  ],
+                  "Resource": "arn:aws:glacier:eu-west-1:432981146916:vaults/MyArchive"
+               }
+            ]
+        }
+        EOF
+
+        tags = {
+          Test = "MyArchive"
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/glacier_vault#access_policy
+    * https://docs.aws.amazon.com/amazonglacier/latest/dev/vault-access-policy.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_167
+severity: High
+sid: ckv-aws-167
+title: "Ensure Glacier Vault access policy is not public by only allowing specific services or principals to access it"

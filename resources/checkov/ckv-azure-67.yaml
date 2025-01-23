@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that 'HTTP Version' is the latest, if used to run the Function app"
+extra:
+  entity: azurerm_function_app
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_67
+severity: Medium
+sid: ckv-azure-67
+title: "Ensure that 'HTTP Version' is the latest, if used to run the Function app"

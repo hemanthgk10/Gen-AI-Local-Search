@@ -1,0 +1,53 @@
+---
+autofix: true
+category: TLS
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "You can configure your storage account to accept requests from secure connections only by setting the Secure transfer required property for the storage account. When you require secure transfer, any requests originating from an insecure connection are rejected. Microsoft recommends that you always require secure transfer for all of your storage accounts."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/azu014.go"
+guidelines: |-
+    #### Description
+    Ensure that storage account to accept requests from secure connections only. Any requests from insecured connection should be rejected. Microsoft recommends that you always require secure transfer for all of your storage accounts.
+
+    #### Rationale
+    Allowing requests from insecure connection can lead to security attacks, so it always safe to allow connections only from secured connections.
+
+    #### Remediation
+    Set the attribute `azurerm_storage_account.enable_https_traffic_only` to `true`.
+
+    Terraform example for Azure storage account
+    ```
+    data "azurerm_storage_account" "example" {
+        name                      = "packerimages"
+        resource_group_name       = "packer-storage"
+    -   enable_https_traffic_only = false
+    +   enable_https_traffic_only = true
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/storage_account#enable_https_traffic_only
+    * https://docs.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer
+lwid: []
+provider: Azure
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: enable_https_traffic_only
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - azurerm_storage_account
+ruleId: AZU014
+severity: Critical
+sid: tfsec-azu014
+title: "Storage accounts should be configured to only accept transfers that are over secure connections"

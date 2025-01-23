@@ -1,0 +1,46 @@
+category: Containers
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: "Container images are executables software binaries that encapsulates
+  an application and all it's dependencies. A kubernetes manifest requires the image
+  name to determine the application that needs to run.\nImage tag represents the specific
+  build or code that is used to build this binary. Image tags should be unique to
+  identify the different versions of the same series of image. So ensure that Container
+  image should use digest instead of latest or name in init containers as well. "
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  Container images are executables software binaries that encapsulates an application and all it's dependencies. A kubernetes manifest requires the image name to determine the application that needs to run.
+
+  Image tag represents the specific build or code that is used to build this binary. Image tags should be unique to identify the different versions of the same series of image. So ensure that Container image should use digest instead of latest or name in init containers as well.
+
+  #### Rationale
+  If we use *latest* tag, it is harder to track which version of the image is running and more difficult to roll back to a working version in case of any issue. So, we should specify a meaningful tag such as v1.0.1 to uniquely identify a specific version.
+
+  #### Remediation
+  Specify the version of image you want to use in init container as well.
+
+  Example:
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  spec:
+    containers:
+    - image: nginx:v1.0
+      name: nginx
+    initContainers:
+  - - image: busybox
+  + - image: busybox:v1.1
+      name: busybox
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/concepts/containers/images/
+provider: Kubernetes
+ruleId: CKV_K8S_43
+severity: Medium
+sid: ckv-k8s-43
+title: Image should use digest

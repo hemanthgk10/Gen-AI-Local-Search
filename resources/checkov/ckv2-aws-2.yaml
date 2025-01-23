@@ -1,0 +1,62 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Elastic Compute Cloud (Amazon EC2) provides scalable computing capacity in the Cloud. Amazon Elastic Block Store (Amazon EBS) provides block level storage volumes for use with EC2 instances. EBS volumes behave like raw, unformatted block devices. You can mount these volumes as devices on your instances. EBS volumes that are attached to an instance are exposed as storage volumes that persist independently from the life of the instance.
+
+    EBS volumes are particularly well-suited for use as the primary storage for file systems, databases, or for any applications that require fine granular updates and access to raw, unformatted, block-level storage. Amazon EBS is well suited to both database-style applications that rely on random reads and writes, and to throughput-intensive applications that perform long, continuous reads and writes.
+
+    Enabling Amazon EBS encryption, ensures that the data stored in the EBS is secured both at data-at-rest and data-in-transit.
+extra:
+  entity: aws_volume_attachment
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elastic Compute Cloud (Amazon EC2) provides scalable computing capacity in the Cloud. Amazon Elastic Block Store (Amazon EBS) provides block level storage volumes for use with EC2 instances. EBS volumes behave like raw, unformatted block devices. You can mount these volumes as devices on your instances. EBS volumes that are attached to an instance are exposed as storage volumes that persist independently from the life of the instance.
+
+    EBS volumes are particularly well-suited for use as the primary storage for file systems, databases, or for any applications that require fine granular updates and access to raw, unformatted, block-level storage. Amazon EBS is well suited to both database-style applications that rely on random reads and writes, and to throughput-intensive applications that perform long, continuous reads and writes.
+
+    Enabling Amazon EBS encryption, ensures that the data stored in the EBS is secured both at data-at-rest and data-in-transit.
+
+    #### Rationale
+    Encrypting the data in EBS, protects it from unauthorized access even from the snapshots.
+
+    #### Remediation
+    Make sure only the encrypted ebs volumes are attached to an instance.
+
+    Terraform example
+    ```
+    resource "aws_ebs_volume" "example" {
+        availability_zone = "us-west-2a"
+        size              = 1
+    +   kms_key_id        = "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c"
+        ...
+        ...
+    }
+
+    resource "aws_instance" "web" {
+        ami               = "ami-21f78e11"
+        availability_zone = "us-west-2a"
+        instance_type     = "t2.micro"
+        ...
+        ...
+    }
+
+    resource "aws_volume_attachment" "ebs_att" {
+        device_name = "/dev/sdh"
+    +   volume_id   = aws_ebs_volume.example.id
+        instance_id = aws_instance.web.id
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume#kms_key_id
+    * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_2
+severity: Medium
+sid: ckv2-aws-2
+title: "Ensure that only encrypted EBS volumes are attached to EC2 instances"

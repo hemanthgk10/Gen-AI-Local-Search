@@ -1,0 +1,62 @@
+---
+autofix: true
+category: TLS
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "You should not use outdated/insecure TLS versions for encryption. You should be using TLS v1.2+."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws025.go"
+guidelines: |-
+    #### Description
+    You should not use outdated/insecure TLS versions for encryption. You should be using TLS v1.2+.
+
+    #### Rationale
+    Using outdated SSL version in the API gateway domain, can have vulnerabilities opened up to intruders.
+
+    #### Remediation
+    The Transport Layer Security (TLS) version + cipher suite for this DomainName. Possible values are
+    * TLS_1_0
+    * TLS_1_2
+
+    Terraform example
+    ```
+    resource "aws_api_gateway_domain_name" "my-resource" {
+       domain_name              = "api.example.com"
+       regional_certificate_arn = aws_acm_certificate_validation.example.certificate_arn
+    -	 security_policy = "TLS_1_0"
+    +	 security_policy = "TLS_1_2"
+       ...
+       ...
+    }
+    ```
+
+    Using *CLI*:
+    ```
+    aws apigatewayv2 create-domain-name \
+      --domain-name 'api.example.com' \
+      --domain-name-configurations SecurityPolicy=TLS_1_2"
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_domain_name#security_policy
+    * https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: security_policy
+        resourceAttributeType: string
+        resourceAttributeValue: TLS_1_2
+        resourceType:
+          - aws_api_gateway_domain_name
+ruleId: AWS025
+severity: Critical
+sid: tfsec-aws025
+title: "API Gateway domain name uses outdated SSL/TLS protocols"

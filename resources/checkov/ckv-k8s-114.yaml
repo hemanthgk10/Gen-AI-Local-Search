@@ -1,0 +1,100 @@
+---
+category: Monitoring
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The Kubernetes scheduler is a control plane process which assigns Pods to Nodes. The scheduler determines which Nodes are valid placements for each Pod in the scheduling queue according to constraints and available resources.
+
+    Kubernetes scheduler has an option of `Profiling`, which can help to debug any issues or bottle necks. Profiling is the act of analyzing the performance of an applications. It is recommended to disable this `profiling` option, if not needed.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The Kubernetes scheduler is a control plane process which assigns Pods to Nodes. The scheduler determines which Nodes are valid placements for each Pod in the scheduling queue according to constraints and available resources.
+
+    Kubernetes scheduler has an option of `Profiling`, which can help to debug any issues or bottle necks. Profiling is the act of analyzing the performance of an applications. It is recommended to disable this `profiling` option, if not needed.
+
+    #### Rationale
+    Profiling allows for the identification of specific performance bottlenecks. It generates a significant amount of program data that could potentially be exploited to uncover system and program details. If you are not experiencing any bottlenecks and do not need the profiler for troubleshooting purposes, it is recommended to turn it off to reduce the potential attack surface.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-scheduler
+    ```
+    Verify that the `--profiling` argument is set to `false`.
+
+    #### Remediation
+    Edit the Scheduler pod specification file `/etc/kubernetes/manifests/kube-scheduler.yaml` file on the master node and set the below parameter.
+
+    By default, profiling is enabled.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        labels:
+          component: kube-scheduler
+          tier: control-plane
+        name: kube-scheduler
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - /usr/local/bin/kube-scheduler
+          - --address=0.0.0.0
+          - --leader-elect=false
+    +     - --profiling=false
+            ...
+            ...
+          image: k8s.gcr.io/kube-scheduler:v1.9.7
+          name: kube-scheduler
+          volumeMounts:
+          - mountPath: /var/ssl
+            name: varssl
+            readOnly: true
+          - mountPath: /etc/openssl
+            name: etcopenssl
+            readOnly: true
+          - mountPath: /etc/pki
+            name: etcpki
+            readOnly: true
+        hostNetwork: true
+        volumes:
+        - hostPath:
+            path: /var/ssl
+          name: varssl
+        - hostPath:
+            path: /etc/openssl
+          name: etcopenssl
+        - hostPath:
+            path: /etc/pki
+          name: etcpki
+        ...
+        ...
+    ```
+
+    #### Impact
+    Profiling information would not be available.
+
+    #### CIS Controls:
+    **Version 6**
+      *14 Controlled Access Based on the Need to Know* -- Controlled Access Based on the Need to Know.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-scheduler/
+    * https://dominik-tornow.medium.com/the-kubernetes-scheduler-cd429abac02f
+    * https://github.com/kubernetes/community/blob/master/contributors/devel/profiling.md
+provider: Kubernetes
+ruleId: CKV_K8S_114
+severity: Low
+sid: ckv-k8s-114
+title: "Ensure that the --profiling argument is set to false"

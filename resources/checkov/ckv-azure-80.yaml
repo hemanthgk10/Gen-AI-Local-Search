@@ -1,0 +1,14 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that 'Net Framework' version is the latest, if used as a part of the web app"
+extra:
+  entity: azurerm_app_service
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_80
+severity: Low
+sid: ckv-azure-80
+title: "Ensure that 'Net Framework' version is the latest, if used as a part of the web app"

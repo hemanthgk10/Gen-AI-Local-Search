@@ -1,0 +1,70 @@
+---
+autofix: true
+category: Compute
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "If the <code>workflow_metadata_config</code> block is included the <code>node_metadata</code> attribute is required. "
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/gcp006.go"
+guidelines: |-
+    #### Description
+    If the `workload_metadata_config` block within `node_config` is included, the `node_metadata` attribute should be configured securely. The attribute should be set to `SECURE` to use metadata concealment, or `GKE_METADATA_SERVER` if workload identity is enabled.
+
+    #### Rationale
+    Using the option `SECURE` ensures that the VM metadata is not unnecessarily exposed to pods.
+
+    #### Remediation
+    `node_metadata` flag exposes the node metadata to the workloads running on the node.
+
+    Allowed values are:
+    * UNSPECIFIED
+    * SECURE
+    * EXPOSE
+    * GKE_METADATA_SERVER
+
+    Option `EXPOSE` exposes all VM metadata to pods. So, please use the `SECURE` option instead.
+
+    Terraform example:
+
+    ```
+    resource "google_container_node_pool" "gke" {
+      	node_config {
+      		workload_metadata_config {
+    -  			node_metadata = "EXPOSE"
+    +       node_metadata = "SECURE"
+      		}
+      	}
+        ...
+        ...
+    }
+    ```
+
+    #### Impact
+    Using the option `EXPOSE` exposes all the VM metadata to all pods (workloads) on the node.
+
+    #### References
+    * https://www.terraform.io/docs/providers/google/r/container_cluster.html#node_metadata
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/protecting-cluster-metadata#create-concealed
+lwid: []
+provider: GCP
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: node_config.workload_metadata_config
+        resourceAttributeType: nestedBlock
+        resourceAttributeValue: |-
+            workload_metadata_config {
+               node_metadata = "SECURE"
+            }
+        resourceType:
+          - google_container_node_pool
+ruleId: GCP006
+severity: Low
+sid: tfsec-gcp006
+title: "Node metadata value disables metadata concealment"

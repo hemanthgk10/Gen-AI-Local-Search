@@ -1,0 +1,75 @@
+---
+autofix: true
+category: IAM
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "IAM account password policies should prevent the reuse of passwords. The account password policy should be set to prevent using any of the last five used passwords."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws037.go"
+guidelines: |-
+    #### Description
+    IAM password policies can prevent the reuse of a given password by the same user. It is recommended that the password policy prevent the reuse of passwords.
+
+    #### Rationale
+    Preventing password reuse increases account resiliency against brute force login attempts.
+
+    #### Remediation
+    Set `password_reuse_prevention` is set at least to 24 to keep password more secure.
+
+    Terraform example:
+    ```
+    resource "aws_iam_account_password_policy" "strict" {
+        minimum_password_length        = 14
+        max_password_age               = 90
+        require_lowercase_characters   = true
+        require_numbers                = true
+        require_uppercase_characters   = true
+        require_symbols                = true
+        allow_users_to_change_password = true
+    +   password_reuse_prevention      = 24
+
+        ...
+        ...
+    }
+    ```
+
+    From *Console*:
+
+    1. Go to IAM Service on the [AWS Console](https://console.aws.amazon.com/iam)
+    2. Click on Account Settings on the Left Pane
+    3. Check `Prevent password reuse`
+    4. Click `Apply password policy`
+
+    From *CLI*
+
+    ```
+    aws iam update-account-password-policy --password-reuse-prevention 24
+    ```
+
+    #### Note
+    All commands starting with `aws iam update-account-password-policy` can be combined into a single command.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_account_password_policy#password_reuse_prevention
+lwid:
+  - AWS_CIS_1_10
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: password_reuse_prevention
+        resourceAttributeType: integer
+        resourceAttributeValue: "24"
+        resourceType:
+          - aws_iam_account_password_policy
+ruleId: AWS037
+severity: Medium
+sid: tfsec-aws037
+title: "IAM Password policy should prevent password reuse"

@@ -1,0 +1,130 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The Kubernetes API is the front end of the Kubernetes control plane and is how users interact with their Kubernetes cluster. The API (application programming interface) server determines if a request is valid and then processes it.
+
+    On a Kubernetes API server with token authentication configured, and anonymous access enabled, a request providing an invalid bearer token would receive a 401 Unauthorized error. A request providing no bearer token would be treated as an anonymous request.
+
+    In `1.5.1`-`1.5.x`, anonymous access is disabled by default, and can be enabled by passing the ``--anonymous-auth=true` option to the API server.
+
+    In `1.6+`, anonymous access is enabled by default if an authorization mode other than AlwaysAllow is used, and can be disabled by passing the `--anonymous-auth=false` option to the API server. Starting in `1.6`, the ABAC and RBAC authorizers require explicit authorization of the `system:anonymous` user or the `system:unauthenticated group`, so legacy policy rules that grant access to the `*` user or `*`` group do not include anonymous users.
+
+    In production, it is always safe to disable anonymous requests to the API server.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The Kubernetes API is the front end of the Kubernetes control plane and is how users interact with their Kubernetes cluster. The API (application programming interface) server determines if a request is valid and then processes it.
+
+    On a Kubernetes API server with token authentication configured, and anonymous access enabled, a request providing an invalid bearer token would receive a 401 Unauthorized error. A request providing no bearer token would be treated as an anonymous request.
+
+    In `1.5.1`-`1.5.x`, anonymous access is disabled by default, and can be enabled by passing the ``--anonymous-auth=true` option to the API server.
+
+    In `1.6+`, anonymous access is enabled by default if an authorization mode other than AlwaysAllow is used, and can be disabled by passing the `--anonymous-auth=false` option to the API server. Starting in `1.6`, the ABAC and RBAC authorizers require explicit authorization of the `system:anonymous` user or the `system:unauthenticated group`, so legacy policy rules that grant access to the `*` user or `*`` group do not include anonymous users.
+
+    In production, it is always safe to disable anonymous requests to the API server.
+
+    #### Rationale
+    When enabled, requests that are not rejected by other configured authentication methods are treated as anonymous requests. These requests are then served by the API server. You should rely on authentication to authorize access and disallow anonymous requests. Anonymous requests are given a username of `system:anonymous` and a group of `system:unauthenticated`.
+
+    If you are using RBAC authorization, it is generally considered reasonable to allow anonymous access to the API Server for health checks and discovery purposes, and hence this recommendation is not scored. However, you should consider whether anonymous discovery is an acceptable risk for your purposes.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-apiserver
+    ```
+    Verify that the `--anonymous-auth` argument is set to `false`.
+
+    #### Remediation
+    Edit the API server pod specification file `/etc/kubernetes/manifests/kube-apiserver.yaml` on the master node and set the below parameter.
+    ```
+     --anonymous-auth=false
+    ```
+
+    By default, anonymous access is enabled, so we need to explicitly set it to `false`.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          scheduler.alpha.kubernetes.io/critical-pod: ""
+        labels:
+          component: kube-apiserver
+          tier: control-plane
+        name: kube-apiserver
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - kube-apiserver
+          - --admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,ResourceQuota
+          - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+          - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+          - --secure-port=6443
+          - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+          - --requestheader-allowed-names=front-proxy-client
+          - --service-account-key-file=/etc/kubernetes/pki/sa.pub
+          - --client-ca-file=/etc/kubernetes/pki/ca.crt
+          - --enable-bootstrap-token-auth=true
+          - --allow-privileged=true
+          - --kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt
+          - --proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt
+          - --proxy-client-key-file=/etc/kubernetes/pki/front-proxy-client.key
+          - --insecure-port=0
+          - --requestheader-group-headers=X-Remote-Group
+          - --requestheader-extra-headers-prefix=X-Remote-Extra-
+          - --service-cluster-ip-range=10.96.0.0/12
+          - --kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key
+          - --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt
+          - --authorization-mode=Node,RBAC
+          - --etcd-servers=http://127.0.0.1:2379
+    +     - --anonymous-auth=false
+          ...
+          ...
+
+          image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.0
+          livenessProbe:
+            failureThreshold: 8
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: 6443
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+          name: kube-apiserver
+          resources:
+            requests:
+              cpu: 250m
+          volumeMounts:
+          - mountPath: /etc/kubernetes/pki
+            name: k8s-certs
+            readOnly: true
+          ...
+          ...
+    ```
+
+    #### Impact
+    Anonymous requests will be rejected.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-apiserver/
+    * https://kubernetes.io/docs/reference/access-authn-authz/authentication/
+    * https://kubernetes.io/docs/admin/authentication/#anonymous-requests
+provider: Kubernetes
+ruleId: CKV_K8S_68
+severity: Critical
+sid: ckv-k8s-68
+title: "Ensure that the --anonymous-auth argument is set to false"

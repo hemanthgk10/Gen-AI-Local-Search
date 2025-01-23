@@ -1,0 +1,62 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Elasticsearch Service (Amazon ES) is a managed service that makes it easy to deploy, operate, and scale Elasticsearch clusters in the AWS Cloud. Elasticsearch is a popular open-source search and analytics engine for use cases such as log analytics, real-time application monitoring, and clickstream analysis.
+
+    An Amazon ES domain is synonymous with an Elasticsearch cluster. Domains are clusters with the settings, instance types, instance counts, and storage resources that you specify.
+
+    Launching an Elasticsearch Service (Amazon ES) domains, into a virtual private cloud (VPC) provides logically isolated from other virtual networks in the AWS Cloud.
+extra:
+  entity: aws_elasticsearch_domain
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elasticsearch Service (Amazon ES) is a managed service that makes it easy to deploy, operate, and scale Elasticsearch clusters in the AWS Cloud. Elasticsearch is a popular open-source search and analytics engine for use cases such as log analytics, real-time application monitoring, and clickstream analysis.
+
+    An Amazon ES domain is synonymous with an Elasticsearch cluster. Domains are clusters with the settings, instance types, instance counts, and storage resources that you specify.
+
+    Launching an Elasticsearch Service (Amazon ES) domains, into a virtual private cloud (VPC) provides logically isolated from other virtual networks in the AWS Cloud.
+
+    #### Rationale
+    Placing an Amazon ES domain within a VPC enables secure communication between Amazon ES and other services within the VPC without the need for an internet gateway, NAT device, or VPN connection. All traffic remains securely within the AWS Cloud. Because of their logical isolation, domains that reside within a VPC have an extra layer of security when compared to domains that use public endpoints.
+
+    #### Remediation
+    Set `vpc_options` for `aws_elasticsearch_domain` to make sure that ElasticSearch domain is configured with in a VPC.
+
+    Terraform example
+    ```
+    resource "aws_elasticsearch_domain" "es" {
+         domain_name           = var.domain
+         elasticsearch_version = "6.3"
+
+         cluster_config {
+            instance_type = "m4.large.elasticsearch"
+         }
+
+    +    vpc_options {
+    +      subnet_ids = [
+    +        data.aws_subnet_ids.selected.ids[0],
+    +        data.aws_subnet_ids.selected.ids[1],
+    +      ]
+    +
+    +      security_group_ids = [aws_security_group.es.id]
+    +    }
+         ...
+         ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticsearch_domain#vpc_options
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticsearch_domain
+    * https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html
+lwid:
+  - LW_AWS_ELASTICSEARCH_2
+provider: AWS
+ruleId: CKV_AWS_137
+severity: High
+sid: ckv-aws-137
+title: "Ensure that Elasticsearch is configured inside a VPC"

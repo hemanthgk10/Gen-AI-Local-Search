@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that key vault allows firewall rules settings"
+extra:
+  entity: azurerm_key_vault
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_109
+severity: High
+sid: ckv-azure-109
+title: "Ensure that key vault allows firewall rules settings"

@@ -1,0 +1,91 @@
+category: Compute
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure that Compute instances do not have public IP addresses
+extra:
+  entity: google_compute_instance
+  type: resource
+guidelines: |-
+  #### Description
+  Compute instances should not be configured to have external IP addresses.
+
+  #### Rationale
+  To reduce your attack surface, Compute instances should not have public IP addresses. Instead, instances should be configured behind load balancers, to minimize the instance's exposure to the internet.
+
+  #### Remediation
+  By default, Compute instances have a public IP address. Set the `access_config` block for `google_compute_instance`.
+
+  Terraform example
+  ```
+  resource "google_compute_instance" "default" {
+      name         = "test"
+      machine_type = "e2-medium"
+      zone         = "us-central1-a"
+
+  -   access_config {
+  -      // ANY CONFIG
+  -   }
+      ...
+      ...
+  }
+  ```
+
+  From *Console*
+
+  1. Go to the [VM instances](https://console.cloud.google.com/compute/instances)
+  2. Click on the instance name to go the the `Instance detail page`.
+  3. Click `Edit`.
+  4. For each Network interface, ensure that `External IP` is set to `None`.
+  5. Click `Done` and then click `Save`.
+
+  From *CLI*
+  1. Describe the instance properties.
+  ```
+  gcloud compute instances describe INSTANCE_NAME --zone=ZONE
+  ```
+  2. Identify the access config name that contains the external IP address. This access config appears in the following format
+  ```
+  networkInterfaces:
+  - accessConfigs:
+   - kind: compute#accessConfig
+     name: External NAT
+     natIP: 130.211.181.55
+     type: ONE_TO_ONE_NAT
+  ```
+  3. Delete the access config.
+  ```
+   gcloud compute instances delete-access-config INSTANCE_NAME --zone=ZONE -- access-config-name "ACCESS_CONFIG_NAME"
+  ```
+  In the above example, the `ACCESS_CONFIG_NAME` is `External NAT`. The name of your access config might be different.
+
+  #### Prevention
+  You can configure the `Define allowed external IPs for VM instances` Organization Policy to prevent VMs from being configured with public IP addresses.
+
+  [Learn More](https://console.cloud.google.com/orgpolicies/compute-vmExternalIpAccess)
+
+  #### Impact
+  Removing the external IP address from your Compute instance may cause some applications to stop working.
+
+
+
+  #### References
+  * https://cloud.google.com/load-balancing/docs/backend-service#backends_and_external_ip_addresses
+  * https://cloud.google.com/compute/docs/instances/connecting-advanced#sshbetweeninstances
+  * https://cloud.google.com/compute/docs/instances/connecting-to-instance
+  * https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address#unassign_ip
+  * https://cloud.google.com/resource-manager/docs/organization-policy/org-policy-constraints
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#access_config
+
+  #### Notes
+  You can connect to Linux VMs that do not have public IP addresses by using Identity-Aware Proxy for TCP forwarding.
+
+  [Learn More](https://cloud.google.com/compute/docs/instances/connecting-advanced#sshbetweeninstances)
+lwid:
+  - GCP_CIS12_4_9
+provider: GCP
+ruleId: CKV_GCP_40
+severity: Medium
+sid: ckv-gcp-40
+title: Ensure that Compute instances do not have public IP addresses

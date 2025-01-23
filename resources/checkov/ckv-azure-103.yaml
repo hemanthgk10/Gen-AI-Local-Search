@@ -1,0 +1,14 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Azure Data Factory uses Git repository for source control"
+extra:
+  entity: azurerm_data_factory
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_103
+severity: Low
+sid: ckv-azure-103
+title: "Ensure that Azure Data Factory uses Git repository for source control"

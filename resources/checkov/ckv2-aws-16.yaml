@@ -1,0 +1,57 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon EC2 Auto Scaling group (ASG) contains a collection of Amazon EC2 instances that are treated as a logical grouping for the purposes of automatic scaling and management. An Auto Scaling group also enables you to use Amazon EC2 Auto Scaling features such as health check replacements and scaling policies.
+
+    Amazon DynamoDB is a fully managed NoSQL database service that provides fast and predictable performance with seamless scalability. With DynamoDB, you can create database tables that can store and retrieve any amount of data and serve any level of request traffic.
+extra:
+  entity: aws_dynamodb_table
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon EC2 Auto Scaling group (ASG) contains a collection of Amazon EC2 instances that are treated as a logical grouping for the purposes of automatic scaling and management. An Auto Scaling group also enables you to use Amazon EC2 Auto Scaling features such as health check replacements and scaling policies.
+
+    Amazon DynamoDB is a fully managed NoSQL database service that provides fast and predictable performance with seamless scalability. With DynamoDB, you can create database tables that can store and retrieve any amount of data and serve any level of request traffic.
+
+    #### Rationale
+    Amazon DynamoDB auto scaling uses the AWS Application Auto Scaling service to dynamically adjust provisioned tables throughput capacity on your behalf, in response to actual traffic patterns. This enables a table or a global secondary index to increase its provisioned read and write capacity to handle sudden increases in traffic, without throttling. When the workload decreases, Application Auto Scaling decreases the throughput so that you don't pay for unused provisioned capacity.
+
+    #### Remediation
+    Make sure to configure `aws_appautoscaling_target` for a `aws_dynamodb_table`.
+
+    Terraform example
+    ```
+    resource "aws_dynamodb_table" "example-tb" {
+        name           = "GameScores"
+        billing_mode   = "PROVISIONED"
+        read_capacity  = 20
+        write_capacity = 20
+        hash_key       = "UserId"
+        range_key      = "GameTitle"
+        ...
+        ...
+    }
+
+    resource "aws_appautoscaling_target" "dynamodb_table_read_target" {
+        max_capacity       = 100
+        min_capacity       = 5
+    +   resource_id        = "table/${aws_dynamodb_table.example-tb.name}"
+        scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+        service_namespace  = "dynamodb"
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appautoscaling_target#resource_id
+    * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/AutoScaling.Console.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_16
+severity: Medium
+sid: ckv2-aws-16
+title: "Ensure that Auto Scaling is enabled on your DynamoDB tables"

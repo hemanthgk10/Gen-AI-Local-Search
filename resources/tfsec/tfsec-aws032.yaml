@@ -1,0 +1,69 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Traffic flowing between Elasticsearch nodes should be encrypted to ensure sensitive data is kept private."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws032.go"
+guidelines: |-
+    #### Description
+    Ensure that node-to-node encryption is enabled for the Amazon Elasticsearch domains (clusters).
+    This feature enforces the use of Transport Layer Security (TLS) for all Elasticsearch node intercommunication.
+    This ensures data transmitted by Elasticsearch is always encrypted in transit.
+
+    #### Rationale
+    Each Amazon ES domain resides within its own dedicated VPC.
+    This architecture prevents potential attackers from intercepting traffic between Elasticsearch nodes and keeps the cluster secure.
+    By default, however, traffic within the VPC is unencrypted.
+    Node-to-node encryption enables TLS 1.2 encryption for all communications within the Elasticsearch VPC.
+
+    #### Remediation
+    Set the `node_to_node_encryption.enabled` to true. By default not having the option is false.
+
+    Terraform example:
+    ```
+    resource "aws_elasticsearch_domain" "es" {
+       domain_name           = "${var.es_domain_name}"
+       elasticsearch_version = "${var.es_version}"
+
+       # Encryption not enabled for all instance types
+       encrypt_at_rest {
+         enabled = "true"
+         kms_key_id = data.aws_kms_alias.es.target_key_id
+       }
+
+    +  node_to_node_encryption {
+    +    enabled = "true"
+    +  }
+       ...
+       ...
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/ntn.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticsearch_domain#node_to_node_encryption
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: node_to_node_encryption
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            node_to_node_encryption {
+               enabled = true
+            }
+        resourceType:
+          - aws_elasticsearch_domain
+ruleId: AWS032
+severity: Medium
+sid: tfsec-aws032
+title: "Elasticsearch domain uses plaintext traffic for node to node communication"

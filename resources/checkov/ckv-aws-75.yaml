@@ -1,0 +1,61 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure Global Accelerator accelerator has flow logs enabled"
+extra:
+  entity: aws_globalaccelerator_accelerator
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Flow logs provides a way to monitor all the traffic to your endpoint. A flow log record represents a network flow in your flow log. Each record captures the network flow for a specific 5-tuple, for a specific capture window. A 5-tuple is a set of five different values that specify the source, destination, and protocol for an IP flow. The capture window is a duration of time during which the flow logs service aggregates data before publishing flow log records. These logs can also be sent to cloudwatch logs.
+
+    #### Rationale
+    AWS Flow logs enables you to capture information about the IP address traffic going to and from network interfaces in your accelerator in Global Accelerator. Flow log data is published to Amazon S3, to retrieve and view your data in future for your auditing purposes. Flow logs helps in diagnosing traffic reachability issues to an endpoint and restrictive security group rules.
+
+    #### Remediation
+    Set the `attributes` section in `aws_globalaccelerator_accelerator`. Specify the S3 bucket name and prefix for content.
+
+    Terraform example:
+    ```
+    resource "aws_globalaccelerator_accelerator" "example" {
+        name            = "Example"
+        ip_address_type = "IPV4"
+        enabled         = true
+
+    +   attributes {
+    +      flow_logs_enabled   = true
+    +      flow_logs_s3_bucket = "example-bucket"
+    +      flow_logs_s3_prefix = "flow-logs/"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/globalaccelerator_accelerator#flow_logs_enabled
+    * https://docs.aws.amazon.com/global-accelerator/latest/dg/monitoring-global-accelerator.flow-logs.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-globalaccelerator-accelerator.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_75
+severity: Low
+sid: ckv-aws-75
+title: "Ensure Global Accelerator accelerator has flow logs enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: attributes
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      attributes {
+        flow_logs_enabled       = true
+        flow_logs_s3_bucket     = "<Provide bucketname to store the logs>"
+        flow_logs_s3_prefix     = "<Provide prefix for AWS S3 bucket specified above>"
+      }
+    resourceType: [ "aws_globalaccelerator_accelerator" ]

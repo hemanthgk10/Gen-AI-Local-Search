@@ -1,0 +1,44 @@
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: Ensure default service account is not used at an organization level
+extra:
+  entity: google_organization_iam_binding
+  type: resource
+guidelines: |-
+  #### Description
+  Service Accounts are used to interact with other GCP services, instead of using the regular user accounts. So ensure that IAM role bindings using the default Compute Engine and App Engine service account are not used at Project, folder or Organization level.
+
+  #### Rationale
+  Service accounts represent service-level security of application or VM Resources, determined by the roles assigned to them. The use of Default service accounts should be avoided.
+
+  Default Compute Engine Service Account: Used by GKE, Compute, DataProc, DataFlow, Composer.
+  project-id-compute@developer.gserviceaccount.com
+
+  Default Appspot Service Account: Used by App Engine, Cloud Functions, App Engine based services.
+  project-id@appspot.gserviceaccount.com
+
+  #### Remediation
+  Remove any members that are being binded to default service accounts. Instead of the default, create separate `Service Accounts` with required permissions.
+
+  Terraform example
+  ```
+  resource "google_project_iam_binding" "example" {
+    project  = "your-project-id"
+    role     = "roles/iam.securityAdmin"
+  - members  = ["project-id-compute@developer.gserviceaccount.com"]
+    ...
+    ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_project_iam#google_project_iam_binding
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_project_iam#google_project_iam_member
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_47
+severity: Medium
+sid: ckv-gcp-47
+title: Ensure default service account is not used at an organization level

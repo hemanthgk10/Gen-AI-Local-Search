@@ -1,0 +1,46 @@
+---
+category: Secrets
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "You should not make secrets available to a user in plaintext in any scenario. Secrets can instead be pulled from a secure secret storage system by the service requiring them."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws013.go"
+guidelines: |-
+    #### Description
+    You should not make secrets available to a user in plaintext in any scenario. Secrets can instead be pulled from a secure secret storage system by the service requiring them.
+
+    #### Rationale
+    Having secrets or any sensitive information in code will be committed to source control and visible to others including others who are not intended. So it should not available easily in plain text in the code.
+
+    #### Remediation
+    Terraform example:
+    ```
+    resource "aws_ecs_task_definition" "my-task" {
+        container_definitions = <<EOF
+        [
+          {
+            "name": "my_service",
+            "essential": true,
+            "memory": 256,
+            "environment": [
+              { "name": "ENVIRONMENT", "value": "development" }
+    -         { "name": "DATABASE_PASSWORD", "value": "oh no D:"}
+            ]
+          }
+        ]
+        EOF
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/systems-manager/latest/userguide/integration-ps-secretsmanager.html
+    * https://www.vaultproject.io/
+lwid: []
+provider: AWS
+ruleId: AWS013
+severity: Critical
+sid: tfsec-aws013
+title: "Task definition defines sensitive environment variable(s)"

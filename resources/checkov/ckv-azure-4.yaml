@@ -1,0 +1,54 @@
+category: Monitoring
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: |-
+  Azure AKS is a managed Kubernetes cluster service from Microsoft. AKS operationalize your workload containers on Kubernetes.
+  Logging is an essential way to monitor the performance of your workloads that are deployed to Kubernetes environments.
+extra:
+  entity: Microsoft.ContainerService/managedClusters
+  type: resource
+guidelines: |-
+  #### Description
+  Azure AKS is a managed Kubernetes cluster service from Microsoft. AKS operationalize your workload containers on Kubernetes.
+
+  Logging is an essential way to monitor the performance of your workloads that are deployed to Kubernetes environments.
+
+  #### Rationale
+  AKS logs contains detailed information about successful and failed requests to the AKS cluster. This information can be used to monitor individual requests and to diagnose issues with any workload.
+
+  #### Remediation
+  Set the `addon_profile.oms_agent` to `true`.
+
+  Terraform example for Azure Kubernetes cluster
+  ```
+  resource "azurerm_kubernetes_cluster" "example" {
+      name                = "example-aks1"
+      location            = azurerm_resource_group.example.location
+      resource_group_name = azurerm_resource_group.example.name
+      dns_prefix          = "exampleaks1"
+
+      default_node_pool {
+        name       = "default"
+        node_count = 1
+        vm_size    = "Standard_D2_v2"
+      }
+
+  +   addon_profile {
+  +     oms_agent = true
+  +   }
+      ...
+      ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster#addon_profile
+  * https://docs.microsoft.com/en-us/azure/monitoring/monitoring-container-insights-onboard
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_4
+severity: Low
+sid: ckv-azure-4
+title: Ensure AKS logging to Azure Monitoring is Configured

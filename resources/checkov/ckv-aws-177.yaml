@@ -1,0 +1,44 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Kinesis Video Streams is a fully managed AWS service that you can use to stream live video from devices to the AWS Cloud, or build applications for real-time video processing or batch-oriented video analytics.
+
+    Server-side encryption is a feature in Kinesis Video Streams that automatically encrypts data before it's at rest by using an AWS KMS customer master key (CMK) that you specify. Data is encrypted before it is written to the Kinesis Video Streams stream storage layer, and it is decrypted after it is retrieved from storage. As a result, your data is always encrypted at rest within the Kinesis Video Streams service.
+extra:
+  entity: aws_kinesis_video_stream
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Kinesis Video Streams is a fully managed AWS service that you can use to stream live video from devices to the AWS Cloud, or build applications for real-time video processing or batch-oriented video analytics.
+
+    Server-side encryption is a feature in Kinesis Video Streams that automatically encrypts data before it's at rest by using an AWS KMS customer master key (CMK) that you specify. Data is encrypted before it is written to the Kinesis Video Streams stream storage layer, and it is decrypted after it is retrieved from storage. As a result, your data is always encrypted at rest within the Kinesis Video Streams service.
+
+    #### Rationale
+    Encrypting using AWS Key Management Service (AWS KMS) makes it easier for you to meet strict data management requirements by encrypting your data at rest in Amazon Kinesis Video Streams.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in AWS Kenesis Video stream.
+
+    Terraform example
+    ```
+    resource "aws_kinesis_video_stream" "example-stream" {
+        stream_name = "webcam"
+        retention   = 10
+    +   kms_key_id  = "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c"
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/babylonhealth/aws-babylon/latest/docs/resources/waf_web_acl#logging_configuration-configuration-block
+    * https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/how-kms.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_177
+severity: High
+sid: ckv-aws-177
+title: "Ensure Kinesis Video Stream is encrypted by KMS using a customer managed Key (CMK)"

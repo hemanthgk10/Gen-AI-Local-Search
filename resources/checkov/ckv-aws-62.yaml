@@ -1,0 +1,99 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+  - HIPAA
+description: "Ensure IAM policies that allow full administrative privileges are not created. IAM policies should start with a minimum set of permissions and include more as needed rather than starting with full administrative privileges."
+extra:
+  entity: aws_iam_policy
+  type: resource
+guidelines: |-
+    ##### Description
+    Ensure IAM policies that allow full administrative privileges are not created. IAM policies should start with a minimum set of permissions and include more as needed rather than starting with full administrative privileges.
+
+    ##### Rationale
+    Providing full administrative privileges when unnecessary exposes resources to potentially unwanted actions.
+
+    ##### Remediation
+    Manual Steps:
+    1. Navigate to [Identity and Access Management](https://console.aws.amazon.com/iam/)
+    2. In the left navigation, select Policies.
+    3. Select the Policy and edit the document to define only the necessary permissions to ensure least privilege.
+    4. Repeat for each policy that allows for Allow and Action set to `*` and Resource set to `*`.
+
+    Terraform example:
+    ```
+    data "aws_iam_policy_document" "example" {
+      statement {
+        sid = "1"
+
+    -   actions = [ "*"]
+
+    +   actions = [
+    +     "s3:ListAllMyBuckets",
+    +     "s3:GetBucketLocation",
+    +   ]
+
+    -   resources = [ "*" ]
+
+    +   resources = [
+    +     "arn:aws:s3:::${var.s3_bucket_name}",
+    +   ]
+      }
+    }
+
+    resource "aws_iam_policy" "example" {
+      name   = "example_policy"
+      path   = "/"
+      policy = data.aws_iam_policy_document.example.json
+    }
+    ```
+
+    CloudFormation example:
+
+    ```
+    {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyDocument" : {
+          "Version": "2020-10-17",
+          "Statement": [
+              {
+                  "Sid": "AllowAllUsersToListAccounts",
+                  "Effect": "Allow",
+    -             "Action": "*",
+
+    +             "Action": [
+    +                 "s3:ListAllMyBuckets",
+    +                 "s3:GetBucketLocation"
+    +              ],
+                  ...
+                  ...
+    -             "Resource": "*",
+
+    +             "Resource": [
+    +                "arn:aws:s3:::my_corporate_bucket/example.png"
+    +             ]
+              }
+          ]
+        },
+        "PolicyName" : "s3-default-bucket-policy",
+        ...
+        ...
+      }
+    }
+    ```
+
+    ##### References
+    * https://docs.aws.amazon.com/IAM/latest/UserGuide/access_controlling.html
+    * https://docs.aws.amazon.com/IAM/latest/UserGuide/getting-started_create-admin-group.html
+    * https://learn.hashicorp.com/terraform/aws/iam-policy
+lwid:
+  - AWS_CIS_1_24
+provider: AWS
+ruleId: CKV_AWS_62
+severity: Critical
+sid: ckv-aws-62
+title: "Ensure IAM policies doesn't allow administrative privileges"

@@ -1,0 +1,56 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Google Kubernetes Engine (GKE) clusters can be configured in different ways that controls the way the control plane/master nodes or API server of the Kubernetes cluster is accessed.
+
+    By default GKE clusters are created with public IPs for master and worker nodes. But this is not a recommended practise, as the nodes and API server are both reachable from internet, it increases the chances of exposure to unathorized users.
+
+    In private clusters, worker nodes only get internal IP addresses. However, the control plane has a private endpoint and a public endpoint.
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Google Kubernetes Engine (GKE) clusters can be configured in different ways that controls the way the control plane/master nodes or API server of the Kubernetes cluster is accessed.
+
+    By default GKE clusters are created with public IPs for master and worker nodes. But this is not a recommended practise, as the nodes and API server are both reachable from internet, it increases the chances of exposure to unathorized users.
+
+    In private clusters, worker nodes only get internal IP addresses. However, the control plane has a private endpoint and a public endpoint.
+
+    #### Rationale
+    Keeping the nodes private helps in preventing attacks like DDOS or exposing the workloads to the internet.
+
+    #### Remediation
+    We shouldn't configure the `google_storage_bucket` logging to store in itself. Create a new bucket and configure that to store the logs of the bucket required.
+
+    Terraform example
+    ```
+    resource "google_container_cluster" "primary" {
+        name                     = "my-gke-cluster"
+        location                 = "us-central1"
+        remove_default_node_pool = true
+        initial_node_count       = 1
+    +   private_cluster_config {
+    +      enable_private_nodes    = true
+    +      enable_private_endpoint = true
+    +      ...
+    +      ...
+    +   }
+    }
+    ```
+
+    #### Note
+    The Google provider is unable to validate certain configurations of `private_cluster_config` when `enable_private_nodes` is `false`. It's recommended that you omit the block entirely if the field is not set to `true`.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#private_cluster_config
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_64
+severity: Medium
+sid: ckv-gcp-64
+title: "Ensure clusters are created with Private Nodes"

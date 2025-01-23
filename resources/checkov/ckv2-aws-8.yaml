@@ -1,0 +1,53 @@
+---
+category: "Backup & Recovery"
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "AWS Backup is a fully-managed service that makes it easy to centralize and automate data protection across AWS services, in the cloud, and on premises. It is apolicy expression that defines when, how and for what AWS resources, you want to back up."
+extra:
+  entity: aws_backup_selection
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Backup is a fully-managed service that makes it easy to centralize and automate data protection across AWS services, in the cloud, and on premises. It is a policy expression that defines when, how and for what AWS resources, you want to back up.
+
+    #### Rationale
+    AWS Backup helps in reducing risk for data loss or service availability, as we can use the backups to restore the service or data.
+
+    #### Remediation
+    Make sure that each RDS cluster has an AWS Backup plan enabled.
+
+    Terraform example
+    ```
+    resource "aws_rds_cluster" "default" {
+        cluster_identifier      = "aurora-cluster-demo"
+        engine                  = "aurora-mysql"
+        engine_version          = "5.7.mysql_aurora.2.03.2"
+        database_name           = "mydb"
+        ...
+        ...
+    }
+
+    resource "aws_backup_selection" "example" {
+        iam_role_arn = aws_iam_role.example.arn
+        name         = "tf_example_backup_selection"
+        plan_id      = aws_backup_plan.example.id
+        resources = [
+           aws_db_instance.example.arn,
+    +      aws_rds_cluster.default.arn,
+           aws_efs_file_system.example.arn,
+        ]
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_selection#resources
+    * https://docs.aws.amazon.com/aws-backup/latest/devguide/API_BackupSelection.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_8
+severity: Medium
+sid: ckv2-aws-8
+title: "Ensure that RDS clusters has backup plan of AWS Backup"

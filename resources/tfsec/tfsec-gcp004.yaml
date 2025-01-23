@@ -1,0 +1,63 @@
+---
+category: Network
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Network security rules should not use very broad subnets. Where possible, segments should be broken into smaller subnets and avoid using the <code>/0</code> subnet."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/gcp004.go"
+guidelines: |-
+    #### Description
+    GCP `Firewall Rules` are specific to a `VPC Network`. Each rule either `allows` or `denies` traffic when its conditions are met. Its conditions allow you to specify the type of traffic, such as ports and protocols, and the source or destination of the traffic, including IP addresses, subnets, and instances. Firewall rules are defined at the VPC network level, and are specific to the network in which they are defined. The rules themselves cannot be shared among networks. Firewall rules only support IPv4 traffic. When specifying a source for an ingress rule or a destination for an egress rule by address, you can only use an IPv4 address or `IPv4 block in CIDR` notation. Generic `(0.0.0.0/0)` outgoing traffic to internet can be avoided.
+
+    #### Rationale
+    GCP Firewall Rules within a VPC Network. These rules apply to outgoing (egress) traffic from instances and incoming (ingress) traffic to instances in the network. Egress and ingress traffic are controlled even if the traffic stays within the network (for example, instance-to-instance communication). For an instance to have outgoing Internet access, the network must have a valid Internet gateway route or custom route whose destination IP is specified. This route simply defines the path to the Internet, to avoid the most general `(0.0.0.0/0)` destination IP Range specified from Internet. We need to restrict generic access from Internet to specific IP Range.
+
+    #### Remediation
+    Do not allow outbound traffic to anywhere (0.0.0.0). Where possible, segments should be broken into smaller subnets and avoid using the /0 subnet.
+
+    Terraform example
+    ```
+    resource "google_compute_firewall" "default" {
+        name       = "test-firewall"
+        network    = google_compute_network.default.name
+
+        direction  = "EGRESS"
+        source_ranges = ["10.10.10.10/24"]
+    -   destination_ranges = ["0.0.0.0/0"]
+    +   destination_ranges = ["10.10.2.0/32"]
+        ...
+        ...
+    }
+    ```
+
+    From *Console*
+      1. Go to `VPC Network`
+      2. Go to the `Firewall Rules`
+      3. Click the `Firewall Rule` you want to modify
+      4. Click `Edit`
+      5. Modify `Destination IP ranges` to a small subnet of IP address.
+      6. Click `Save`
+
+    Via *CLI gcloud*
+
+    Update RDP Firewall rule with new `DESTINATION_RANGE` from below command:
+    ```
+    gcloud compute firewall-rules update FirewallName --allow=[PROTOCOL[:PORT[-PORT]],...] --destination-ranges=[CIDR_RANGE,...]
+    ```
+
+    #### Impact
+    All connections to outside of the network from the concerned VPC(s) will be blocked. In this case, specific destination IP(s) should be mentioned in firewall rules from the concerned VPC(s).
+
+    #### References
+    * https://cloud.google.com/vpc/docs/firewalls#blockedtraffic
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall#destination_ranges
+
+    #### Notes
+    Currently GCP VPC only supports IPV4 however, Google is already working on adding IPV6 support for VPC. In that case along with source IP range `0.0.0.0`, rule should be checked for IPv6 equivalent `::0` as well.
+lwid: []
+provider: GCP
+ruleId: GCP004
+severity: High
+sid: tfsec-gcp004
+title: "An outbound firewall rule allows traffic to `/0`"

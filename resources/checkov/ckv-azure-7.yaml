@@ -1,0 +1,50 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: In MicroService based architecture on Kubernetes, you would want to control
+  which service can communicate to what other services. In order for the communication,
+  we need a network policy to be configured.
+extra:
+  entity: Microsoft.ContainerService/managedClusters
+  type: resource
+guidelines: |-
+  #### Description
+  In MicroService based architecture on Kubernetes, you would want to control which service can communicate to what other services. In order for the communication, we need a network policy to be configured.
+
+  #### Rationale
+  It always safe to follow least privilege policy when allowing traffic between different services in Kubernetes cluster. This will help in reducing the attack surface when one of the service is hacked.
+
+  #### Remediation
+  Make sure to have `network_profile.network_policy` configured for the AKS cluster. If the `network_policy` is set to `azure` then `network_plugin` is configured to `azure` as well.
+
+  Currently, supported values for network_policy is `calico` and `azure`.
+
+  Terraform example for AKS cluster
+  ```
+  resource "azurerm_kubernetes_cluster" "example" {
+      name                = "example-aks1"
+      location            = azurerm_resource_group.example.location
+      resource_group_name = azurerm_resource_group.example.name
+      dns_prefix          = "exampleaks1"
+  +   network_profie  {
+  +      network_plugin = "kubenet"
+  +      network_policy = "calico"
+  +      ...
+  +      ...
+  +   }
+      ...
+      ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster#network_profile
+  * https://docs.microsoft.com/en-us/azure/aks/use-network-policies
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_7
+severity: Medium
+sid: ckv-azure-7
+title: Ensure AKS cluster has Network Policy configured

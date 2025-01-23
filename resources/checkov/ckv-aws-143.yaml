@@ -1,0 +1,118 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon S3 has a simple web services interface that you can use to store and retrieve any amount of data, at any time, from anywhere on the web. It gives any developer access to the same highly scalable, reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.
+
+    With S3 Object Lock, you can store objects using a write-once-read-many (WORM) model. Object Lock can help prevent objects from being deleted or overwritten for a fixed amount of time or indefinitely.
+
+    S3 Object Lock provides two retention modes:
+    * Governance mode
+    * Compliance mode
+
+    These retention modes apply different levels of protection to your objects. You can apply either retention mode to any object version that is protected by Object Lock.
+
+    In `governance` mode, users can't overwrite or delete an object version or alter its lock settings unless they have special permissions. With governance mode, you protect objects against being deleted by most users, but you can still grant some users permission to alter the retention settings or delete the object if necessary. You can also use governance mode to test retention-period settings before creating a compliance-mode retention period.
+
+    In `compliance` mode, a protected object version can't be overwritten or deleted by any user, including the root user in your AWS account. When an object is locked in compliance mode, its retention mode can't be changed, and its retention period can't be shortened. Compliance mode helps ensure that an object version can't be overwritten or deleted for the duration of the retention period.
+extra:
+  entity: aws_s3_bucket
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon S3 has a simple web services interface that you can use to store and retrieve any amount of data, at any time, from anywhere on the web. It gives any developer access to the same highly scalable, reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.
+
+    With S3 Object Lock, you can store objects using a write-once-read-many (WORM) model. Object Lock can help prevent objects from being deleted or overwritten for a fixed amount of time or indefinitely.
+
+    S3 Object Lock provides two retention modes:
+    * Governance mode
+    * Compliance mode
+
+    These retention modes apply different levels of protection to your objects. You can apply either retention mode to any object version that is protected by Object Lock.
+
+    In `governance` mode, users can't overwrite or delete an object version or alter its lock settings unless they have special permissions. With governance mode, you protect objects against being deleted by most users, but you can still grant some users permission to alter the retention settings or delete the object if necessary. You can also use governance mode to test retention-period settings before creating a compliance-mode retention period.
+
+    In `compliance` mode, a protected object version can't be overwritten or deleted by any user, including the root user in your AWS account. When an object is locked in compliance mode, its retention mode can't be changed, and its retention period can't be shortened. Compliance mode helps ensure that an object version can't be overwritten or deleted for the duration of the retention period.
+
+    #### Rationale
+    Object Lock can help prevent objects from being deleted or overwritten for a fixed amount of time or indefinitely. You can use Object Lock to help meet regulatory requirements that require write-once-read-many (WORM) storage, or to simply add another layer of protection against object changes and deletion.
+
+    #### Remediation
+    Set the `object_lock_configuration` with `default_rentention` rule.
+
+    Possible values for `mode` are `COMPLIANCE` and `GOVERNANCE`.
+
+    Either provide `days` or `years` in the rule to specify the number of days/years that you want to specify for the default retention period.
+
+    Terraform example
+    ```
+    resource "aws_kms_key" "mykey" {
+        description             = "This key is used to encrypt bucket objects"
+        deletion_window_in_days = 10
+    }
+
+    resource "aws_s3_bucket" "mybucket" {
+        bucket = "mybucket"
+
+        server_side_encryption_configuration {
+          rule {
+            apply_server_side_encryption_by_default {
+              kms_master_key_id = aws_kms_key.mykey.arn
+              sse_algorithm     = "aws:kms"
+            }
+          }
+        }
+
+    +   object_lock_configuration {
+    +        object_lock_enabled = "Enabled"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+          "BucketName" : "mybucket",
+    +     "ObjectLockConfiguration" : {
+    +        "ObjectLockEnabled" : "Enabled",
+    +        "Rule" : {
+    +           "DefaultRetention" : {
+    +              "Days" : 366,
+    +              "Mode" : "COMPLIANCE"
+    +           }
+    +        }
+    +     },
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket#object_lock_configuration
+    * https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_143
+severity: Medium
+sid: ckv-aws-143
+title: "Ensure that S3 bucket has lock configuration enabled by default"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: object_lock_configuration
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+     object_lock_configuration {
+        object_lock_enabled = "Enabled"
+     }
+    resourceType: [ "aws_s3_bucket" ]

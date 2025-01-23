@@ -4,6 +4,7 @@ This project is a local search tool that leverages **Generative AI** and **FAISS
 
 ---
 
+
 ## **Features**
 
 - **Document Preprocessing**: Automatically parses PDFs, Word, PPTX, and plain text files for indexing.
@@ -20,6 +21,10 @@ This project is a local search tool that leverages **Generative AI** and **FAISS
 
 * Python 3.8+
 * pip or virtualenv for package management.
+* Install Ollama
+  ```
+  curl -fsSL https://ollama.com/install.sh | sh
+  ```
 
 ## **Installation**
 

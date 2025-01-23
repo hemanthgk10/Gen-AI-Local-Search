@@ -1,0 +1,88 @@
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+- HIPAA
+description: Ensure Dynamodb point in time recovery (backup) is enabled. You can create
+  on-demand backups of your Amazon DynamoDB tables, or you can enable continuous backups
+  using point-in-time recovery.
+extra:
+  entity: AWS::DynamoDB::Table
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure Dynamodb point in time recovery (backup) is enabled. You can create on-demand backups of your Amazon DynamoDB tables, or you can enable continuous backups using point-in-time recovery. DynamoDB maintains incremental backups of your table.
+
+  #### Rationale
+  Point-in-time recovery helps protect your DynamoDB tables from accidental write or delete operations. With point-in-time recovery, you don't have to worry about creating, maintaining, or scheduling on-demand backups. With point-in-time recovery, you can restore that table to any point in time during the last 35 days.
+
+  #### Remediation
+  Enable the attribute `point_in_time_recovery` to protect DynamoDB table data from acciental write or delete operation.
+
+  Terraform example:
+  ```
+  resource "aws_dynamodb_table" "basic-dynamodb-table" {
+      name           = "GameScores"
+      billing_mode   = "PROVISIONED"
+      read_capacity  = 20
+      write_capacity = 20
+      hash_key       = "UserId"
+      range_key      = "GameTitle"
+
+  +   point_in_time_recovery {
+  +     enabled      = true
+  +   }
+    ...
+    ...
+  }
+  ```
+
+  Cloudformation example:
+  ```json
+  {
+    "Type" : "AWS::DynamoDB::Table",
+    "Properties" : {
+        "BillingMode" : "PROVISIONED",
+        "TableName" : "GameScores",
+  +     "PointInTimeRecoverySpecification" : {
+  +        "PointInTimeRecoveryEnabled" : true
+  +     },
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_table#point_in_time_recovery
+  * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/PointInTimeRecovery.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_28
+severity: Medium
+sid: ckv-aws-28
+title: Ensure Dynamodb point in time recovery is enabled
+autofix: true
+remediation:
+- checkType: CloudFormation
+  steps:
+  - actions: add
+    resource: [ "resource" ]
+    resourceAttribute: PointInTimeRecoverySpecification
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      {
+         "PointInTimeRecoveryEnabled" : true
+      }
+    resourceType: [ "AWS::DynamoDB::Table" ]
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: point_in_time_recovery
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      point_in_time_recovery {
+        enabled = true
+      }
+    resourceType: [ "aws_dynamodb_table" ]

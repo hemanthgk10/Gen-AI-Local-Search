@@ -1,0 +1,56 @@
+---
+category: "Backup & Recovery"
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS Backup is a fully-managed service that makes it easy to centralize and automate data protection across AWS services, in the cloud, and on premises. Using this service, you can configure backup policies and monitor activity for your AWS resources in one place.
+
+    In AWS Backup, a backup vault is a container that stores and organizes your backups. When creating a backup vault, you must specify the AWS Key Management Service (AWS KMS) encryption key that encrypts some of the backups placed in this vault.
+extra:
+  entity: aws_backup_vault
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Backup is a fully-managed service that makes it easy to centralize and automate data protection across AWS services, in the cloud, and on premises. Using this service, you can configure backup policies and monitor activity for your AWS resources in one place.
+
+    In AWS Backup, a backup vault is a container that stores and organizes your backups. When creating a backup vault, you must specify the AWS Key Management Service (AWS KMS) encryption key that encrypts some of the backups placed in this vault.
+
+    #### Rationale
+    Encrypting the Amazon Backup vault can prevent from unauthorized access to sensitive data.
+
+    #### Remediation
+    Specify the `kms_key_arn` to encrypt backup vault data.
+
+    Terraform example
+    ```
+    resource "aws_backup_vault" "example" {
+        name        = "example_backup_vault"
+    +   kms_key_arn = "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c"
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::Backup::BackupVault",
+      "Properties" : {
+          "BackupVaultName" : "backup-vault",
+    +     "EncryptionKeyArn" : "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c",
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_vault#kms_key_arn
+    * https://docs.aws.amazon.com/aws-backup/latest/devguide/encryption.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_166
+severity: High
+sid: ckv-aws-166
+title: "Ensure Backup Vault is encrypted at rest using KMS CMK"

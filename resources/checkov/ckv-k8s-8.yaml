@@ -1,0 +1,54 @@
+category: Containers
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: Many applications running for long periods of time eventually transition
+  to broken states, and cannot recover except by being restarted. Kubernetes provides
+  liveness probes to detect and remedy such situations.
+extra:
+  entity: containers
+guidelines: |-
+  #### Description
+  Many applications running for long periods of time eventually transition to broken states, and cannot recover except by being restarted. Kubernetes provides liveness probes to detect and remedy such situations.
+
+  #### Rationale
+  The kubelet uses liveness probes to know when to restart a container.
+
+  For example, liveness probes could catch a deadlock, where an application is running, but unable to make progress. Restarting a container in such a state can help to make the application more available despite bugs.
+
+  #### Remediation
+  Set the `livenessProbe` for the container manifest.
+
+  Example:
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    labels:
+      test: liveness
+    name: liveness-exec
+  spec:
+    containers:
+    - name: liveness
+      image: k8s.gcr.io/busybox
+      args:
+      - /bin/sh
+      - -c
+      - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+  +   livenessProbe:
+  +     exec:
+  +       command:
+  +       - cat
+  +       - /tmp/healthy
+  +     initialDelaySeconds: 5
+  +     periodSeconds: 5
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+provider: Kubernetes
+ruleId: CKV_K8S_8
+severity: Low
+sid: ckv-k8s-8
+title: Liveness Probe Should be Configured

@@ -1,0 +1,53 @@
+---
+category: General
+checkTool: checkov
+checkType: Docker
+compliance: []
+description: "Ensure the base image uses a non latest version tag"
+guidelines: |-
+    #### Description
+    Use only tagged images ( non latest tag) as base images. `Latest` version tag can be for the base image can be changed any point of time. And this can be an image that has not been tested and having it as a base image can cause your application to break and hard to rollback.
+
+    #### Rationale
+    If there is no version mentioned in the base image, then the latest version of image will be used. Tagged images are useful to fall back from "latest" to a specific version of an image in production.
+
+    #### Remediation
+    Use only a specific tagged version of the base image rather than using the `latest` version tag.
+
+    Dockerfile example:
+    ```
+    - FROM ubuntu
+    + FROM ubuntu:18.04
+      RUN apt-get update && apt-get -y install \
+          build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev wget
+
+      RUN wget http://nginx.org/download/nginx-1.20.2.tar.gz
+
+      RUN tar -xzvf nginx-1.20.2.tar.gz
+
+      WORKDIR nginx-1.20.2
+
+      RUN ./configure \
+          --sbin-path=/usr/bin/nginx \
+          --conf-path=/etc/nginx/nginx.conf \
+          --error-log-path=/var/log/nginx/error.log \
+          --http-log-path=/var/log/nginx/access.log \
+          --with-pcre \
+          --pid-path=/var/run/nginx.pid \
+          --with-http_ssl_module
+
+      RUN make && make install
+    ```
+
+    #### Default Value
+    By default, if there is no version mentioned in the base image then the latest version of image will be used.
+
+    #### References
+    * https://docs.docker.com/engine/reference/builder/#from
+    * https://en.wikipedia.org/wiki/Reproducible_builds
+lwid: []
+provider: Docker
+ruleId: CKV_DOCKER_7
+severity: Medium
+sid: ckv-docker-7
+title: "Ensure the base image uses a non latest version tag"

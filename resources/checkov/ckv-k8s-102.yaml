@@ -1,0 +1,122 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    Kubernetes uses a popular key-value pair datastore (ETCD) for persisting the data in the cluster.
+
+    ETCD is a strongly consistent, distributed key-value store that provides a reliable way to store data that needs to be accessed by a distributed system or cluster of machines.
+
+    Kubernetes API server is the entry point for storing/retrieving the data from ETCD in a cluster. As ETCD might have sensitive information like tokens etc, so it should be configured to make use of TLS encryption for client connections.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    Kubernetes uses a popular key-value pair datastore (ETCD) for persisting the data in the cluster.
+
+    ETCD is a strongly consistent, distributed key-value store that provides a reliable way to store data that needs to be accessed by a distributed system or cluster of machines.
+
+    Kubernetes API server is the entry point for storing/retrieving the data from ETCD in a cluster. As ETCD might have sensitive information like tokens etc, so it should be configured to make use of TLS encryption for client connections.
+
+    #### Rationale
+    ETCD objects are sensitive in nature and should be protected by client authentication. This requires the API server to identify itself to the etcd server using a SSL Certificate Authority file.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-apiserver
+    ```
+    Verify that the `--etcd-cafile` argument exists and it is set as appropriate.
+
+    #### Remediation
+    Follow the Kubernetes documentation and set up the TLS connection between the apiserver and etcd. Then, edit the API server pod specification file `/etc/kubernetes/manifests/kube-apiserver.yaml` on the master node and set the etcd certificate authority file parameter.
+    ```
+        --etcd-cafile=<path/to/ca-file>
+    ```
+
+    By default, `--etcd-cafile` is not set.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          scheduler.alpha.kubernetes.io/critical-pod: ""
+        labels:
+          component: kube-apiserver
+          tier: control-plane
+        name: kube-apiserver
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - kube-apiserver
+          - --admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,ResourceQuota
+          - --etcd-servers=http://127.0.0.1:2379
+          - --authorization-mode=Node,RBAC
+          - --admission-control-config-file=admission-config.yaml
+          - --enable-admission-plugins=NodeRestriction,NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota
+          - --secure-port=6443
+          - --audit-log-path=/var/log/apiserver/audit.log
+          - --audit-log-maxage=30
+          - --audit-log-maxbackup=10
+          - --audit-log-maxsize=100
+          - --request-timeout=60
+          - --service-account-lookup=true
+          - --service-account-key-file=/etc/kubernetes/pki/sa.pub
+          - --etcd-certfile=/etc/etcd/pki/etcd.crt
+          - --etcd-keyfile=/etc/etcd/pki/etcd.key
+          - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+          - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+    +     - --etcd-ca-file=/etc/etcd/pki/ca.crt
+          ...
+          ...
+
+          image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.0
+          livenessProbe:
+            failureThreshold: 8
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: 6443
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+          name: kube-apiserver
+          resources:
+            requests:
+              cpu: 250m
+          volumeMounts:
+          - mountPath: /etc/kubernetes/pki
+            name: k8s-certs
+            readOnly: true
+          ...
+          ...
+    ```
+
+    #### Impact
+    TLS and client certificate authentication must be configured for etcd.
+
+    #### CIS Controls:
+    **Version 6**
+      14.2 *Encrypt All Sensitive Information Over Less-trusted Networks* -- All communication of sensitive information over less-trusted networks should be encrypted. Whenever information flows over a network with a lower trust level, the information should be encrypted.
+
+    **Version 7**
+      14.4 *Encrypt All Sensitive Information in Transit* -- Encrypt all sensitive information in transit.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-apiserver/
+    * https://coreos.com/etcd/docs/latest/op-guide/security.html
+provider: Kubernetes
+ruleId: CKV_K8S_102
+severity: Medium
+sid: ckv-k8s-102
+title: "Ensure that the --etcd-ca-file argument is set as appropriate"

@@ -1,0 +1,67 @@
+---
+autofix: true
+category: TLS
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "You should not use outdated/insecure TLS versions for encryption. You should be using TLS v1.2+."
+extra:
+  srcUrl: "https://github.com/aquasecurity/tfsec/blob/46554e72aaf51987ad6e737c5029bb8c8bc7fd4d/internal/app/tfsec/rules/aws021.go"
+guidelines: |-
+    #### Description
+    When we create a web application, we specify one or more CloudFront distributions to delivery the data, videos, applications and APIs to customers globally with low latency, high transfer speeds, all within a developer-friendly environment. CloudFront provides security capabilities, including field level encryption and HTTPS support, seamlessly integrated with AWS Shield, AWS Web Application Firewall and Route 53 to protect against multiple types of attacks including network and application layer DDoS attacks. So, we should not use outdated/insecure TLS versions for encrypting the CloudFront content. We should be using latest TLS v1.2+.
+
+    #### Rationale
+    Using an outdated policy, can have vulnerabilities opened up that can leave the underlying resources for exploit.
+
+    #### Remediation
+    Set the `minimum_protocol_version` to the latest `TLSv1.2_2021`.
+
+    Possible value for `minimum_protocol_version`
+    * SSLv3
+    * TLSv1
+    * TLSv1_2016
+    * TLSv1.1_2016
+    * TLSv1.2_2018
+    * TLSv1.2_2019
+    * TLSv1.2_2021
+
+    Default value is `TLSv1`.
+
+    This can be set only if `cloudfront_default_certificate = false`.
+
+    Terraform example:
+    ```
+    resource "aws_cloudfront_distribution" "s3_distribution" {
+        viewer_certificate {
+          cloudfront_default_certificate = true
+    -     minimum_protocol_version       = "TLSv1"
+    +     minimum_protocol_version       = "TLSv1.2_2021"
+        }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-cloudfront-to-custom-origin.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_distribution#minimum_protocol_version
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: viewer_certificate.minimum_protocol_version
+        resourceAttributeType: blockAttribute
+        resourceAttributeValue: TLSv1.2_2021
+        resourceType:
+          - aws_cloudfront_distribution
+ruleId: AWS021
+severity: Critical
+sid: tfsec-aws021
+title: "CloudFront distribution uses outdated SSL/TLS protocols"

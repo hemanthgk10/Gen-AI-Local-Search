@@ -1,0 +1,82 @@
+category: Monitoring
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+- CIS
+- HIPAA
+description: AWS CloudTrail is a web service that records AWS API calls for an account
+  and makes those logs available to users and resources in accordance with IAM policies.
+  AWS Key Management Service (KMS) is a managed service that helps create and control
+  the encryption keys used to encrypt account data, and uses Hardware Security Modules
+  (HSMs) to protect the security of encryption keys. CloudTrail logs can be configured
+  to leverage server side encryption (SSE) and KMS customer created master keys (CMK)
+  to further protect CloudTrail logs. It is recommended that CloudTrail be configured
+  to use SSE-KMS.
+extra:
+  entity: AWS::CloudTrail::Trail
+  type: resource
+guidelines: |-
+  #### Description
+  AWS CloudTrail is a web service that records AWS API calls for an account and makes those logs available to users and resources in accordance with IAM policies. AWS Key Management Service (KMS) is a managed service that helps create and control the encryption keys used to encrypt account data, and uses Hardware Security Modules (HSMs) to protect the security of encryption keys. CloudTrail logs can be configured to leverage server side encryption (SSE) and KMS customer created master keys (CMK) to further protect CloudTrail logs. It is recommended that CloudTrail be configured to use SSE-KMS.
+
+  #### Rationale
+  Configuring CloudTrail to use SSE-KMS provides additional confidentiality controls on log data as a given user must have S3 read permission on the corresponding log bucket and must be granted decrypt permission by the CMK policy
+
+  #### Remediation
+  Set the `kms_key_id` argument to encrypt the logs delivered by CloudTrail.
+
+  Terraform example:
+  ```
+  resource "aws_kms_key" "logs" {
+    description = "KMS Key used for log encryption"
+    enable_key_rotation = true
+  }
+
+  resource "aws_cloudwatch_log_group" "example" {
+    name = "Example"
+  }
+
+  resource "aws_cloudtrail" "example" {
+     cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.example.arn}:*",
+  +  kms_key_id                 = "arn:aws:kms:us-west-2:111122223333:key/example",
+     ...
+     ...
+  }
+  ```
+
+  Cloudformation example:
+  ```json
+  {
+    "Type" : "AWS::CloudTrail::Trail",
+    "Properties" : {
+        "IsLogging" : true,
+        "IsMultiRegionTrail" : true,
+  +     "KMSKeyId" : "arn:aws:kms:us-west-2:111122223333:key/example",
+        "S3BucketName" : "my-bucket",
+        "S3KeyPrefix" : "my-bucket-logs",
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudtrail#kms_key_id
+  * https://docs.aws.amazon.com/awscloudtrail/latest/userguide/encrypting-cloudtrail-log-files-with-aws-kms.html
+lwid:
+  - AWS_CIS_2_7
+provider: AWS
+ruleId: CKV_AWS_35
+severity: Medium
+sid: ckv-aws-35
+title: Ensure CloudTrail logs are encrypted at rest using KMS CMKs
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: kms_key_id
+    resourceAttributeType: string
+    resourceAttributeValue: "<Provide the ID of the KMS key>"
+    resourceType: [ "aws_cloudtrail" ]

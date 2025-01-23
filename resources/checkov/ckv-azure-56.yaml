@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that function apps enables Authentication"
+extra:
+  entity: azurerm_function_app
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_56
+severity: Medium
+sid: ckv-azure-56
+title: "Ensure that function apps enables Authentication"

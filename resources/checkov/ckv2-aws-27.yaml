@@ -1,0 +1,65 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud.
+
+    RDS provides metrics in real time for the operating system (OS) that your DB instance runs on and it also supports the viewing of database logs. Logs can provide information on performance, access, usage and other important information.
+extra:
+  entity: aws_rds_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud.
+
+    RDS provides metrics in real time for the operating system (OS) that your DB instance runs on and it also supports the viewing of database logs. Logs can provide information on performance, access, usage and other important information.
+
+    #### Rationale
+    You can monitor the RDS error logs, the slow query logs when you enable query logging.
+
+    #### Remediation
+    To enable query logging on PostgreSQL, change the values of the following parameters by modifying a customized parameter group that is associated with the DB instance:
+
+    * log_statement
+    * log_min_duration_statement
+
+
+    Terraform example
+    ```
+    resource "aws_rds_cluster" "postgresql" {
+        cluster_identifier = "aurora-cluster-demo"
+        engine             = "aurora-postgresql"
+        ...
+        ...
+    }
+
+    resource "aws_rds_cluster_parameter_group" "default" {
+        name        = "rds-cluster-pg"
+        family      = "aurora-postgresql"
+        description = "RDS default cluster parameter group"
+
+    +   parameter {
+    +      name  = "log_statement"
+    +      value = "ddl"
+    +   }
+
+    +   parameter {
+    +      name  = "log_min_duration_statement"
+    +      value = "1000"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster_parameter_group
+    * https://aws.amazon.com/premiumsupport/knowledge-center/rds-postgresql-query-logging/
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_27
+severity: Medium
+sid: ckv2-aws-27
+title: "Ensure Postgres RDS as aws_rds_cluster has Query Logging enabled"

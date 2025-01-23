@@ -1,0 +1,81 @@
+---
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: |-
+    Amazon DynamoDB Accelerator (DAX) is a fully managed, highly available, in-memory cache for Amazon DynamoDB that delivers up to a 10 times performance improvement—from milliseconds to microseconds—even at millions of requests per second.
+    DAX does all the heavy lifting required to add in-memory acceleration to your DynamoDB tables, without requiring developers to manage cache invalidation, data population, or cluster management.
+    DAX server-Side Encryption (SSE) automatically integrates with AWS Key Management Service (KMS) for encrypting the DAX data in cache, configuration data and log files. Ensure that your AWS DAX cluster data at rest is encrypted using Server-Side Encryption in order to protect it from unauthorized access to the underlying storage and meet compliance requirements.
+extra:
+  entity: "AWS::DAX::Cluster"
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon DynamoDB Accelerator (DAX) is a fully managed, highly available, in-memory cache for Amazon DynamoDB that delivers up to a 10 times performance improvement—from milliseconds to microseconds—even at millions of requests per second.
+
+    DAX does all the heavy lifting required to add in-memory acceleration to your DynamoDB tables, without requiring developers to manage cache invalidation, data population, or cluster management.
+
+    DAX server-Side Encryption (SSE) automatically integrates with AWS Key Management Service (KMS) for encrypting the DAX data in cache, configuration data and log files. Ensure that your AWS DAX cluster data at rest is encrypted using Server-Side Encryption in order to protect it from unauthorized access to the underlying storage and meet compliance requirements.
+
+    #### Rationale
+    Amazon DynamoDB Accelerator (DAX) encryption at rest provides an additional layer of data protection by helping secure your data from unauthorized access to the underlying storage. Organizational policies, industry or government regulations, and compliance requirements might require the use of encryption at rest to protect your data. You can use encryption to increase the data security of your applications that are deployed in the cloud.
+
+    #### Remediation
+    Enable the argument `server_side_encryption` in `aws_dax_cluster` to encrypt the data at rest.
+
+    Terraform example:
+    ```
+    resource "aws_dax_cluster" "my_dax" {
+        cluster_name           = "example-cluster"
+        node_type              = "dax.r4.large"
+        replication_factor     = 1
+    +   server_side_encryption {
+    +      enabled  = true
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```
+    {
+      "Type" : "AWS::DAX::Cluster",
+      "Properties" : {
+          "ClusterName" : "example-cluster",
+          "Description" : "Example DAX cluster",
+          "IAMRoleARN" : "arn:aws:iam::123456789012:role/S3Access",
+          "NodeType" : "dax.r4.large",
+    +     "SSESpecification" : {
+    +         "SSEEnabled" : true
+    +     },
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dax_cluster#server_side_encryption
+    * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAXEncryptionAtRest.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-dax-cluster-ssespecification.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_47
+severity: High
+sid: ckv-aws-47
+title: "Ensure DAX is encrypted at rest"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: server_side_encryption
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      server_side_encryption {
+         enabled = true
+      }
+    resourceType: [ "aws_dax_cluster" ]

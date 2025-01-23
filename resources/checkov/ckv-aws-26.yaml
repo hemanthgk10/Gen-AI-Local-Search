@@ -1,0 +1,80 @@
+---
+autofix: true
+category: Encryption
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+  - HIPAA
+description: "Ensure all data stored in the SNS topic is encrypted to protect its data from any security breaches"
+extra:
+  entity: "AWS::SNS::Topic"
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure that Server-Side Encryption (SSE) is enabled for your AWS Simple Notification Service (SNS) topics for additional protection of sensitive data delivered as messages to subscribers. With the SSE feature enabled, when messages are published to encrypted topics, AWS SNS immediately encrypts the messages using an encryption algorithm.
+
+    #### Rationale
+    Unencrypted SNS topics mean that data stored might be at risk of potential security attack. Hence it is important to make sure that no compromise has been done as far as the security of your sensitive or confidential data is concerned.
+
+    #### Remediation
+    Enable server-side encryption (SSE) for an Amazon SNS topic, specify the CMK ID by setting the KmsMasterKeyId attribute
+
+    Terraform example:
+    ```
+    resource "aws_sns_topic" "my_topic" {
+      name              = "my_topic"
+    + kms_master_key_id = "arn:aws:kms:us-west-2:111122223333:key/example",
+      ...
+      ...
+    }
+    ```
+
+    Cloudformation example:
+    ```json
+    {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+          "ContentBasedDeduplication" : true,
+          "DisplayName" : "my_topic",
+    +     "KmsMasterKeyId" : "arn:aws:kms:us-west-2:111122223333:key/example",,
+          "TopicName" : "my_topic"
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic#kms_master_key_id
+    * https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: CloudFormation
+    steps:
+      -
+        actions: modify
+        resource:
+          - resource
+        resourceAttribute: KmsMasterKeyId
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide the ARN for KMS key>"
+        resourceType:
+          - "AWS::SNS::Topic"
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: kms_master_key_id
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide the ARN of the KMS key>"
+        resourceType:
+          - aws_sns_topic
+ruleId: CKV_AWS_26
+severity: Medium
+sid: ckv-aws-26
+title: "Ensure all data stored in the SNS topic is encrypted"

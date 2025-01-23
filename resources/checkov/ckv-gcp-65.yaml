@@ -1,0 +1,52 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. Kubernetes API server may authorize a request using one of several authorization modes. The most preferred authorization mode is `RBAC`.
+
+    Role-based access control (RBAC) is a mechanism that enables you to configure fine-grained and specific sets of permissions that define how a given Google Cloud user, or group of users, can interact with any Kubernetes object in your cluster, or in a specific Namespace of your cluster.
+
+    Previously, you could only grant roles to Google Cloud user accounts or IAM service accounts. Google Groups for RBAC enables you to grant roles to the members of a group in Google Groups for Business.
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. Kubernetes API server may authorize a request using one of several authorization modes. The most preferred authorization mode is `RBAC`.
+
+    Role-based access control (RBAC) is a mechanism that enables you to configure fine-grained and specific sets of permissions that define how a given Google Cloud user, or group of users, can interact with any Kubernetes object in your cluster, or in a specific Namespace of your cluster.
+
+    Previously, you could only grant roles to Google Cloud user accounts or IAM service accounts. Google Groups for RBAC enables you to grant roles to the members of a group in Google Groups for Business.
+
+    #### Rationale
+    With Google Groups for RBAC feature, the users and groups themselves are maintained by your Google Workspace administrators, completely outside of Kubernetes or Cloud Console, so your cluster administrators do not need detailed information about your users.
+
+    #### Remediation
+    We shouldn't configure the `google_storage_bucket` logging to store in itself. Create a new bucket and configure that to store the logs of the bucket required.
+
+    Terraform example
+    ```
+    resource "google_container_cluster" "primary" {
+        name                     = "my-gke-cluster"
+        location                 = "us-central1"
+        remove_default_node_pool = true
+        initial_node_count       = 1
+    +   authenticator_groups_config {
+    +      security_group    = "gke-security-groups@yourdomain.com"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#authenticator_groups_config
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/role-based-access-control#groups-setup-gsuite
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_65
+severity: Medium
+sid: ckv-gcp-65
+title: "Manage Kubernetes RBAC users with Google Groups for GKE"

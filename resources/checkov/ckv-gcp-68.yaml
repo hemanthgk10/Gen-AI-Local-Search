@@ -1,0 +1,71 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Secure boot is a node pool setting that's disabled by default on GKE because third-party unsigned kernel modules cannot be loaded when secure boot is enabled. It is a feature that can be used alongside Shielded GKE nodes
+
+    This is required to verify the digital signature of node boot components.
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Secure boot is a node pool setting that's disabled by default on GKE because third-party unsigned kernel modules cannot be loaded when secure boot is enabled. It is a feature that can be used alongside Shielded GKE nodes
+
+    This is required to verify the digital signature of node boot components.
+
+    #### Rationale
+    An attacker may seek to alter boot components to persist malware or root kits during system initialization. Secure Boot helps ensure that the system only runs authentic software by verifying the digital signature of all boot components, and halting the boot process if signature verification fails.
+
+    #### Remediation
+    Set the `enable_secure_boot` to `true` in the `shielded_instance_config` for `google_container_cluster` or `google_container_node_pool`.
+
+    Terraform example
+    ```
+    resource "google_container_cluster" "example" {
+        name                        = "my-gke-cluster"
+        location                    = "us-central1"
+        remove_default_node_pool    = true
+        initial_node_count          = 1
+        node_config {
+          service_account = google_service_account.default.email
+    +     shielded_instance_config {
+    +       enable_secure_boot  = true
+    +     }
+          ...
+          ...
+        }
+        ...
+        ...
+    }
+
+     OR
+
+    resource "google_container_node_pool" "example_preemptible_nodes" {
+        name       = "my-node-pool"
+        location   = "us-central1"
+        cluster    = google_container_cluster.primary.name
+        node_config {
+          preemptible  = true
+    +     shielded_instance_config {
+    +       enable_secure_boot  = true
+    +     }
+          ...
+          ...
+        }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#enable_secure_boot
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/shielded-gke-nodes#secure_boot
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_68
+severity: High
+sid: ckv-gcp-68
+title: "Ensure Secure Boot for Shielded GKE Nodes is Enabled"

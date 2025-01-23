@@ -1,0 +1,15 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Virtual Machines use managed disks"
+extra:
+  entity: azurerm_linux_virtual_machine
+  type: resource
+lwid:
+  - Azure_CIS_131_7_1
+provider: Azure
+ruleId: CKV_AZURE_92
+severity: Medium
+sid: ckv-azure-92
+title: "Ensure that Virtual Machines use managed disks"

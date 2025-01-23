@@ -1,0 +1,179 @@
+---
+autofix: true
+category: "Load Balancers"
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+  - HIPAA
+description: "Ensure ALB protocol is HTTPS"
+extra:
+  entity: "AWS::ElasticLoadBalancingV2::Listener"
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure that Amazon ALBs are using HTTPS protocols.
+
+    #### Rationale
+    Amazon ALBs should implement HTTPS to prevent cleartext traffic transmission.
+
+    #### Remediation
+    Manual Steps:
+      1. Sign in to the AWS Management Console.
+      2. Navigate to [EC2 dashboard][ec2-console].
+      3. In the left navigation panel, under LOAD BALANCING section, choose Load Balancers.
+      4. Select the Listeners tab from the bottom panel to access the load balancer listeners configuration.
+      5. Change the listener to https protocol instead of http.
+
+    Terraform Example:
+
+    ```
+    resource "aws_lb_listener" "front_end" {
+        load_balancer_arn = aws_lb.front_end.arn
+    -   protocol          = "http"
+    -   port              = "8080"
+    +   port              = "443"
+    +   protocol          = "HTTPS"
+    +   ssl_policy        = "ELBSecurityPolicy-2016-08"
+    +   certificate_arn   = "arn:aws:iam::187416307283:server-certificate/test_cert_adsfas"
+
+        default_action {
+          type             = "forward"
+          target_group_arn = aws_lb_target_group.front_end.arn
+        }
+
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation Example:
+
+    ```json
+    {
+        "Type": "AWS::ElasticLoadBalancingV2::Listener",
+        "Properties": {
+            "DefaultActions": [
+                {
+                    "Type": "redirect",
+                    "RedirectConfig": {
+                          "Protocol": "HTTPS",
+                          "Port": 443,
+                          "Host": "#{host}",
+                          "Path": "/#{path}",
+                          "Query": "#{query}",
+                          "StatusCode": "HTTP_301"
+                      }
+                  }
+              ],
+              "LoadBalancerArn": {
+                  "Ref": "myLoadBalancer"
+              },
+    -         "Port": 8080,
+    -         "Protocol": "HTTP"
+    +         "Port": 443,
+    +         "Protocol": "HTTPS",
+    +         "SslPolicy": "ELBSecurityPolicy-2016-08",
+    +         "Certificates": [{
+    +            "CertificateArn" : "<Provide Certificate ARN reference>"
+    +         }]
+              ...
+              ...
+          }
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener
+
+    [ec2-console]: https://console.aws.amazon.com/ec2/
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: CloudFormation
+    steps:
+      -
+        actions: modify
+        resource:
+          - resource
+        resourceAttribute: protocol
+        resourceAttributeType: string
+        resourceAttributeValue: HTTPS
+        resourceType:
+          - "AWS::ElasticLoadBalancingV2::Listener"
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: port
+        resourceAttributeType: string
+        resourceAttributeValue: "443"
+        resourceType:
+          - "AWS::ElasticLoadBalancingV2::Listener"
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: SslPolicy
+        resourceAttributeType: string
+        resourceAttributeValue: ELBSecurityPolicy-2016-08
+        resourceType:
+          - "AWS::ElasticLoadBalancingV2::Listener"
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: Certificates
+        resourceAttributeType: array
+        resourceAttributeValue: |-
+            [
+              {
+               "certificateArn": "<Provide the ARN of the default SSL server certificate>"
+              }
+            ]
+        resourceType:
+          - "AWS::ElasticLoadBalancingV2::Listener"
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: protocol
+        resourceAttributeType: string
+        resourceAttributeValue: HTTPS
+        resourceType:
+          - aws_lb_listener
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: port
+        resourceAttributeType: string
+        resourceAttributeValue: "443"
+        resourceType:
+          - aws_lb_listener
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: ssl_policy
+        resourceAttributeType: string
+        resourceAttributeValue: ELBSecurityPolicy-2016-08
+        resourceType:
+          - aws_lb_listener
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: certificate_arn
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide the ARN of the default SSL server certificate>"
+        resourceType:
+          - aws_lb_listener
+ruleId: CKV_AWS_2
+severity: Critical
+sid: ckv-aws-2
+title: "Ensure ALB protocol is HTTPS"

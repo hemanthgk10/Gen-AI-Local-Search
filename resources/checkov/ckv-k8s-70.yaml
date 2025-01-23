@@ -1,0 +1,111 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    All Kubernetes clusters have two categories of users: service accounts managed by Kubernetes, and normal users.
+
+    It is assumed that a cluster-independent service manages normal users in the following ways:
+
+      * An administrator distributing private keys
+      * A user store like Keystone or Google Accounts
+      * A file with a list of usernames and passwords
+
+    Administrators can also provide a file with a list of tokens that can be used for authentication but this is not a recommended setup for production.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    All Kubernetes clusters have two categories of users: service accounts managed by Kubernetes, and normal users.
+
+    It is assumed that a cluster-independent service manages normal users in the following ways:
+
+      * An administrator distributing private keys
+      * A user store like Keystone or Google Accounts
+      * A file with a list of usernames and passwords
+
+    Administrators can also provide a file with a list of tokens that can be used for authentication but this is not a recommended setup for production.
+
+    #### Rationale
+    The token-based authentication utilizes static tokens to authenticate requests to the apiserver. The tokens are stored in clear-text in a file on the apiserver, and cannot be revoked or rotated without restarting the apiserver. Hence, do not use static token-based authentication.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-apiserver
+    ```
+    Verify that the `--token-auth-file` argument does not exist.
+
+    #### Remediation
+    Follow the documentation and configure alternate mechanisms for authentication. Then, edit the API server pod specification file `/etc/kubernetes/manifests/kube-apiserver.yaml` on the master node and remove the `--token-auth-file=<filename>` parameter.
+
+    By default, `--token-auth-file` argument is not set.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          scheduler.alpha.kubernetes.io/critical-pod: ""
+        labels:
+          component: kube-apiserver
+          tier: control-plane
+        name: kube-apiserver
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - kube-apiserver
+          - --admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,ResourceQuota
+          - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+          - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+          - --secure-port=6443
+          - --insecure-port=0
+          - --requestheader-group-headers=X-Remote-Group
+          - --requestheader-extra-headers-prefix=X-Remote-Extra-
+          - --etcd-servers=http://127.0.0.1:2379
+    -     - --token-auth-file=/etc/kubernetes/tokens
+          ...
+          ...
+
+          image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.0
+          livenessProbe:
+            failureThreshold: 8
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: 6443
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+          name: kube-apiserver
+          resources:
+            requests:
+              cpu: 250m
+          volumeMounts:
+          - mountPath: /etc/kubernetes/pki
+            name: k8s-certs
+            readOnly: true
+          ...
+          ...
+    ```
+
+    #### Impact
+    You will have to configure and use alternate authentication mechanisms such as tokens and certificates. Static token based authentication could not be used.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-apiserver/
+    * https://kubernetes.io/docs/admin/authentication/#static-token-file
+provider: Kubernetes
+ruleId: CKV_K8S_70
+severity: High
+sid: ckv-k8s-70
+title: "Ensure that the --token-auth-file argument is not set"

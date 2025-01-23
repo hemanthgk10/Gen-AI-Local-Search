@@ -1,0 +1,54 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: Ensure Azure Instance does not use basic authentication(Use SSH Key Instead)
+extra:
+  entity: Microsoft.Compute/virtualMachines
+  type: resource
+guidelines: |-
+  #### Description
+  Basic authentication is a simple authentication scheme built into the HTTP protocol. It use base64 encoded string of `username:password` which can be easily decoded. Where as SSH keys are encrypted secure keys that can be used to authenticate.
+
+  SSH key authentication also provides single sign on benefit across multiple servers without having to remember the complex passwords.
+
+  #### Rationale
+  Basic authentication is easy to crack by an hacker using some kind of techniques like brute force etc. So ensure that basic authentication is turned off and use SSH keys instead.
+
+  #### Remediation
+  Do not set `os_profile_linux_config.disable_password_authentication` to `false`. If this is set to `false`, then `admin_password` should be specified.
+
+  If it is set to `true`, make sure to have `ssh_keys` block set as well.
+
+  Terraform example
+
+  ```
+  resource "azurerm_virtual_machine" "main" {
+      name                  = "${var.prefix}-vm"
+      location              = azurerm_resource_group.main.location
+      resource_group_name   = azurerm_resource_group.main.name
+      network_interface_ids = [azurerm_network_interface.main.id]
+      vm_size               = "Standard_DS1_v2"
+
+      os_profile_linux_config {
+  -      disable_password_authentication = false
+  +      disable_password_authentication = true
+  +      ssh_keys {
+  +        key_data = "zyasdfasd"
+  +        path     = "/usr/hello/.ssh"
+  +      }
+      }
+      ...
+      ...
+  }
+  ```
+
+  #### References
+  * https://azure.github.io/AppService/2020/08/10/securing-data-plane-access.html
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine#disable_password_authentication
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_1
+severity: High
+sid: ckv-azure-1
+title: Ensure Azure Instance does not use basic authentication

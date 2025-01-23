@@ -1,0 +1,57 @@
+---
+autofix: true
+category: Network
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Network security rules should not use very broad subnets. Where possible, segments should be broken into smaller subnets."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/azu002.go"
+guidelines: |-
+    #### Description
+    Azure network security group to filter network traffic to and from Azure resources in an Azure virtual network. A network security group contains security rules that allow or deny inbound network traffic to, or outbound network traffic from, several types of Azure resources.
+
+    For each rule, you can specify source and destination, port, and protocol.
+
+    #### Rationale
+    Removing unfettered connectivity to/from remote console services, reduces a server's exposure to risk.
+
+    #### Remediation
+    Network security rules should not use very broad subnets, so use a smaller subnet as much as possible.
+
+    Terraform example:
+    ```
+    resource "azurerm_network_security_rule" "example" {
+        name                       = "example"
+        direction                  = "Outbound"
+    -   destination_address_prefix = "*"
+    +   destination_address_prefix = "10.0.0.0/16"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/security/fundamentals/network-best-practices
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule#destination_address_prefix
+lwid: []
+provider: Azure
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: destination_address_prefix
+        resourceAttributeType: string
+        resourceAttributeValue: "<Please provide a specific cidr instead of opening to everything>"
+        resourceType:
+          - azurerm_network_security_rule
+ruleId: AZU002
+severity: Critical
+sid: tfsec-azu002
+title: "An outbound network security rule allows traffic to `/0`"

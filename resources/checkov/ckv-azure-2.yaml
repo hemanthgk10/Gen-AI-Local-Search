@@ -1,0 +1,56 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+- HIPAA
+description: Ensure that OS disks (boot volumes) and data disks (non-boot volumes)
+  are encrypted with CMK as they might contain sensitive information and files.
+extra:
+  entity: Microsoft.Compute/disks
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure that OS disks (boot volumes) and data disks (non-boot volumes) are encrypted with CMK as they might contain sensitive information and files.
+
+  #### Rationale
+  Encrypting the IaaS VM's OS disk (boot volume), Data disks (non-boot volume) ensures that the entire content is fully unrecoverable without a key and thus protects the volume from unwarranted reads. CMK is superior encryption although requires additional planning.
+
+  #### Remediation
+  Set the `encryption_settings.enabled` to `true` and provide the `disk_encryption_key` and `key_encryption_key` to encrypt the disk.
+
+  Terraform example for Azure managed disk
+  ```
+  resource "azurerm_managed_disk" "source" {
+      name                 = "acctestmd1"
+      location             = "West US 2"
+      resource_group_name  = azurerm_resource_group.example.name
+      storage_account_type = "Standard_LRS"
+      create_option        = "Empty"
+      disk_size_gb         = "1"
+  +   encryption_settings {
+  +     enabled  = true
+  +     disk_encryption_key {
+  +         secret_url       = "${var.secretURL}"
+  +         source_vault_id  = "${var.keyVaultID}"
+  +     }
+  +     key_encryption_key {
+  +         key_url          = "${var.keyURL}"
+  +         source_vault_id  = "${var.keyVaultID}"
+  +     }
+      }
+      ...
+      ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/managed_disk#encryption_settings
+  * https://docs.microsoft.com/azure/security/fundamentals/azure-disk-encryption-vms-vmss
+  * https://docs.microsoft.com/azure/security/fundamentals/data-encryption-best-practices#protect-data-at-resthttps://docs.microsoft.com/azure/virtual-machines/windows/disk-encryption-portal-quickstart
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_2
+severity: High
+sid: ckv-azure-2
+title: Ensure Azure managed disk have encryption enabled

@@ -1,0 +1,61 @@
+---
+autofix: true
+category: Compute
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "The Compute Engine instance metadata server exposes legacy v0.1 and v1beta1 endpoints, which do not enforce metadata query headers. This is a feature in the v1 APIs that makes it more difficult for a potential attacker to retrieve instance metadata. Unless specifically required, we recommend you disable these legacy APIs. When setting the <code>metadata</code> block, the default value for <code>disable-legacy-endpoints</code> is set to true, they should not be explicitly enabled."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/gcp007.go"
+guidelines: |-
+    #### Description
+    The Compute Engine instance metadata server exposes legacy v0.1 and v1beta1 endpoints, which do not enforce metadata query headers. This is a feature in the v1 APIs that makes it more difficult for a potential attacker to retrieve instance metadata.
+
+    #### Rationale
+    Unless there is a specific requirement, it is recommend to disable these legacy APIs.
+
+    #### Remediation
+    The metadata key/value pairs assigned to instances in the cluster. From GKE 1.12 onwards, `disable-legacy-endpoints` is set to `true` by the API; if metadata is set but that default value is not included, Terraform will attempt to unset the value. To avoid this, set the value in your config.
+
+    Terraform example:
+    ```
+    resource "google_container_cluster" "gke" {
+        name               = "primary-cluster"
+        location           = "us-central1-a"
+        node_config {
+            metadata {
+    -          disable-legacy-endpoints = false
+    +          disable-legacy-endpoints = true
+            }
+        }
+        ...
+        ...
+    }
+
+    ```
+
+    #### References
+    * https://www.terraform.io/docs/providers/google/r/container_cluster.html#metadata
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster#protect_node_metadata_default_for_112
+lwid: []
+provider: GCP
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: node_config.metadata
+        resourceAttributeType: nestedBlock
+        resourceAttributeValue: |-
+            metadata {
+               disable-legacy-endpoints = true
+            }
+        resourceType:
+          - google_container_cluster
+ruleId: GCP007
+severity: Low
+sid: tfsec-gcp007
+title: "Legacy metadata endpoints enabled"

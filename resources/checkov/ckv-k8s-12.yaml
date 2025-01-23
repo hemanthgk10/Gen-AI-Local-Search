@@ -1,0 +1,50 @@
+category: Compute
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: Memory requests should be set
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  Memory requests should be set on each container to specify the amount of memory it requires for execution on a node. This helps the scheduler to bind your pod to a node prior to it's creation.
+
+  #### Rationale
+  Memory request represents a minimum amount of memory that it requires to run, but if there is no requests specified for memory, it may burst to use as much memory as is available on the node. This can be a problem for
+  other containers running on the same node as might fail with resource starvation.
+
+  #### Remediation
+  Set the `requests.memory` for `containers` and `initContainers`.
+
+  Example of Memory requests for a Pod:
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  spec:
+    containers:
+    - image: nginx
+      name: nginx
+      resources:
+       requests:
+  +       memory: 100m
+          cpu: 100m
+      ...
+      ...
+    initContainers:
+    - image: nginx-preconfig
+      name: configeditor
+      resources:
+        requests:
+  +       memory: 100m
+          cpu: 100m
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  * https://docs.openshift.com/enterprise/3.1/dev_guide/compute_resources.html
+provider: Kubernetes
+ruleId: CKV_K8S_12
+severity: Medium
+sid: ckv-k8s-12
+title: Memory requests should be set

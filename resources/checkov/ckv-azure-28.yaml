@@ -1,0 +1,70 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure 'Enforce SSL connection' is set to 'ENABLED' for MySQL Database
+  Server
+extra:
+  entity: Microsoft.DBforMySQL/servers
+  type: resource
+guidelines: |-
+  #### Description
+  Enable `SSL connection` on `MYSQL` Servers.
+
+  #### Rationale
+  SSL connectivity helps to provide a new layer of security, by connecting database server to client applications using Secure Sockets Layer (SSL). Enforcing SSL connections between database server and client applications helps protect against "man in the middle" attacks by encrypting the data stream between the server and application.
+
+  #### Remediation
+  Set the `ssl_enforcement_enabled` to `true`.
+
+  Terraform example
+  ```
+  resource "azurerm_mysql_server" "example" {
+        name                = "example-mysqlserver"
+        location            = azurerm_resource_group.example.location
+        resource_group_name = azurerm_resource_group.example.name
+
+        administrator_login          = "mysqladminun"
+        administrator_login_password = "H@Sh1CoR3!"
+
+        sku_name   = "B_Gen5_2"
+        storage_mb = 5120
+        version    = "5.7"
+
+        auto_grow_enabled                 = true
+        backup_retention_days             = 7
+        geo_redundant_backup_enabled      = false
+        infrastructure_encryption_enabled = false
+        public_network_access_enabled     = true
+  +     ssl_enforcement_enabled           = true
+        ssl_minimal_tls_version_enforced  = "TLS1_2"
+  }
+  ```
+
+  *From Azure Console*
+      1. Login to [Azure Portal](https://portal.azure.com)
+      2. Go to `Azure Database` for `MySQL server`
+      3. For each database, click on `Connection security`
+      4. In SSL settings
+      5. Click on `ENABLED` for `Enforce SSL connection`
+
+  * From Azure Command Line Interface 2.0 *
+  Use the below command to set MYSQL Databases to Enforce SSL connection.
+
+  ```
+   az mysql server update --resource-group <resourceGroupName> --name <serverName> --ssl-enforcement Enabled
+  ```
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/mysql/concepts-ssl-connection-security
+  * https://docs.microsoft.com/en-us/azure/mysql/howto-configure-ssl
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-data-protection#dp-4-encrypt-sensitive-information-in-transit
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mysql_server#ssl_enforcement_enabled
+lwid:
+  - Azure_CIS_131_4_3_2
+provider: Azure
+ruleId: CKV_AZURE_28
+severity: High
+sid: ckv-azure-28
+title: Ensure 'Enforce SSL connection' is set to 'ENABLED' for MySQL Database Server

@@ -1,0 +1,85 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    kubelet is the primary "node agent" that runs on each node in a Kubernetes cluster. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    When kubelet has `anonymous-auth` enabled, any request to the kubelet is not authenticated. It is recommended to disable anonymous requests to the Kubelet server.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    kubelet is the primary "node agent" that runs on each node in a Kubernetes cluster. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    When kubelet has `anonymous-auth` enabled, any request to the kubelet is not authenticated. It is recommended to disable anonymous requests to the Kubelet server.
+
+    #### Rationale
+    When enabled, requests that are not rejected by other configured authentication methods are treated as anonymous requests. These requests are then served by the Kubelet server. You should rely on authentication to authorize access and disallow anonymous requests.
+
+    #### Audit
+    If using a Kubelet configuration file, check that there is an entry for `authentication: anonymous: enabled` set to `false`. Run the following command on each node:
+    ```
+     ps -ef | grep kubelet
+    ```
+    Verify that the `--anonymous-auth` argument is set to `false`. This executable argument may be omitted, provided there is a corresponding entry set to `false` in the Kubelet config file.
+
+
+    #### Remediation
+    If using a Kubelet config file, edit the file to set `authentication: anonymous: enabled` to `false`. If using executable arguments, edit the kubelet service file `/etc/systemd/system/kubelet.service.d/10-kubeadm.conf` on each worker node and set the below parameter in `KUBELET_SYSTEM_PODS_ARGS` variable.
+    ```
+        --anonymous-auth=false
+    ```
+
+    Based on your system, restart the `kubelet` service. For example:
+    ```
+       systemctl daemon-reload
+       systemctl restart kubelet.service
+    ```
+
+    By default, anonymous access is enabled.
+
+    Example of Kubelet Configuration file:
+    ```yaml
+         apiVersion: kubelet.config.k8s.io/v1beta1
+         kind: KubeletConfiguration
+         address: 0.0.0.0
+         authentication:
+            anonymous:
+    -         enabled: true
+    +         enabled: false
+         evictionHard:
+            memory.available:  "200Mi"
+         podCIDR: 10.200.0.0/16
+         authorization:
+           mode: AlwaysAllow
+         maxPods: 200
+         readOnlyPort: 0
+         ...
+         ...
+    ```
+
+    #### Impact
+    Anonymous requests will be rejected.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kubelet/
+    * https://kubernetes.io/docs/admin/kubelet-authentication-authorization/#kubelet-authentication
+    * https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/kubelet-integration/
+    * https://www.cyberark.com/resources/threat-research-blog/using-kubelet-client-to-attack-the-kubernetes-cluster
+
+    #### CIS Controls:
+    **Version 6**
+      *14 Controlled Access Based on the Need to Know* -- Controlled Access Based on the Need to Know.
+provider: Kubernetes
+ruleId: CKV_K8S_138
+severity: Critical
+sid: ckv-k8s-138
+title: "Ensure that the --anonymous-auth argument is set to false"

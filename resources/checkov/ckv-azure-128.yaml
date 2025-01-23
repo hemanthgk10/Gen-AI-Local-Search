@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that PostgreSQL server enables Threat detection policy"
+extra:
+  entity: azurerm_postgresql_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_128
+severity: High
+sid: ckv-azure-128
+title: "Ensure that PostgreSQL server enables Threat detection policy"

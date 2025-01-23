@@ -1,0 +1,86 @@
+---
+category: Compute
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Lambda is a compute service that lets you run code without provisioning or managing servers. Lambda runs your code on a high-availability compute infrastructure and performs all of the administration of the compute resources, including server and operating system maintenance, capacity provisioning and automatic scaling, code monitoring and logging. With Lambda, you can run code for virtually any type of application or backend service. You organize your code into Lambda functions. Lambda runs your function only when needed and scales automatically, from a few requests per day to thousands per second.
+
+    The first time you invoke your function, AWS Lambda creates an instance of the function and runs its handler method to process the event. When the function returns a response, it stays active and waits to process additional events. If you invoke the function again while the first event is being processed, Lambda initializes another instance, and the function processes the two events concurrently. As more events come in, Lambda routes them to available instances and creates new instances as needed. When the number of requests decreases, Lambda stops unused instances to free up scaling capacity for other functions.
+
+    Your functions' concurrency is the number of instances that serve requests at a given time. For an initial burst of traffic, your functions' cumulative concurrency in a Region can reach an initial level of between 500 and 3000, which varies per Region.
+
+    *Burst concurrency quotas*
+
+    * 3000 – US West (Oregon), US East (N. Virginia), Europe (Ireland)
+    * 1000 – Asia Pacific (Tokyo), Europe (Frankfurt), US East (Ohio)
+    * 500 – Other Regions
+
+    After the initial burst, your functions' concurrency can scale by an additional 500 instances each minute. This continues until there are enough instances to serve all requests, or until a concurrency limit is reached. When requests come in faster than your function can scale, or when your function is at maximum concurrency, additional requests fail with a throttling error (429 status code).
+extra:
+  entity: aws_lambda_function
+  type: resource
+guidelines: |-
+    #### Description
+    Lambda is a compute service that lets you run code without provisioning or managing servers. Lambda runs your code on a high-availability compute infrastructure and performs all of the administration of the compute resources, including server and operating system maintenance, capacity provisioning and automatic scaling, code monitoring and logging. With Lambda, you can run code for virtually any type of application or backend service. You organize your code into Lambda functions. Lambda runs your function only when needed and scales automatically, from a few requests per day to thousands per second.
+
+    The first time you invoke your function, AWS Lambda creates an instance of the function and runs its handler method to process the event. When the function returns a response, it stays active and waits to process additional events. If you invoke the function again while the first event is being processed, Lambda initializes another instance, and the function processes the two events concurrently. As more events come in, Lambda routes them to available instances and creates new instances as needed. When the number of requests decreases, Lambda stops unused instances to free up scaling capacity for other functions.
+
+    Your functions' concurrency is the number of instances that serve requests at a given time. For an initial burst of traffic, your functions' cumulative concurrency in a Region can reach an initial level of between 500 and 3000, which varies per Region.
+
+    *Burst concurrency quotas*
+
+    * 3000 – US West (Oregon), US East (N. Virginia), Europe (Ireland)
+    * 1000 – Asia Pacific (Tokyo), Europe (Frankfurt), US East (Ohio)
+    * 500 – Other Regions
+
+    After the initial burst, your functions' concurrency can scale by an additional 500 instances each minute. This continues until there are enough instances to serve all requests, or until a concurrency limit is reached. When requests come in faster than your function can scale, or when your function is at maximum concurrency, additional requests fail with a throttling error (429 status code).
+
+    #### Rationale
+    If you exceed a concurrency limit, Lambda starts throttling the offending functions by rejecting requests, so make sure to set it to a number based on your usecase instead of setting it to `-1`.
+
+    #### Remediation
+    Set the `reserved_concurrent_executions` to any number not equal to `0` or `-1`. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations.
+
+    Terraform example
+    ```
+    variable "lambda_function_name" {
+        default = "lambda_function_name"
+    }
+
+    resource "aws_lambda_function" "test_lambda" {
+        function_name = var.lambda_function_name
+
+        depends_on = [
+          aws_iam_role_policy_attachment.lambda_logs,
+          aws_cloudwatch_log_group.example,
+        ]
+
+    -   reserved_concurrent_executions = -1
+    +   reserved_concurrent_executions = 100
+
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function#reserved_concurrent_executions
+    * https://docs.aws.amazon.com/lambda/latest/dg/invocation-scaling.html
+    * https://aws.amazon.com/blogs/compute/managing-aws-lambda-function-concurrency/#:~:text=You%20can%20now%20set%20a,account%2Dlevel%20limit%20by%20default
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_115
+severity: Medium
+sid: ckv-aws-115
+title: "Ensure that AWS Lambda function is configured for function-level concurrent execution limit"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: reserved_concurrent_executions
+    resourceAttributeType: integer
+    resourceAttributeValue: "100"
+    resourceType: [ "aws_lambda_function" ]

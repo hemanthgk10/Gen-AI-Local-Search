@@ -1,0 +1,47 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Every virtual machine (VM) instance stores its metadata on a metadata server. Your VM automatically has access to the metadata server API without any additional authorization. Google Kubernetes Engine (GKE) uses this instance metadata to configure node virtual machines (VMs).
+
+    The metadata server is particularly useful when used in combination with startup and shutdown scripts. The legacy GCE metadata endpoint allows simple HTTP requests for extracting sensitive information.
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Every virtual machine (VM) instance stores its metadata on a metadata server. Your VM automatically has access to the metadata server API without any additional authorization. Google Kubernetes Engine (GKE) uses this instance metadata to configure node virtual machines (VMs).
+
+    The metadata server is particularly useful when used in combination with startup and shutdown scripts. The legacy GCE metadata endpoint allows simple HTTP requests for extracting sensitive information.
+
+    #### Rationale
+    This metadata is potentially sensitive and should be protected from the workloads running on the cluster as having access to this information can jeopardize the security of the cluster.
+
+    #### Remediation
+    Set the minimum kubernetes version that the cluster master nodes should at least use. Use Kubernetes version 1.12 and above to avoid using legacy compute engine.
+
+    Terraform example
+    ```
+    resource "google_container_cluster" "example" {
+        name                        = "my-gke-cluster"
+        location                    = "us-central1"
+        remove_default_node_pool    = true
+        initial_node_count          = 1
+    +   min_master_version          = "1.12" // ( or higher )
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#min_master_version
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/protecting-cluster-metadata
+    * https://cloud.google.com/compute/docs/metadata/overview
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_67
+severity: Medium
+sid: ckv-gcp-67
+title: "Ensure legacy Compute Engine instance metadata APIs are Disabled"

@@ -1,0 +1,17 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "Ensure that Azure Defender is set to On for Container Registries"
+extra:
+  entity: azurerm_security_center_subscription_pricing
+  type: resource
+lwid:
+  - Azure_CIS_131_2_7
+provider: Azure
+ruleId: CKV_AZURE_86
+severity: Low
+sid: ckv-azure-86
+title: "Ensure that Azure Defender is set to On for Container Registries"

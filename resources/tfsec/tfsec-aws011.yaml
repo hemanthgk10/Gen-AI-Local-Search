@@ -1,0 +1,58 @@
+---
+autofix: true
+category: Storage
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Database resources should not publicly available. You should limit all access to the minimum that is required for your application to function."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws011.go"
+guidelines: |-
+    #### Description
+    This policy identifies AWS buckets which are accessible to public. Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to setup and manage databases. If RDS buckets are inadvertently shared to public, any unauthorized user with AWS console access can gain access to the buckets and gain access to sensitive data.
+
+    #### Rationale
+    Allowing public access to RDS buckets may aid an adversary in accessing the content and any sensitive information stored in it.
+
+    #### Remediation
+    Set `publicly_accessible` flag as false.
+
+    Terraform example
+    ```
+    resource "aws_db_instance" "mydb" {
+        allocated_storage    = 30
+        storage_type         = "gp2"
+        engine               = "mysql"
+        engine_version       = "5.7"
+        instance_class       = "db.t2.medium"
+        name                 = "mydb"
+        storage_encrypted    = true
+    +   publicly_accessible  = false
+
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://aws.amazon.com/rds/features/security/
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance#publicly_accessible
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: publicly_accessible
+        resourceAttributeType: boolean
+        resourceAttributeValue: "false"
+        resourceType:
+          - aws_db_instance
+ruleId: AWS011
+severity: Critical
+sid: tfsec-aws011
+title: "A resource is marked as publicly accessible"

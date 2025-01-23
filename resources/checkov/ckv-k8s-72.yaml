@@ -1,0 +1,122 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The kubelet is the primary "node agent" that runs on each node. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    A kubelet's HTTPS endpoint exposes Kubernetes APIs which give access to data of varying sensitivity, and allow you to perform operations with varying levels of power on the node and within containers.
+
+    By default, requests to the kubelet's HTTPS endpoint that are not rejected by other configured authentication methods are treated as anonymous requests.
+
+    To enable X509 client certificate authentication to the kubelet's HTTPS endpoint:
+      * Start the kubelet with the `--client-ca-file` flag, providing a CA bundle to verify client certificates with
+      * Start the apiserver with `--kubelet-client-certificate` and `--kubelet-client-key` flags
+
+    It is always safe and secure to use the above certificate based kubelet authentication rather than using the http authentication between kubelets and Kubernetes API servers.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The kubelet is the primary "node agent" that runs on each node. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    A kubelet's HTTPS endpoint exposes Kubernetes APIs which give access to data of varying sensitivity, and allow you to perform operations with varying levels of power on the node and within containers.
+
+    By default, requests to the kubelet's HTTPS endpoint that are not rejected by other configured authentication methods are treated as anonymous requests.
+
+    To enable X509 client certificate authentication to the kubelet's HTTPS endpoint:
+      * Start the kubelet with the `--client-ca-file` flag, providing a CA bundle to verify client certificates with
+      * Start the apiserver with `--kubelet-client-certificate` and `--kubelet-client-key` flags
+
+    It is always safe and secure to use the above certificate based kubelet authentication rather than using the http authentication between kubelets and Kubernetes API servers.
+
+    #### Rationale
+    The apiserver, by default, does not authenticate itself to the kubelet's HTTPS endpoints. The requests from the apiserver are treated anonymously. You should set up certificate- based kubelet authentication to ensure that the apiserver authenticates itself to kubelets when submitting requests.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-apiserver
+    ```
+    Verify that the `--kubelet-client-certificate` and `--kubelet-client-key` arguments exist and they are set as appropriate.
+
+    #### Remediation
+    Follow the Kubernetes documentation and set up the TLS connection between the apiserver and kubelets. Then, edit API server pod specification file `/etc/kubernetes/manifests/kube-apiserver.yaml` on the master node and set the kubelet client certificate and key parameters as below.
+    ```
+     --kubelet-client-certificate=<path/to/client-certificate-file>
+     --kubelet-client-key=<path/to/client-key-file>
+    ```
+
+    By default, certificate-based kubelet authentication is not set.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          scheduler.alpha.kubernetes.io/critical-pod: ""
+        labels:
+          component: kube-apiserver
+          tier: control-plane
+        name: kube-apiserver
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - kube-apiserver
+          - --admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,ResourceQuota
+          - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+          - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+          - --secure-port=6443
+          - --insecure-port=0
+          - --requestheader-group-headers=X-Remote-Group
+          - --requestheader-extra-headers-prefix=X-Remote-Extra-
+          - --etcd-servers=http://127.0.0.1:2379
+    +     - --kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt
+    +     - --kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key
+          ...
+          ...
+
+          image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.0
+          livenessProbe:
+            failureThreshold: 8
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: 6443
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+          name: kube-apiserver
+          resources:
+            requests:
+              cpu: 250m
+          volumeMounts:
+          - mountPath: /etc/kubernetes/pki
+            name: k8s-certs
+            readOnly: true
+          ...
+          ...
+    ```
+
+    #### Impact
+    You require TLS to be configured on apiserver as well as kubelets.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-apiserver/
+    * https://kubernetes.io/docs/admin/kubelet-authentication-authorization/
+    * https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certs
+    * https://kubernetes.io/docs/concepts/cluster-administration/master-node-communication/#apiserver---kubelet
+provider: Kubernetes
+ruleId: CKV_K8S_72
+severity: High
+sid: ckv-k8s-72
+title: "Ensure that the --kubelet-client-certificate and --kubelet-client-key arguments are set as appropriate"

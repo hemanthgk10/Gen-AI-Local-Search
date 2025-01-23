@@ -1,0 +1,54 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- HIPAA
+description: AWS Redshift is a managed AWS service in the cloud that can store peta
+  bytes of data in it's data warehouse solutions. Redshift offers fast query performance
+  using the same SQL-based tools and business intelligence applications. It can contain
+  sensitive information and having it publicy accessible can cause data leak.
+extra:
+  entity: aws_redshift_cluster
+  type: resource
+guidelines: |-
+  #### Description
+  AWS Redshift is a managed AWS service in the cloud that can store peta bytes of data in it's data warehouse solutions. Redshift offers fast query performance using the same SQL-based tools and business intelligence applications. It can contain sensitive information and having it publicy accessible can cause data leak.
+
+  #### Rationale
+  Ensure that Redshift cluster is not publicly accessible. Publicly accessible cluster means that other non-authorized users can access your cluster and the data stored in it.
+
+  #### Remediation
+  Set the `publicly_accessible` argument to `false` for preventing the Redshift cluster from public accessibility.
+
+  Terraform example:
+  ```
+  resource "aws_redshift_cluster" "default" {
+      cluster_identifier  = "tf-redshift-cluster"
+      database_name       = "mydb"
+      node_type           = "dc1.large"
+      cluster_type        = "single-node"
+  +   publicly_accessible = false
+      ...
+      ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/redshift_cluster#publicly_accessible
+lwid:
+  - LW_AWS_NETWORKING_37
+provider: AWS
+ruleId: CKV_AWS_87
+severity: Critical
+sid: ckv-aws-87
+title: Redshift cluster should not be publicly accessible
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: publicly_accessible
+    resourceAttributeType: boolean
+    resourceAttributeValue: "false"
+    resourceType: [ "aws_redshift_cluster" ]

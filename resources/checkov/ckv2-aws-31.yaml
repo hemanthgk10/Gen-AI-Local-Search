@@ -1,0 +1,56 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS WAF is a web application firewall that lets you monitor the HTTP and HTTPS requests that are forwarded to an Amazon CloudFront distribution, an Amazon API Gateway REST API, an Application Load Balancer, or an AWS AppSync GraphQL API. AWS WAF also lets you control access to your content. Based on conditions that you specify, such as the IP addresses that requests originate from or the values of query strings, Amazon CloudFront, Amazon API Gateway, Application Load Balancer, or AWS AppSync responds to requests either with the requested content or with an HTTP 403 status code (Forbidden).
+
+    Monitoring is an important part of maintaining the reliability, availability, and performance of AWS WAF and your AWS solutions. You should collect monitoring data from all parts of your AWS solution so that you can more easily debug a multi-point failure if one occurs.
+extra:
+  entity: aws_wafv2_web_acl
+  type: resource
+guidelines: |-
+    #### Description
+    AWS WAF is a web application firewall that lets you monitor the HTTP and HTTPS requests that are forwarded to an Amazon CloudFront distribution, an Amazon API Gateway REST API, an Application Load Balancer, or an AWS AppSync GraphQL API. AWS WAF also lets you control access to your content. Based on conditions that you specify, such as the IP addresses that requests originate from or the values of query strings, Amazon CloudFront, Amazon API Gateway, Application Load Balancer, or AWS AppSync responds to requests either with the requested content or with an HTTP 403 status code (Forbidden).
+
+    Monitoring is an important part of maintaining the reliability, availability, and performance of AWS WAF and your AWS solutions. You should collect monitoring data from all parts of your AWS solution so that you can more easily debug a multi-point failure if one occurs.
+
+    #### Rationale
+    AWS WAF offers logging for the traffic that your web ACLs analyze. The logs include information such as the time that AWS WAF received the request from your protected AWS resource, detailed information about the request, and the action setting for the rule that the request matched.
+
+    #### Remediation
+    Creates a WAFv2 Web ACL Logging Configuration resource as shown below.
+
+    Terraform example
+    ```
+    resource "aws_wafv2_web_acl" "example" {
+        name        = "managed-rule-example"
+        description = "Example of a managed rule."
+        scope       = "REGIONAL"
+        ...
+        ...
+    }
+
+    +  resource "aws_wafv2_web_acl_logging_configuration" "example" {
+    +     log_destination_configs = [aws_kinesis_firehose_delivery_stream.example.arn]
+    +     resource_arn            = aws_wafv2_web_acl.example.arn
+    +     redacted_fields {
+    +        single_header {
+    +          name = "user-agent"
+    +        }
+    +     }
+    +     ...
+    +     ...
+    + }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_logging_configuration
+    * https://docs.aws.amazon.com/waf/latest/developerguide/waf-incident-response.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_31
+severity: Low
+sid: ckv2-aws-31
+title: "Ensure WAF2 has a Logging Configuration"

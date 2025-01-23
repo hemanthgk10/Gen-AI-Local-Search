@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that API management services use virtual networks"
+extra:
+  entity: azurerm_api_management
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_107
+severity: Low
+sid: ckv-azure-107
+title: "Ensure that API management services use virtual networks"

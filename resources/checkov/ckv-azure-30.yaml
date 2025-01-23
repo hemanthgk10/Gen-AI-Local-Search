@@ -1,0 +1,61 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure server parameter 'log_checkpoints' is set to 'ON' for PostgreSQL
+  Database Server
+extra:
+  entity: configurations
+  type: resource
+guidelines: |-
+  #### Description
+  Enable `log_checkpoints` on PostgreSQL Servers.
+
+  #### Rationale
+  Enabling `log_checkpoints` helps the PostgreSQL Database to `Log each checkpoint` in turn generates query and error logs. However, access to transaction logs is not supported. Query and error logs can be used to identify, troubleshoot, and repair configuration errors and sub-optimal performance.
+
+  #### Remediation
+  Set the `log_checkpoints` on the `azurerm_postgresql_configuration` to "ON".
+
+  Terraform example
+  ```
+    resource "azurerm_postgresql_server" "example" {
+        name                = "example-psqlserver"
+        location            = azurerm_resource_group.example.location
+        resource_group_name = azurerm_resource_group.example.name
+        ...
+        ...
+    }
+  + resource "azurerm_postgresql_configuration" "example" {
+  +    name                = "log_checkpoints"
+  +    value               = "ON"
+  + }
+  ```
+
+  *From Azure Console*
+     1. Login to [Azure Portal](https://portal.azure.com)
+     2. Go to Azure Database for PostgreSQL server
+     3. For each database, click on Server parameters
+     4. Search for `log_checkpoints`.
+     5. Click `ON` and save.
+
+  *From Azure Command Line Interface 2.0*
+
+  Use the below command to update `log_checkpoints` configuration.
+
+  ```
+  az postgres server configuration set --resource-group <resourceGroupName> --server-name <serverName> --name log_checkpoints --value on
+  ```
+
+  #### References
+  * https://docs.microsoft.com/en-us/rest/api/postgresql/configurations/listbyserver
+  * https://docs.microsoft.com/en-us/azure/postgresql/howto-configure-server-parameters-using-portal
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-logging-threat-detection#lt-4-enable-logging-for-azure-resources
+lwid:
+  - Azure_CIS_131_4_3_3
+provider: Azure
+ruleId: CKV_AZURE_30
+severity: Low
+sid: ckv-azure-30
+title: Sql database log_checkpoints flag check

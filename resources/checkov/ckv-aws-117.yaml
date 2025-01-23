@@ -1,0 +1,61 @@
+---
+category: Compute
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Lambda is a compute service that lets you run code without provisioning or managing servers. Lambda runs your code on a high-availability compute infrastructure and performs all of the administration of the compute resources, including server and operating system maintenance, capacity provisioning and automatic scaling, code monitoring and logging. With Lambda, you can run code for virtually any type of application or backend service. You organize your code into Lambda functions. Lambda runs your function only when needed and scales automatically, from a few requests per day to thousands per second.
+
+    You can configure a Lambda function to connect to private subnets in a virtual private cloud (VPC) in your AWS account. Use Amazon Virtual Private Cloud (Amazon VPC) to create a private network for resources such as databases, cache instances, or internal services. Connect your function to the VPC to access private resources while the function is running.
+extra:
+  entity: aws_lambda_function
+  type: resource
+guidelines: |-
+    #### Description
+    Lambda is a compute service that lets you run code without provisioning or managing servers. Lambda runs your code on a high-availability compute infrastructure and performs all of the administration of the compute resources, including server and operating system maintenance, capacity provisioning and automatic scaling, code monitoring and logging. With Lambda, you can run code for virtually any type of application or backend service. You organize your code into Lambda functions. Lambda runs your function only when needed and scales automatically, from a few requests per day to thousands per second.
+
+    You can configure a Lambda function to connect to private subnets in a virtual private cloud (VPC) in your AWS account. Use Amazon Virtual Private Cloud (Amazon VPC) to create a private network for resources such as databases, cache instances, or internal services. Connect your function to the VPC to access private resources while the function is running.
+
+    #### Rationale
+    When building an application with AWS Lambda, it is advised to host your Lambda function in a VPC. The will help the Lambda function to connect to other AWS resources which aren’t accessible from the public internet, such as a relational database or Redis instance and this will also help in securing your application from public access.
+
+    #### Remediation
+    For network connectivity to AWS resources in a VPC, specify a list of security groups and subnets in the VPC. When you connect a function to a VPC, it can only access resources and the internet through that VPC
+
+    Terraform example
+    ```
+    variable "lambda_function_name" {
+        default = "lambda_function_name"
+    }
+
+    resource "aws_lambda_function" "example" {
+        function_name = var.lambda_function_name
+
+        file_system_config {
+          # EFS file system access point ARN
+          arn = aws_efs_access_point.access_point_for_lambda.arn
+
+          # Local mount path inside the lambda function. Must start with '/mnt/'.
+          local_mount_path = "/mnt/efs"
+        }
+
+    +   vpc_config {
+    +       subnet_ids         = [aws_subnet.subnet_for_lambda.id]
+    +       security_group_ids = [aws_security_group.sg_for_lambda.id]
+    +   }
+
+        ...
+        ...
+
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function#vpc_config
+    * https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_117
+severity: Medium
+sid: ckv-aws-117
+title: "Ensure that AWS Lambda function is configured inside a VPC"

@@ -1,0 +1,84 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure IAM policies don't allow IAM users access AWS resources using different types of credentials, such as passwords or access keys. Credentials Exposure actions return credentials as part of the API response , such as ecr:GetAuthorizationToken, iam:UpdateAccessKey, and others."
+extra:
+  entity: aws_iam_policy_document
+  type: resource
+guidelines: |-
+    #### Description
+    AWS IAM policies are JSON-formatted objects that specify actions and resources on which those actions can be taken. The policy is then attached to a resource, such as a user account, EC2 instance, or internal AWS function, allowing that resource to make API calls to execute actions within the account.
+
+    Ensure IAM policies don't allow IAM users access AWS resources using different types of credentials, such as passwords or access keys. Credentials Exposure actions return credentials as part of the API response , such as ecr:GetAuthorizationToken, iam:UpdateAccessKey, and others.
+
+    #### Rationale
+    Ensure that IAM policies doesn't contain actions that return credentials as part of the API response.
+
+    #### Remediation
+    Avoid actions in the IAM policy, that return credentials as part of the API response such as `ecr:GetAuthorizationToken`, `iam:UpdateAccessKey`, and others. The full list of avoidable actions in IAM Policies are available in CloudSplaining documentation [here](https://cloudsplaining.readthedocs.io/en/latest/glossary/credentials-exposure/)
+
+    Terraform example
+    ```
+    data "aws_iam_policy_document" "example" {
+        statement {
+           sid = "1"
+           actions = [
+             "s3:ListAllMyBuckets",
+             "s3:GetBucketLocation",
+    -        "ecr:GetAuthorizationToken"
+           ]
+
+        }
+
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```
+    {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyDocument" : {
+          "Version": "2020-10-17",
+          "Statement": [
+              {
+                  "Sid": "AllowAllUsersToListAccounts",
+                  "Effect": "Allow",
+                  "Action": [
+    -                 "ecr:GetAuthorizationToken"
+                      "s3:ListAllMyBuckets",
+                      "s3:GetBucketLocation"
+                   ],
+                  ...
+                  ...
+              }
+          ]
+        },
+        "PolicyName" : "s3-default-bucket-policy",
+        ...
+        ...
+      }
+    }
+    ```
+
+    Manual Steps:
+    1. Navigate to [Identity and Access Management][iam-console]
+    2. In the left navigation, select `Policies`.
+    3. Select the Policy and edit the document to define only the explicit permissions necessary for the role.
+    4. Repeat for each policy, remove the actions that return the credentials as part of API response.
+
+    #### References
+    * https://cloudsplaining.readthedocs.io/en/latest/glossary/credentials-exposure/
+    * https://aws.amazon.com/blogs/security/what-to-do-if-you-inadvertently-expose-an-aws-access-key/
+
+    [iam-console]: https://console.aws.amazon.com/iam/
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_107
+severity: Critical
+sid: ckv-aws-107
+title: "Ensure IAM policies does not allow credentials exposure"

@@ -1,0 +1,88 @@
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: DNSSEC algorithm numbers in this registry may be used in CERT RRs. Zone
+  signing (DNSSEC) and transaction security mechanisms (SIG(0) and TSIG) make use
+  of particular subsets of these algorithms. The algorithm used for key signing should
+  be a recommended one and it should be strong.
+extra:
+  entity: google_dns_managed_zone
+  type: resource
+guidelines: |-
+  #### Description
+  DNSSEC algorithm numbers in this registry may be used in CERT RRs. Zone signing (DNSSEC) and transaction security mechanisms (SIG(0) and TSIG) make use of particular subsets of these algorithms. The algorithm used for key signing should be a recommended one and it should be strong.
+
+  #### Rationale
+  Domain Name System Security Extensions (DNSSEC) algorithm numbers in this registry may be used in CERT RRs. Zonesigning (DNSSEC) and transaction security mechanisms (SIG(0) and TSIG) make use of particular subsets of these algorithms.
+
+  The algorithm used for key signing should be a recommended one and it should be strong. When enabling DNSSEC for a managed zone, or creating a managed zone with DNSSEC, the user can select the DNSSEC signing algorithms and the denial-of-existence type. Changing the DNSSEC settings is only effective for a managed zone if DNSSEC is not already enabled. If there is a need to change the settings for a managed zone where it has been enabled, turn DNSSEC off and then re-enable it with different settings.
+
+  #### Remediation
+
+  1. If it is necessary to change the settings for a managed zone where it has been enabled, NSSEC must be turned off and re-enabled with different settings. To turn off DNSSEC, run the following command:
+  ```
+  gcloud dns managed-zones update ZONE_NAME --dnssec-state off
+  ```
+  2. To update key-signing for a reported managed DNS Zone, run the following command:
+  ```
+   gcloud dns managed-zones update ZONE_NAME --dnssec-state on --ksk-algorithm KSK_ALGORITHM --ksk-key-length KSK_KEY_LENGTH --zsk-algorithm ZSK_ALGORITHM - -zsk-key-length ZSK_KEY_LENGTH --denial-of-existence DENIAL_OF_EXISTENCE
+  ```
+
+  Supported algorithm options and key lengths are as follows.
+
+  ```
+  |    Algorithm      |     KSK Length                |     ZSK Length         |
+  ------------------------------------------------------------------------------
+  |   RSASHA1         |    1024, 2048                 |    1024, 2048          |
+  |  RSASHA256        |    1024, 2048                 |    1024, 2048          |
+  |  RSASHA512        |    1024, 2048                 |    1024, 2048          |
+  |  ECDSAP256SHA256  |     256                       |    256                 |
+  |  ECDSAP384SHA384  |     384                       |    384                 |
+  ------------------------------------------------------------------------------
+  ```
+
+  Instead of using `rsasha1` use any other `algorithm` from the above list.
+  Terraform example
+
+  ```
+  resource "google_dns_managed_zone" "sd-zone" {
+      provider = google-beta
+
+      name        = "peering-zone"
+      dns_name    = "services.example.com."
+      description = "Example private DNS Service Directory zone"
+
+      visibility = "private"
+
+      dnssec_config {
+         state   = "on"
+         default_key_specs  {
+  -           algorithm  = "rsasha1"
+  +           algorithm  = "RSASHA512"
+         }
+      }
+
+      ...
+      ...
+  }
+  ```
+
+
+  #### References
+  * https://cloud.google.com/dns/dnssec-advanced#advanced_signing_options
+
+  #### Notes
+  * RSASHA1 key-signing support may be required for compatibility reasons.
+  * Remediation CLI works well with gcloud-cli version 221.0.0 and later.
+lwid:
+  - GCP_CIS_3_4
+  - GCP_CIS12_3_4
+  - GCP_CIS12_3_5
+  - GCP_CIS_3_5
+provider: GCP
+ruleId: CKV_GCP_17
+severity: Medium
+sid: ckv-gcp-17
+title: RSASHA1 not used for signing check

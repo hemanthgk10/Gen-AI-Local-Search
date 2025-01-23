@@ -1,0 +1,64 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Subscription ownership should not include permission to create custom
+  owner roles. The principle of least privilege should be followed and only necessary
+  privileges should be assigned instead of allowing full administrative access.
+extra:
+  entity: Microsoft.Authorization/roleDefinitions
+  type: resource
+guidelines: |-
+  #### Description
+  Subscription ownership should not include permission to create custom owner roles. The principle of least privilege should be followed and only necessary privileges should be assigned instead of allowing full administrative access.
+
+  #### Rationale
+  Classic subscription admin roles offer basic access management and include Account Administrator, Service Administrator, and Co-Administrators. It is recommended the least necessary permissions be given initially. Permissions can be added as needed by the account holder. This ensures the account holder cannot perform actions which were not intended.
+
+  #### Remediation
+  Do not set `permissions.actions` to `*` instead specify least privilege permissions.
+
+  Terraform example
+  ```
+    resource "azurerm_role_definition" "example" {
+        name        = "my-custom-role"
+        scope       = data.azurerm_subscription.primary.id
+        description = "This is a custom role created via Terraform"
+
+        permissions {
+  -       actions     = ["*"]
+  +       actions     = [ "Microsoft.Resources/subscriptions/resourceGroups/read" ]
+          not_actions = []
+        }
+
+        assignable_scopes = [
+          data.azurerm_subscription.primary.id, # /subscriptions/00000000-0000-0000-0000-000000000000
+        ]
+    }
+  ```
+
+
+  From *Azure Command Line Interface 2.0*
+  ```
+  az role definition list
+  ```
+
+  Check for entries with `assignableScope` of / or a `subscription`, and an action of `*`. Verify the usage and impact of removing the role identified.
+
+  ```
+  az role definition delete --name "rolename"
+  ```
+  By default, no custom owner roles are created.
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/billing/billing-add-change-azure-subscription-administrator
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-governance-strategy#gs-2-define-enterprise-segmentation-strategy
+  * https://docs.microsoft.com/en-us/azure/role-based-access-control/resource-provider-operations
+lwid:
+  - Azure_CIS_1_23
+provider: Azure
+ruleId: CKV_AZURE_39
+severity: Medium
+sid: ckv-azure-39
+title: Ensure that no custom subscription owner roles are created

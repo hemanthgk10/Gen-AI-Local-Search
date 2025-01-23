@@ -1,0 +1,48 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: "Azure AKS is a managed Kubernetes cluster service from Microsoft. AKS
+  operationalize your workload containers on Kubernetes.\nIn AKS cluster, the API
+  server receives requests to perform actions in the cluster such as create, delete,
+  update and scale resources. So having it exposed to everywhere can lead to security
+  attacks. "
+extra:
+  entity: Microsoft.ContainerService/managedClusters
+  type: resource
+guidelines: |-
+  #### Description
+  Azure AKS is a managed Kubernetes cluster service from Microsoft. AKS operationalize your workload containers on Kubernetes.
+
+  In AKS cluster, the API server receives requests to perform actions in the cluster such as create, delete, update and scale resources. So having it exposed to everywhere can lead to security attacks.
+
+  #### Rationale
+  The API server is the central way to interact with Kubernetes cluster. Inorder to mitigate any security risk of exposure of this API server, we should allow only few authorized IP ranges only to interact with it.
+
+  #### Remediation
+  Do not allow traffic from everywhere. Only allow traffic from specific IP ranges approved by the security team using `api_server_authorized_ip_ranges`.
+
+  Terraform example for AKS cluster
+  ```
+  resource "azurerm_kubernetes_cluster" "example" {
+      name                = "example-aks1"
+      location            = azurerm_resource_group.example.location
+      resource_group_name = azurerm_resource_group.example.name
+      dns_prefix          = "exampleaks1"
+  -   api_server_authorized_ip_ranges = "0.0.0.0/0" # Remove default from everywhere
+  +   api_server_authorized_ip_ranges = "192.168.0.1/16"
+      ...
+      ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster#api_server_authorized_ip_ranges
+  * https://docs.microsoft.com/en-us/azure/aks/api-server-authorized-ip-ranges
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_6
+severity: Medium
+sid: ckv-azure-6
+title: Ensure AKS has an API Server Authorized IP Ranges enabled

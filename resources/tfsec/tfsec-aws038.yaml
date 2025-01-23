@@ -1,0 +1,74 @@
+---
+autofix: true
+category: IAM
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "IAM account password policies should have a maximum age specified. The account password policy should be set to expire passwords after 90 days or less."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws038.go"
+guidelines: |-
+    #### Description
+    IAM password policies can require passwords to be rotated or expired after a given number of days. It is recommended that the password policy expire passwords after 90 days or less.
+
+    #### Rationale
+    Reducing the password lifetime increases account resiliency against brute force login attempts. Additionally, requiring regular password changes help in the following scenarios:
+
+    * Passwords can be stolen or compromised sometimes without your knowledge. This can happen via a system compromise, software vulnerability, or internal threat.
+    * Certain corporate and government web filters or proxy servers have the ability to intercept and record traffic even if it's encrypted.
+    * Many people use the same password for many systems such as work, email, and personal.
+    * Compromised end user workstations might have a keystroke logger.
+
+    #### Remediation
+    Perform the following to set the password policy as prescribed:
+
+    Terraform example
+    ```
+    resource "aws_iam_account_password_policy" "strict" {
+        minimum_password_length        = 14
+    +   max_password_age               = 90
+        require_lowercase_characters   = true
+        require_numbers                = true
+        require_uppercase_characters   = true
+        require_symbols                = true
+        allow_users_to_change_password = true
+        password_reuse_prevention      = 24
+    }
+    ```
+
+    Via *AWS Console*:
+    1. Go to IAM Service on the [AWS Console](https://console.aws.amazon.com/iam)
+    2. Click on `Account Settings` on the Left Pane
+    3. Check `Enable password expiration`
+    4. Set `Password expiration period (in days)` to 90 or less
+
+    Via *CLI*
+    ```
+    aws iam update-account-password-policy --max-password-age 90
+    ```
+    #### Notes
+    All commands starting with "aws iam update-account-password-policy" can be combined into a single command.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_account_password_policy#require_symbols
+lwid:
+  - AWS_CIS_1_11
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: max_password_age
+        resourceAttributeType: integer
+        resourceAttributeValue: "90"
+        resourceType:
+          - aws_iam_account_password_policy
+ruleId: AWS038
+severity: Medium
+sid: tfsec-aws038
+title: "IAM Password policy should have expiry less than or equal to 90 days"

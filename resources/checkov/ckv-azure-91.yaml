@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that only SSL are enabled for Cache for Redis"
+extra:
+  entity: azurerm_redis_cache
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_91
+severity: High
+sid: ckv-azure-91
+title: "Ensure that only SSL are enabled for Cache for Redis"

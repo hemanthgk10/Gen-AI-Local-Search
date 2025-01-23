@@ -1,0 +1,45 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon FSx for Windows File Server provides fully managed Microsoft Windows file servers, backed by a fully native Windows file system. FSx for Windows File Server has the features, performance, and compatibility to easily lift and shift enterprise applications to the AWS Cloud.
+
+    All Amazon FSx file systems are encrypted at rest with keys managed using AWS Key Management Service (AWS KMS). Data is automatically encrypted before being written to the file system, and automatically decrypted as it is read.
+extra:
+  entity: aws_fsx_windows_file_system
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon FSx for Windows File Server provides fully managed Microsoft Windows file servers, backed by a fully native Windows file system. FSx for Windows File Server has the features, performance, and compatibility to easily lift and shift enterprise applications to the AWS Cloud.
+
+    All Amazon FSx file systems are encrypted at rest with keys managed using AWS Key Management Service (AWS KMS). Data is automatically encrypted before being written to the file system, and automatically decrypted as it is read.
+
+    #### Rationale
+    Encrypting using AWS Key Management Service (AWS KMS) makes it easier for you to meet strict data management requirements by encrypting your data at rest in Amazon FSx file systems.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_fsx_windows_file_system`.
+
+    Terraform example
+    ```
+    resource "aws_fsx_windows_file_system" "example" {
+    +   kms_key_id          = ${aws_kms_key.example.arn}
+        storage_capacity    = 300
+        subnet_ids          = [aws_subnet.example.id]
+        throughput_capacity = 1024
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/fsx_windows_file_system#kms_key_id
+    * https://docs.aws.amazon.com/fsx/latest/WindowsGuide/encryption-at-rest.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_179
+severity: High
+sid: ckv-aws-179
+title: "Ensure FSX Windows filesystem is encrypted by KMS using a customer managed Key (CMK)"

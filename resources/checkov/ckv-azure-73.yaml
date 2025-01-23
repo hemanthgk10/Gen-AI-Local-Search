@@ -1,0 +1,14 @@
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Automation account variables are encrypted"
+extra:
+  entity: azurerm_automation_variable_bool
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_73
+severity: Medium
+sid: ckv-azure-73
+title: "Ensure that Automation account variables are encrypted"

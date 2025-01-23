@@ -1,0 +1,65 @@
+---
+autofix: true
+category: Logging
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: |-
+    AWS CloudTrail is a service that enables governance, compliance, operational auditing, and risk auditing of your AWS account. With CloudTrail, you can log, continuously monitor, and retain account activity related to actions across your AWS infrastructure. CloudTrail provides event history of your AWS account activity, including actions taken through the AWS Management Console, AWS SDKs, command line tools, and other AWS services. This event history simplifies security analysis, resource change tracking, and troubleshooting.
+    When creating Cloudtrail in the AWS Management Console the trail is configured by default to be multi-region, this isn’t the case with the Terraform resource. Cloudtrail should cover the full AWS account to ensure you can track changes in regions you are not actively operting in.
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws063.go"
+guidelines: |-
+    #### Description
+    AWS CloudTrail is a service that enables governance, compliance, operational auditing, and risk auditing of your AWS account. With CloudTrail, you can log, continuously monitor, and retain account activity related to actions across your AWS infrastructure. CloudTrail provides event history of your AWS account activity, including actions taken through the AWS Management Console, AWS SDKs, command line tools, and other AWS services. This event history simplifies security analysis, resource change tracking, and troubleshooting.
+
+    When creating Cloudtrail in the AWS Management Console the trail is configured by default to be multi-region, this isn’t the case with the Terraform resource. Cloudtrail should cover the full AWS account to ensure you can track changes in regions you are not actively operting in.
+
+    #### Rationale
+    Enabling Cloudtrail in all regions helps in automatically tracking a new region when AWS resources are launched there. This allows you track and automatically respond to account activity threatening the security of your AWS resources.
+
+    #### Remediation
+    Set the `is_multi_region_trail` flag to specify whether the trail is created in the current region or in all regions.
+
+    Terraform example:
+    ```
+    resource "aws_cloudtrail" "good_example" {
+        event_selector {
+          read_write_type           = "All"
+          include_management_events = true
+
+          data_resource {
+            type = "AWS::S3::Object"
+            values = ["${data.aws_s3_bucket.important-bucket.arn}/"]
+          }
+        }
+    +   is_multi_region_trail = true
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudtrail#is_multi_region_trail
+    * https://docs.aws.amazon.com/awscloudtrail/latest/userguide/receive-cloudtrail-log-files-from-multiple-regions.html
+    * https://aws.amazon.com/about-aws/whats-new/2015/12/turn-on-cloudtrail-across-all-regions-and-support-for-multiple-trails/
+lwid:
+  - AWS_CIS_2_1
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: is_multi_region_trail
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_cloudtrail
+ruleId: AWS063
+severity: Medium
+sid: tfsec-aws063
+title: "Cloudtrail should be enabled in all regions regardless of where your AWS resources are generally homed"

@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that CORS disallows every resource to access app services"
+extra:
+  entity: azurerm_app_service
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_57
+severity: Medium
+sid: ckv-azure-57
+title: "Ensure that CORS disallows every resource to access app services"

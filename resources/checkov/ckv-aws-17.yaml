@@ -1,0 +1,83 @@
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+- HIPAA
+description: This policy identifies AWS buckets which are accessible to public. Amazon
+  Relational Database Service (Amazon RDS) is a web service that makes it easier to
+  setup and manage databases. If RDS buckets are inadvertently shared to public, any
+  unauthorized user with AWS console access can gain access to the buckets and gain
+  access to sensitive data.
+extra:
+  entity: AWS::RDS::DBInstance
+  type: resource
+guidelines: |-
+  #### Description
+  This policy identifies AWS buckets which are accessible to public. Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to setup and manage databases. If RDS buckets are inadvertently shared to public, any unauthorized user with AWS console access can gain access to the buckets and gain access to sensitive data.
+
+  #### Rationale
+  Allowing public access to RDS buckets may aid an adversary in accessing the content and any sensitive information stored in it.
+
+  #### Remediation
+  Set `publicly_accessible` flag as false.
+
+  Terraform example
+  ```
+  resource "aws_db_instance" "mydb" {
+      allocated_storage    = 30
+      storage_type         = "gp2"
+      engine               = "mysql"
+      engine_version       = "5.7"
+      instance_class       = "db.t2.medium"
+      name                 = "mydb"
+      storage_encrypted    = true
+  +   publicly_accessible  = false
+
+      ...
+      ...
+  }
+  ```
+
+  Cloudformation example
+  ```
+  {
+    "Type" : "AWS::RDS::DBInstance",
+    "Properties" : {
+        "AllocatedStorage" : 20,
+        "DBName" : "mydb",
+        "StorageEncrypted" : true,
+  +     "PubliclyAccessible": false,
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://aws.amazon.com/rds/features/security/
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance#publicly_accessible
+lwid:
+  - LW_AWS_RDS_1
+provider: AWS
+ruleId: CKV_AWS_17
+severity: High
+sid: ckv-aws-17
+title: Ensure all data stored in the RDS bucket is not public
+autofix: true
+remediation:
+- checkType: CloudFormation
+  steps:
+  - actions: modify
+    resource: [ "resource" ]
+    resourceAttribute: PubliclyAccessible
+    resourceAttributeType: boolean
+    resourceAttributeValue: "false"
+    resourceType: [ "AWS::RDS::DBInstance" ]
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: publicly_accessible
+    resourceAttributeType: boolean
+    resourceAttributeValue: "false"
+    resourceType: [ "aws_db_instance" ]

@@ -1,0 +1,51 @@
+---
+category: General
+checkTool: checkov
+checkType: Docker
+compliance: []
+description: "Ensure From Alias are unique for multistage builds"
+guidelines: |-
+    #### Description
+    Each instruction in the dockerfile adds a layer to the image, this increases the size of the image. Multistage builds feature in Dockerfiles enables you to create smaller container images with better caching and smaller security footprint.
+
+    With multi-stage builds, you use multiple FROM statements in your Dockerfile. Each FROM instruction can use a different base, and each of them begins a new stage of the build. You can selectively copy artifacts from one stage to another, leaving behind everything you don’t want in the final image.
+
+    We should ensure that each stage has unique alias, so it can be used downstream in the dockerfile.
+
+    #### Rationale
+    An alias is useful if we are using the build stage image multiple times in the dockerfile. It improves readability and also prevent errors when a shared image needs to be update in the dockerfile.
+
+    If there are multiple build stage images, having unique alias names is useful to make sure that right build stage image is being used.
+
+    #### Remediation
+    Ensure that we use unique aliases in multistage build.
+
+    Dockerfile example:
+    ```
+    - FROM golang:1.16
+    + FROM golang:1.16 AS builder
+      WORKDIR /go/src/github.com/alexellis/href-counter/
+      RUN go get -d -v golang.org/x/net/html
+      ...
+      ...
+
+      FROM alpine:latest
+      WORKDIR /root/
+    - COPY --from=0 /go/src/github.com/alexellis/href-counter/app ./
+    + COPY --from=builder /go/src/github.com/alexellis/href-counter/app ./
+      ...
+      ...
+    ```
+
+    #### Default Value
+    If the alias is not specified, `--from=0` refers to the first image built.
+
+    #### References
+    * https://docs.docker.com/develop/develop-images/multistage-build/
+    * https://www.docker.com/blog/advanced-dockerfiles-faster-builds-and-smaller-images-using-buildkit-and-multistage-builds/
+lwid: []
+provider: Docker
+ruleId: CKV_DOCKER_11
+severity: Low
+sid: ckv-docker-11
+title: "Ensure From Alias are unique for multistage builds"

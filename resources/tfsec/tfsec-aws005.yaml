@@ -1,0 +1,65 @@
+---
+autofix: true
+category: "Load Balancers"
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "There are many scenarios in which you would want to expose a load balancer to the wider internet, but this check exists as a warning to prevent accidental exposure of internal assets. You should ensure that this resource shouldn't be exposed publicly."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws005.go"
+guidelines: |-
+    #### Description
+    When you create a load balancer in a VPC, you can make it an internal load balancer or an internet-facing load balancer. You create an internet-facing load balancer in a public subnet. Load balancers in EC2-Classic are always internet-facing load balancers.
+
+    #### Rationale
+    In most of the scenarios, the load balancer might be open to public but it is advisable to not having an internet faciing load balancer unless required. Opening up
+
+    #### Remediation
+    Make sure that `internal` flag is set to `true`.
+
+    Terraform example:
+    ```
+    resource "aws_lb" "test" {
+        name               = "test-lb-tf"
+    -   internal           = false
+    +   internal           = true
+        load_balancer_type = "network"
+        subnets            = aws_subnet.public.*.id
+        ...
+        ...
+    }
+    ```
+
+    Using *CLI*:
+    ```
+    aws elb create-load-balancer
+    	--region us-east-1
+    	--load-balancer-name test-lb-tf
+    	--scheme internal
+    	--listeners Protocol=HTTP,LoadBalancerPort=80,InstanceProtocol=HTTP,InstancePort=80
+    	--subnets [SUBNET_ID]
+    	--security-groups [SECURITY_GROUP_ID]
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb#internal
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: internal
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_lb
+ruleId: AWS005
+severity: High
+sid: tfsec-aws005
+title: "Load balancer is exposed to the internet"

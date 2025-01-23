@@ -1,0 +1,63 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure Kubernetes Clusters are configured with Labels
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+  #### Description
+  A cluster label is a key-value pair that helps you organize your Google Cloud Platform resources, such as clusters. You can attach a label to each resource, then filter the resources based on their labels. Information about labels is forwarded to the billing system, so you can break down your billing charges by the label.
+
+  #### Rationale
+  Configured Labels can be used to organize and to select subsets of objects. Labels can be attached to objects at creation time and subsequently added and modified at any time. Each object can have a set of key/value labels defined. Each Key must be unique for a given object. Labels enable users to map their own organizational structures onto system objects in a loosely coupled fashion, without requiring clients to store these mappings. Labels can also be used to apply specific security settings and 'auto configure' objects at creation
+
+  #### Remediation
+  By default, Labels are not configured when you create a new cluster using the gcloud command-line tool or Google Cloud Platform Console. Set the `resource_labels` for the `google_container_cluster`.
+
+  Terraform example
+  ```
+  resource "google_container_cluster" "primary" {
+      name               = "marcellus-wallace"
+      location           = "us-central1-a"
+      initial_node_count = 3
+
+  +   resource_labels {
+  +      "cluster_name": "sample-cluster",
+  +      "environment": "production"
+  +   }
+      ...
+      ...
+  }
+
+  ```
+
+  Using *Console*
+    1. Go to [Kubernetes GCP Console](https://console.cloud.google.com/kubernetes/list)
+    2. Select reported Kubernetes clusters for which Master authorized networks is disabled.
+    3. Click on EDIT button and Set `Master authorized networks (beta)` to `Enabled`.
+
+  Using *Command Line*
+
+  To configure Labels for an existing cluster, run the following command:
+
+  ```
+  gcloud container clusters update [CLUSTER_NAME] --zone [COMPUTE_ZONE] --update-labels [Key]=[Value]
+  ```
+
+  #### Impact
+  Any labels you apply to your clusters propagate via a background process that runs hourly. It can take up to one hour for a label to appear on all resources associated with a given cluster
+
+  #### References
+  * https://cloud.google.com/kubernetes-engine/docs/how-to/creating-managing-labels?hl=en_US
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#resource_labels
+lwid:
+  - GCP_CIS_7_5
+  - GCP_K8S_1_5
+provider: GCP
+ruleId: CKV_GCP_21
+severity: Low
+sid: ckv-gcp-21
+title: Ensure Kubernetes Clusters are configured with Labels

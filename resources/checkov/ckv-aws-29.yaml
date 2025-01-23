@@ -1,0 +1,78 @@
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+- HIPAA
+description: Ensure all data stored in the Elasticache Replication Group is securely
+  encrypted at rest. ElastiCache for Redis offers default (service managed) encryption
+  at rest, as well as ability to use your own symmetric customer managed customer
+  master keys in KMS.
+extra:
+  entity: AWS::ElastiCache::ReplicationGroup
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure all data stored in the Elasticache Replication Group is securely encrypted at rest. ElastiCache for Redis offers default (service managed) encryption at rest, as well as ability to use your own symmetric customer managed customer master keys in KMS.
+
+  #### Rationale
+  At-rest encryption increases data security by encrypting on-disk data. When enabled on a replication group, it encrypts the following resources as well:
+    * Disk during sync, backup and swap operations
+    * Backups stored in Amazon S3
+
+  #### Remediation
+  Enable the attribute `at_rest_encryption_enabled` to true.
+
+  Terraform example:
+  ```
+  resource "aws_elasticache_replication_group" "baz" {
+    replication_group_id          = "tf-redis-cluster"
+    replication_group_description = "test description"
+    node_type                     = "cache.t2.small"
+    port                          = 6379
+    automatic_failover_enabled    = true
+
+  + at_rest_encryption_enabled    = true
+    ...
+    ...
+  }
+  ```
+
+  Cloudformation example:
+  ```json
+  {
+    "Type" : "AWS::ElastiCache::ReplicationGroup",
+    "Properties" : {
+  +     "AtRestEncryptionEnabled" : true,
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_replication_group#at_rest_encryption_enabled
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticache-replicationgroup.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_29
+severity: Medium
+sid: ckv-aws-29
+title: Ensure data stored in the Elasticache Replication Group is secured at rest
+autofix: true
+remediation:
+- checkType: CloudFormation
+  steps:
+  - actions: add
+    resource: [ "resource" ]
+    resourceAttribute: AtRestEncryptionEnabled
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "AWS::ElastiCache::ReplicationGroup" ]
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: at_rest_encryption_enabled
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_elasticache_replication_group" ]

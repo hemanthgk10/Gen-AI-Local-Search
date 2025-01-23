@@ -1,0 +1,101 @@
+---
+category: TLS
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Elastic Load Balancing automatically distributes your incoming traffic across multiple targets, such as EC2 instances, containers, and IP addresses, in one or more Availability Zones. It monitors the health of its registered targets, and routes traffic only to the healthy targets. Elastic Load Balancing scales your load balancer as your incoming traffic changes over time.
+
+    You add one or more listeners to your load balancer. A listener checks for connection requests from clients, using the protocol and port that you configure. The rules that you define for a listener determine how the load balancer routes requests to its registered targets. Each rule consists of a priority, one or more actions, and one or more conditions. When the conditions for a rule are met, then its actions are performed. You must define a default rule for each listener, and you can optionally define additional rules. To use an HTTPS listener, you must deploy at least one SSL/TLS server certificate on your load balancer. The load balancer uses a server certificate to terminate the front-end connection and then decrypt requests from clients before sending them to the targets.
+
+    We recommend that you create certificates for your load balancer using AWS Certificate Manager (ACM). ACM integrates with Elastic Load Balancing so that you can deploy the certificate on your load balancer.
+extra:
+  entity: aws_elb
+  type: resource
+guidelines: |-
+    #### Description
+    Elastic Load Balancing automatically distributes your incoming traffic across multiple targets, such as EC2 instances, containers, and IP addresses, in one or more Availability Zones. It monitors the health of its registered targets, and routes traffic only to the healthy targets. Elastic Load Balancing scales your load balancer as your incoming traffic changes over time.
+
+    You add one or more listeners to your load balancer. A listener checks for connection requests from clients, using the protocol and port that you configure. The rules that you define for a listener determine how the load balancer routes requests to its registered targets. Each rule consists of a priority, one or more actions, and one or more conditions. When the conditions for a rule are met, then its actions are performed. You must define a default rule for each listener, and you can optionally define additional rules. To use an HTTPS listener, you must deploy at least one SSL/TLS server certificate on your load balancer. The load balancer uses a server certificate to terminate the front-end connection and then decrypt requests from clients before sending them to the targets.
+
+    We recommend that you create certificates for your load balancer using AWS Certificate Manager (ACM). ACM integrates with Elastic Load Balancing so that you can deploy the certificate on your load balancer.
+
+    #### Rationale
+    When an ELB has any listeners that are not configured to use a secure protocol, such as HTTPS or SSL, the front-end connection between the client and the load balancer is vulnerable to man-in-the-middle (MITM) attacks and can also expose/alter any sensitive information between the connection.
+
+    #### Remediation
+    Set the `ssl_certificate_id` field to the ARN of the SSL Certificate.
+
+    Terraform example
+    ```
+    resource "aws_elb" "bar" {
+        name               = "foobar-terraform-elb"
+        availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+
+        listener {
+          instance_port      = 8000
+          instance_protocol  = "http"
+          lb_port            = 443
+          lb_protocol        = "https"
+    +     ssl_certificate_id = "arn:aws:acm:region:123456789012:certificate/12345678-1234-1234-1234-123456789012"
+        }
+
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+          "AvailabilityZones" : [ "us-east-2a", "us-east-2b" ],
+          "CrossZone" : true,
+          "Listeners" : [ {
+              "InstancePort" : 8000,
+              "InstanceProtocol" : "http",
+              "LoadBalancerPort" : 443,
+              "Protocol" : "https",
+    +         "SSLCertificateId" : "arn:aws:acm:region:123456789012:certificate/12345678-1234-1234-1234-123456789012"
+          }],
+          ...
+          ...
+        }
+    }
+    ```
+
+    Using *Console*:
+    To add an HTTPS listener to your load balancer
+    1. Open the [Amazon EC2 console](https://console.aws.amazon.com/ec2/).
+    2. On the navigation pane, under `LOAD BALANCING`, choose `Load Balancers`.
+    3. Select your load balancer.
+    4. On the `Listeners` tab, choose `Edit`.
+    5. On the `Edit listeners` page, choose `Add`.
+    6. For `Load Balancer Protocol`, select `HTTPS (Secure HTTP)`. This updates `Load Balancer Port`, `Instance Protocol`, and `Instance Port`.
+    7. If you already have a certificate deployed on your load balancer and want to continue using it.
+
+       For `SSL Certificate`, choose `Change`, and then do one of the following:
+       * If you create or imported a certificate using AWS Certificate Manager, select `Choose an existing certificate from AWS Certificate Manager (ACM)`, select the certificate from Certificate, and then choose `Save`.
+       * If you imported a certificate using IAM, select `Choose an existing certificate from AWS Identity and Access Management (IAM)`, select the certificate from Certificate, and then choose `Save`.
+       * If you have an SSL certificate to import but ACM is not supported in this Region, select `Upload a new SSL Certificate to AWS Identity and Access Management (IAM)`. Type the name of the certificate. In `Private Key`, copy and paste the contents of the private key file (PEM-encoded). In `Public Key Certificate`, copy and paste the contents of the public key certificate file (PEM-encoded). In `Certificate Chain`, copy and paste the contents of the certificate chain file (PEM-encoded), unless you are using a self-signed certificate and it's not important that browsers implicitly accept the certificate.
+    8. Choose `Save` to add the listeners you just configured.
+
+
+    Using *Command Line*:
+    Run the below command to add a listener to your load balancer that accepts HTTPS requests on port 443 and sends the requests to the instances on port 80 using HTTP.
+    ```
+     aws elb create-load-balancer-listeners \
+        --load-balancer-name foobar-terraform-elb \
+        --listeners Protocol=HTTPS,LoadBalancerPort=443,InstanceProtocol=HTTP,InstancePort=80,SSLCertificateId=arn:aws:acm:region:123456789012:certificate/12345678-1234-1234-1234-123456789012
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elb#ssl_certificate_id
+    * https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_127
+severity: High
+sid: ckv-aws-127
+title: "Ensure that Elastic Load Balancer(s) uses SSL certificates provided by AWS Certificate Manager"

@@ -1,0 +1,62 @@
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure web app is using the latest version of TLS encryption
+extra:
+  entity: Microsoft.Web/sites
+  type: resource
+guidelines: |-
+  #### Description
+  The TLS(Transport Layer Security) protocol secures transmission of data over the internet using standard encryption technology. Encryption should be set with the latest version of TLS. App service allows TLS 1.2 by default, which is the recommended TLS level by industry standards, such as PCI DSS.
+
+  #### Rationale
+  App service currently allows the web app to set TLS versions 1.0, 1.1 and 1.2. It is highly recommended to use the latest TLS 1.2 version for web app secure connections.
+
+  #### Remediation
+  Set the `min_tls_version` to `TLS1_2` only. Possible values are TLS1_0, TLS1_1, and TLS1_2. Defaults to TLS1_0 for new webapp config.
+
+  Terraform example:
+  ```
+  resource "azurerm_app_service" "example" {
+      name                = "example-app-service"
+      location            = azurerm_resource_group.example.location
+      resource_group_name = azurerm_resource_group.example.name
+      app_service_plan_id = azurerm_app_service_plan.example.id
+
+      site_config {
+        dotnet_framework_version = "v4.0"
+        scm_type                 = "LocalGit"
+  -     min_tls_version          = "TLS1_1"
+  +     min_tls_version          = "TLS1_2"
+      }
+      ...
+      ...
+  }
+  ```
+
+  Using Console:
+    1. Login to Azure Portal using https://portal.azure.com
+    2. Go to `App Services`
+    3. Click on each App
+    4. Under `Setting section`, Click on `SSL settings`
+    5. Set `Minimum TLS Version` to 1.2 under `Protocol Settings` section
+
+  Using Command Line:
+  To set TLS Version for an existing app, run the following command:
+
+  ```
+   az webapp config set --resource-group <RESOURCE_GROUP_NAME> --name <APP_NAME> --min-tls-version 1.2
+  ```
+  By default, TLS Version feature will be set to 1.2 when a new app is created using the command-line tool or Azure Portal console.
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/app-service/app-service-web-tutorial-custom-ssl#enforce-tls-versions
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/app_service#min_tls_version
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_15
+severity: Critical
+sid: ckv-azure-15
+title: Ensure web app is using the latest version of TLS encryption

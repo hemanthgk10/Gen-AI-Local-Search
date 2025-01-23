@@ -1,0 +1,16 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure Storage logging is enabled for Table service for read requests"
+extra:
+  entity: azurerm_storage_table
+  type: resource
+lwid:
+  - Azure_CIS_131_3_11
+provider: Azure
+ruleId: CKV2_AZURE_20
+severity: Low
+sid: ckv2-azure-20
+title: "Ensure Storage logging is enabled for Table service for read requests"

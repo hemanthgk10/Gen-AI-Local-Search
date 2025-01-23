@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Azure Cognitive Search disables public network access"
+extra:
+  entity: azurerm_search_service
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_124
+severity: Medium
+sid: ckv-azure-124
+title: "Ensure that Azure Cognitive Search disables public network access"

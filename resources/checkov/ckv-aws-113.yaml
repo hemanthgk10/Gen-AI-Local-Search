@@ -1,0 +1,94 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "AWS Systems Manager (formerly known as SSM) is an AWS service that you can use to view and control your infrastructure on AWS. Using the Systems Manager console, you can view operational data from multiple AWS services and automate operational tasks across your AWS resources. Systems Manager helps you maintain security and compliance by scanning your managed instances and reporting on (or taking corrective action on) any policy violations it detects. The AWS SSM document resource creates a Systems Manager (SSM) document in AWS Systems Manager. This document defines the actions that Systems Manager performs on your AWS resources."
+extra:
+  entity: aws_ssm_document
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Systems Manager (formerly known as SSM) is an AWS service that you can use to view and control your infrastructure on AWS. Using the Systems Manager console, you can view operational data from multiple AWS services and automate operational tasks across your AWS resources. Systems Manager helps you maintain security and compliance by scanning your managed instances and reporting on (or taking corrective action on) any policy violations it detects.
+
+    The AWS SSM document resource creates a Systems Manager (SSM) document in AWS Systems Manager. This document defines the actions that Systems Manager performs on your AWS resources.
+
+    When the document type is of `session`, it is better to encrypt the data and logs of the SSM using AWS KMS. This enables to have a secured communication, for the session data transmitted between your Amazon Elastic Compute Cloud (Amazon EC2) instances and the local machines of users.
+
+    #### Rationale
+    Encrypting session data and the ssm cloudwatch logs, with your key also enables sessions to handle confidential data interactions, such as password resets, and further improves your security posture when using Systems Manager Session Manager.
+
+    #### Remediation
+    Set `s3EncryptionEnabled=true` in the `inputs` of the aws_ssm_document, if the `document_type=Session`. This will encrypt the contents of the session in S3 bucket.
+
+    Also make sure to set `cloudWatchEncryptionEnabled=true` as well, so the logs in the cloudwatch are encrypted too.
+
+    Terraform example
+    ```
+    resource "aws_ssm_document" "session_logging" {
+          name          = "SSM-SessionManagerRunShell"
+          document_type = "Session"
+
+          content = <<DOC
+          {
+            "schemaVersion": "1.2",
+            "description": "Check ip configuration of a Linux instance.",
+            "sessionType": "Standard_Stream",
+            "inputs": {
+              "s3BucketName": "${coalesce(var.session_logging_bucket_name, module.logs_label.id)}",
+              "s3KeyPrefix": "logs/",
+    +         "s3EncryptionEnabled": true,
+              "cloudWatchLogGroupName": "${module.logs_label.id}",
+    +         "cloudWatchEncryptionEnabled": true,
+              "kmsKeyId": "${coalesce(var.session_logging_kms_key_arn, module.kms_key.key_arn)}",
+              "runAsEnabled": false,
+              "runAsDefaultUser": ""
+            }
+            ...
+            ...
+          }
+        DOC
+
+        ...
+        ...
+    }
+    ```
+
+    Using *Console* to log session data using Amazon S3:
+
+    1. Open the [AWS Systems Manager console](https://console.aws.amazon.com/systems-manager/)
+    2. In the navigation pane, choose `Session Manager`.
+    3. Choose the `Preferences` tab, and then choose `Edit`.
+    4. Select the check box next to `Enable` under `S3 logging`.
+    5. (Recommended) Select the check box next to `Allow only encrypted S3 buckets`. With this option enabled, log data is encrypted using the server-side encryption key specified for the bucket. If you do not want to encrypt the log data that is sent to Amazon S3, clear the check box. You must also clear the check box if encryption is not enabled on the S3 bucket.
+    6. For S3 bucket name, select one of the following:
+       * `Choose a bucket name from the list:` Select an S3 bucket that has already been created in your account to store session log data.
+       * `Enter a bucket name in the text box:` Enter the name of an S3 bucket that has already been created in your account to store session log data.
+    7. (Optional) For `S3 key prefix`, enter the name of an existing or new folder to store logs in the selected bucket.
+    8. Choose `Save`.
+
+    Using *Console* to stream session data using Amazon CloudWatch Logs:
+
+    1. Open the [AWS Systems Manager console](https://console.aws.amazon.com/systems-manager/)
+    2. In the navigation pane, choose `Session Manager`.
+    3. Choose the `Preferences` tab, and then choose `Edit`.
+    4. Select the check box next to `Enable` under `CloudWatch logging`.
+    5. Choose the `Stream session logs` option.
+    6. (Recommended) Select the check box next to `Allow only encrypted CloudWatch log groups`. With this option enabled, log data is encrypted using the server-side encryption key specified for the log group. If you do not want to encrypt the log data that is sent to CloudWatch Logs, clear the check box. You must also clear the check box if encryption is not enabled on the log group.
+    7. For `CloudWatch logs`, to specify the existing CloudWatch Logs log group in your AWS account to upload session logs to, select one of the following:
+       * Enter the name of a log group in the text box that has already been created in your account to store session log data.
+       * `Browse log groups:` Select a log group that has already been created in your account to store session log data.
+    8. Choose `Save`.
+
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_document#content
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ssm-document.html
+    * https://docs.aws.amazon.com/systems-manager/latest/userguide/session-preferences-enable-encryption.html
+    * https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-logging.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_113
+severity: Medium
+sid: ckv-aws-113
+title: "Ensure Session Manager logs are enabled and encrypted"

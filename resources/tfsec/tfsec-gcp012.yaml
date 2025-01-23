@@ -1,0 +1,77 @@
+---
+autofix: true
+category: IAM
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "You should create and use a minimally privileged service account to run your GKE cluster instead of using the Compute Engine default service account"
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/342eaf8a9b71dde188d9b8711e43138fef0df80b/internal/app/tfsec/checks/gcp012.go"
+guidelines: |-
+    #### Description
+    Create and use minimally privileged	Service	accounts to run	GKE cluster nodes instead of using the Compute Engine default Service account. Unnecessary permissions could be abused in the case of a node compromise.
+
+    #### Rationale
+    A GCP service account (as distinct from a Kubernetes ServiceAccount) is an identity	that an instance or an application can use to run GCP API requests on your behalf. This	identity is used to identify virtual machine instances to other	Google Cloud Platform services.	By default, Kubernetes Engine nodes use	the Compute Engine default service account. This account has broad access by default, as defined by access scopes, making it useful to a wide variety of applications on the VM, but it	has more permissions than are required	to run your Kubernetes Engine cluster.
+
+    You	should create and use a	minimally privileged service account to	run your Kubernetes Engine cluster instead of using the	Compute	Engine	default	service	account, and create separate service accounts for each Kubernetes Workload.
+    Kubernetes Engine requires,	at a minimum, the node service account	to have	the monitoring.viewer,	monitoring.metricWriter, and logging.logWriter roles. Additional roles may need	to be added for	the nodes to pull images from GCR.
+
+    #### Remediation
+    Review the output to ensure	that the service account only has the roles required to	run the cluster:
+    * roles/logging.logWriter
+    * roles/monitoring.metricWriter
+    * roles/monitoring.viewer
+
+    Terraform example
+    ```
+    resource "google_container_cluster" "my-cluster" {
+        name     = "my-gke-cluster"
+        location = "us-central1"
+
+        node_config {
+    +  	   service_account = "cool-service-account@example.com"
+      	}
+        ...
+        ...
+    }
+    ```
+
+    Using *Command Line*:
+    ```
+    gcloud iam service-accounts create [SA-NAME] --display-name=[SA-NAME]
+
+    gcloud projects add-iam-policy-binding [PROJECT-ID] --member "serviceAccount:[SA-NAME]@[PROJECT-ID].iam.gserviceaccount.com" --role roles/logging.logWriter
+
+    gcloud projects add-iam-policy-binding [PROJECT-ID] --member "serviceAccount:[SA-NAME]@[PROJECT-ID].iam.gserviceaccount.com" --role roles/monitoring.metricWriter
+
+    gcloud projects add-iam-policy-binding [PROJECT-ID] --member "serviceAccount:[SA-NAME]@[PROJECT-ID].iam.gserviceaccount.com" --role roles/monitoring.viewer
+
+    gcloud projects add-iam-policy-binding [PROJECT-ID] --member "serviceAccount:[SA-NAME]@[PROJECT-ID].iam.gserviceaccount.com" --role roles/stackdriver.resourceMetadata.writer
+    ```
+
+    #### References
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster#use_least_privilege_sa
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster
+lwid: []
+provider: GCP
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: node_config
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            node_config {
+               service_account = "<Provide the service account>"
+            }
+        resourceType:
+          - google_container_cluster
+ruleId: GCP012
+severity: Medium
+sid: tfsec-gcp012
+title: "Checks for service account defined for GKE nodes"

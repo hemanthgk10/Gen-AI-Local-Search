@@ -1,0 +1,41 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon FSx for NetApp ONTAP is a fully managed service that provides highly reliable, scalable, performant, and feature-rich file storage built on NetApp's popular ONTAP file system.
+
+    All Amazon FSx for NetApp ONTAP file systems are encrypted at rest with keys managed using AWS Key Management Service (AWS KMS). Data is automatically encrypted before being written to the file system, and automatically decrypted as it is read.
+extra:
+  entity: aws_fsx_ontap_file_system
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon FSx for NetApp ONTAP is a fully managed service that provides highly reliable, scalable, performant, and feature-rich file storage built on NetApp's popular ONTAP file system.
+
+    All Amazon FSx for NetApp ONTAP file systems are encrypted at rest with keys managed using AWS Key Management Service (AWS KMS). Data is automatically encrypted before being written to the file system, and automatically decrypted as it is read.
+
+    #### Rationale
+    Encrypting using AWS Key Management Service (AWS KMS) makes it easier for you to meet strict data management requirements by encrypting your data at rest in Amazon FSx for NetApp ONTAP.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_fsx_ontap_file_system`.
+
+    Terraform example
+    ```
+    resource "aws_fsx_ontap_file_system" "example-fs" {
+    +   kms_key_id  = "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c"
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/encryption-at-rest.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_178
+severity: High
+sid: ckv-aws-178
+title: "Ensure fx ontap file system is encrypted by KMS using a customer managed Key (CMK)"

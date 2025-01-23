@@ -1,0 +1,58 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Quantum Ledger Database (Amazon QLDB) is a fully managed ledger database that provides a transparent, immutable, and cryptographically verifiable transaction log owned by a central trusted authority. You can use Amazon QLDB to track all application data changes, and maintain a complete and verifiable history of changes over time.
+
+    Ledgers are typically used to record a history of economic and financial activity in an organization. The standard permissions mode enables access control with finer granularity for ledgers, tables, and PartiQL commands. By default, this mode denies all requests to run any PartiQL commands on any tables in a ledger.
+extra:
+  entity: aws_qldb_ledger
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Quantum Ledger Database (Amazon QLDB) is a fully managed ledger database that provides a transparent, immutable, and cryptographically verifiable transaction log owned by a central trusted authority. You can use Amazon QLDB to track all application data changes, and maintain a complete and verifiable history of changes over time.
+
+    Ledgers are typically used to record a history of economic and financial activity in an organization. The standard permissions mode enables access control with finer granularity for ledgers, tables, and PartiQL commands. By default, this mode denies all requests to run any PartiQL commands on any tables in a ledger.
+
+    #### Rationale
+    The `ALLOW_ALL` mode enables access control with API-level granularity for ledgers. `STANDARD` permissions is the recommended mode to maximize the security of your ledger data.
+
+    #### Remediation
+    Specify the `permissions_mode` to `STANDARD` instead of setting it to `ALLOW_ALL`.
+
+    Terraform example
+    ```
+    resource "aws_qldb_ledger" "sample-ledger" {
+        name             = "sample-ledger"
+    -   permissions_mode = "ALLOW_ALL"
+    +   permissions_mode = "STANDARD"
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::QLDB::Ledger",
+      "Properties" : {
+          "DeletionProtection": true,
+    +     "PermissionsMode": "STANDARD",
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/qldb_ledger#permissions_mode
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-qldb-ledger.html#cfn-qldb-ledger-permissionsmode
+    * https://docs.aws.amazon.com/qldb/latest/developerguide/getting-started-standard-mode.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_170
+severity: High
+sid: ckv-aws-170
+title: "Ensure QLDB ledger permissions mode is set to STANDARD"

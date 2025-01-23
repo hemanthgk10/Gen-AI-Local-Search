@@ -1,0 +1,54 @@
+category: Containers
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+- CIS
+description: Image Pull Policy should be set to 'Always'
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  ImagePull Policy should be set to `Always` in a pod and in admission control plugin.
+
+  #### Rationale
+  Setting admission control policy to AlwaysPullImages, forces every new pod to pull the required images every time. In a multi-tenant cluster users can be assured that their private images can only be used by those who have the credentials to pull them. Without this admission control policy, once an image has been pulled to a node, any pod from any user can use it simply by knowing the image’s name, without any authorization check against the image ownership. When this plug-in is enabled, images are always pulled prior to starting containers, which means valid credentials are required.
+
+  When Image pull policy set to `Always` in Pod manifest, forces the kubelet to always pull new image when a container is being created. This is required when we don't want to use the cached image.
+
+  #### Remediation
+  Make sure to set the `imagePullPolicy` to `Always` for both `containers` and `initContainers`.
+
+  Example of a Pod:
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  spec:
+    containers:
+    - image: nginx:v1.0
+  +   imagePullPolicy: Always
+      name: nginx
+      ...
+      ...
+    initContainers:
+    - name: init-myservice
+      image: busybox:1.28
+  +   imagePullPolicy: Always
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#alwayspullimages
+provider: Kubernetes
+ruleId: CKV_K8S_15
+severity: Medium
+sid: ckv-k8s-15
+title: Image Pull Policy should be Always
+autofix: true
+remediation:
+- checkType: Kubernetes
+  steps:
+  - action: modify
+    resource: [ "Pod", "Deployment", "ReplicaSet", "StatefulSet", "DaemonSet", "Job", "CronJob", "ReplicationController" ]
+    resourceAttribute: imagePullPolicy
+    resourceAttributeType: string
+    resourceAttributeValue: "Always"
+    resourceType: [ "containers", "initContainers" ]

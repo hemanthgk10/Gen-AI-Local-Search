@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Network Interfaces don't use public IPs"
+extra:
+  entity: azurerm_network_interface
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_119
+severity: Medium
+sid: ckv-azure-119
+title: "Ensure that Network Interfaces don't use public IPs"

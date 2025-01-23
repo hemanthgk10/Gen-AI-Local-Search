@@ -1,0 +1,52 @@
+---
+category: VPC
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "AWS Classic resources run in a shared environment with infrastructure owned by other AWS customers. You should run resources in a VPC instead."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws003.go"
+guidelines: |-
+    #### Description
+    A virtual private cloud (VPC) is a secure, isolated private cloud hosted within a public cloud. VPC customers can run code, store data, host websites, and do anything else they could do in an ordinary private cloud, but the private cloud is hosted remotely by a public cloud provider.
+
+    AWS Classic resources run in a shared environment with infrastructure owned by other AWS customers. You should run resources in a VPC instead.
+
+    #### Rationale
+    A Virtual Private Network(VPN) keeps your servers safe from the ravages of the public internet, just like they were in your old data center. This will help you to put restrictions on who can access the data in your VPC etc.
+
+    A VPC isolates computing resources from the other computing resources available in the public cloud.
+
+    #### Remediation
+    `aws_db_security_group` uses the classic security group. Instead of that use `aws_security_group` which runs resources in `VPC`.
+
+    Terraform example:
+    ```
+    - resource "aws_db_security_group" "my-group" {
+    -    name = "rds_sg"
+    -    ingress {
+    -      cidr = "10.0.0.0/24"
+    -    }
+    -    ...
+    -    ...
+    - }
+
+
+    + resource "aws_security_group" "allow-db-access" {
+    +    name        = "allow-db-access"
+    +    description = "Allow DB access to outside resources"
+    +    vpc_id      = aws_vpc.main.id
+    +    ...
+    +    ...
+    + }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-classic-platform.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_security_group
+lwid: []
+provider: AWS
+ruleId: AWS003
+severity: High
+sid: tfsec-aws003
+title: "AWS Classic resource usage"

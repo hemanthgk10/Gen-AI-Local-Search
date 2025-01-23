@@ -1,0 +1,48 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "A security group acts as a virtual firewall for your AWS resources to control inbound and outbound traffic. It provide stateful filtering of ingress/egress network traffic using rules which can allow/deny the traffic."
+extra:
+  entity: aws_security_group
+  type: resource
+guidelines: |-
+    #### Description
+    A security group acts as a virtual firewall for your AWS resources to control inbound and outbound traffic. It provide stateful filtering of ingress/egress network traffic using rules which can allow/deny the traffic.
+
+    #### Rationale
+    Removing unfettered connectivity to AWS resources, reduces exposure to risk.
+
+    #### Remediation
+    Make sure that `security_groups` are attached to other resources like `aws_alb`, `aws_vpc_endpoint`, `aws_rds_cluster` etc.
+
+    Terraform example
+    ```
+    resource "aws_security_group" "allow_tls" {
+        name        = "allow_tls"
+        description = "Allow TLS inbound traffic"
+        vpc_id      = aws_vpc.main.id
+        ...
+        ...
+    }
+
+    resource "aws_lb" "test" {
+        name               = "test-lb-tf"
+        internal           = false
+        load_balancer_type = "application"
+    +   security_groups    = [aws_security_group.allow_tls.id]
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group
+    * https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_5
+severity: Low
+sid: ckv2-aws-5
+title: "Ensure that Security Groups are attached to another resource"

@@ -1,0 +1,122 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    In Kubernetes, you must be authenticated (logged in) before your request can be authorized (granted permission to access). Kubernetes authorizes API requests using the API server. It evaluates all of the request attributes against all policies and allows or denies the request. All parts of an API request must be allowed by some policy in order to proceed. This means that permissions are denied by default.
+
+    When multiple authorization modules are configured, each is checked in sequence. If any authorizer approves or denies a request, that decision is immediately returned and no other authorizer is consulted. If all modules have no opinion on the request, then the request is denied. A deny returns an HTTP status code 403.
+
+    The Kubernetes API server may authorize a request using one of several authorization modes:
+
+      * `Node`    - A special-purpose authorization mode that grants permissions to kubelets based on the pods they are scheduled to run.
+      * `ABAC`    - Attribute-based access control (ABAC) defines an access control paradigm whereby access rights are granted to users through the use of policies which combine attributes together. The policies can use any type of attributes (user attributes, resource attributes, object, environment attributes, etc).
+      * `RBAC`    - Role-based access control (RBAC) is a method of regulating access to computer or network resources based on the roles of individual users within an enterprise. In this context, access is the ability of an individual user to perform a specific task, such as view, create, or modify a file.
+      * `Webhook` - A WebHook is an HTTP callback: an HTTP POST that occurs when something happens; a simple event-notification via HTTP POST. A web application implementing WebHooks will POST a message to a URL when certain things happen.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    In Kubernetes, you must be authenticated (logged in) before your request can be authorized (granted permission to access). Kubernetes authorizes API requests using the API server. It evaluates all of the request attributes against all policies and allows or denies the request. All parts of an API request must be allowed by some policy in order to proceed. This means that permissions are denied by default.
+
+    When multiple authorization modules are configured, each is checked in sequence. If any authorizer approves or denies a request, that decision is immediately returned and no other authorizer is consulted. If all modules have no opinion on the request, then the request is denied. A deny returns an HTTP status code 403.
+
+    The Kubernetes API server may authorize a request using one of several authorization modes:
+
+      * `Node`    - A special-purpose authorization mode that grants permissions to kubelets based on the pods they are scheduled to run.
+      * `ABAC`    - Attribute-based access control (ABAC) defines an access control paradigm whereby access rights are granted to users through the use of policies which combine attributes together. The policies can use any type of attributes (user attributes, resource attributes, object, environment attributes, etc).
+      * `RBAC`    - Role-based access control (RBAC) is a method of regulating access to computer or network resources based on the roles of individual users within an enterprise. In this context, access is the ability of an individual user to perform a specific task, such as view, create, or modify a file.
+      * `Webhook` - A WebHook is an HTTP callback: an HTTP POST that occurs when something happens; a simple event-notification via HTTP POST. A web application implementing WebHooks will POST a message to a URL when certain things happen.
+
+    #### Rationale
+    The API Server, can be configured to allow all requests. This mode should not be used on any production cluster.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-apiserver
+    ```
+    Verify that the `--authorization-mode` argument exists and is not set to `AlwaysAllow`.
+
+    #### Remediation
+    Edit the API server pod specification file `/etc/kubernetes/manifests/kube-apiserver.yaml` on the master node and set the `--authorization-mode` parameter to values other than `AlwaysAllow`. One such example could be as below.
+    ```
+     --authorization-mode=RBAC
+    ```
+
+    By default, `AlwaysAllow` is not enabled.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          scheduler.alpha.kubernetes.io/critical-pod: ""
+        labels:
+          component: kube-apiserver
+          tier: control-plane
+        name: kube-apiserver
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - kube-apiserver
+          - --admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,ResourceQuota
+          - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+          - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+          - --secure-port=6443
+          - --insecure-port=0
+          - --requestheader-group-headers=X-Remote-Group
+          - --requestheader-extra-headers-prefix=X-Remote-Extra-
+          - --etcd-servers=http://127.0.0.1:2379
+          - --kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt
+          - --kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key
+          - --kubelet-certificate-authority=/etc/kubernetes/pki/ca.crt
+    -     - --authorization-mode=AlwaysAllow
+    +     - --authorization-mode=RBAC
+          ...
+          ...
+
+          image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.0
+          livenessProbe:
+            failureThreshold: 8
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: 6443
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+          name: kube-apiserver
+          resources:
+            requests:
+              cpu: 250m
+          volumeMounts:
+          - mountPath: /etc/kubernetes/pki
+            name: k8s-certs
+            readOnly: true
+          ...
+          ...
+    ```
+
+    #### Impact
+    Only authorized requests will be served.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-apiserver/
+    * https://kubernetes.io/docs/admin/authorization/
+    * https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+    * https://kubernetes.io/docs/concepts/cluster-administration/master-node-communication/#apiserver---kubelet
+provider: Kubernetes
+ruleId: CKV_K8S_74
+severity: High
+sid: ckv-k8s-74
+title: "Ensure that the --authorization-mode argument is not set to AlwaysAllow"

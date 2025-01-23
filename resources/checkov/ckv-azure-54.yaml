@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure MySQL is using the latest version of TLS encryption"
+extra:
+  entity: azurerm_mssql_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_54
+severity: Medium
+sid: ckv-azure-54
+title: "Ensure MySQL is using the latest version of TLS encryption"

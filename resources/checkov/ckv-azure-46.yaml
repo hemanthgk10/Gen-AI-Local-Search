@@ -1,0 +1,14 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Specifies a retention period of less than 90 days"
+extra:
+  entity: azurerm_mssql_database_extended_auditing_policy
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_46
+severity: Low
+sid: ckv-azure-46
+title: "Specifies a retention period of less than 90 days"

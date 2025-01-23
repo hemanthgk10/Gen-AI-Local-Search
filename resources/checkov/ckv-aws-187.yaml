@@ -1,0 +1,45 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon SageMaker is a fully managed machine learning service. With SageMaker, data scientists and developers can quickly and easily build and train machine learning models, and then directly deploy them into a production-ready hosted environment. It provides an integrated Jupyter authoring notebook instance for easy access to your data sources for exploration and analysis, so you don't have to manage servers.
+
+    For data protection purposes, it is recommended to encrypt the data in SageMaker at rest and in transit using KMS customer managed keys.
+extra:
+  entity: aws_sagemaker_domain
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon SageMaker is a fully managed machine learning service. With SageMaker, data scientists and developers can quickly and easily build and train machine learning models, and then directly deploy them into a production-ready hosted environment. It provides an integrated Jupyter authoring notebook instance for easy access to your data sources for exploration and analysis, so you don't have to manage servers.
+
+    For data protection purposes, it is recommended to encrypt the data in SageMaker at rest and in transit using KMS customer managed keys.
+
+    #### Rationale
+    Encryption helps you protect your stored data against unauthorized access and other security risks.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_sagemaker_domain`.
+
+    Terraform example
+    ```
+    resource "aws_sagemaker_domain" "example" {
+        domain_name = "example"
+        auth_mode   = "IAM"
+        vpc_id      = aws_vpc.test.id
+    +   kms_key_id  = ${aws_kms_key.example.arn}
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sagemaker_domain#kms_key_id
+    * https://docs.aws.amazon.com/sagemaker/latest/dg/data-protection.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_187
+severity: High
+sid: ckv-aws-187
+title: "Ensure Sagemaker domain is encrypted by KMS using a customer managed Key (CMK)"

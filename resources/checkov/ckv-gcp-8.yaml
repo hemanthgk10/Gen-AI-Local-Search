@@ -1,0 +1,61 @@
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure Stackdriver Monitoring is set to Enabled on Kubernetes Engine
+  Clusters
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+  #### Description
+  Stackdriver Monitoring to monitor signals and build operations in your Kubernetes Engine clusters. Stackdriver Monitoring can access metrics about CPU utilization, some disk traffic metrics, network traffic, and uptime information. Stackdriver Monitoring uses the Monitoring agent to access additional system resources and application services in virtual machine instances.
+
+  #### Rationale
+  By Enabling Stackdriver Monitoring you will have system metrics and custom metrics. System metrics are measurements of the cluster's infrastructure, such as CPU or memory usage. For system metrics, Stackdriver creates a Deployment that periodically connects to each node and collects metrics about its Pods and containers, then sends the metrics to Stackdriver. Metrics for usage of system resources are collected from the CPU, Memory, Evictable memory, Non-evictable memory, and Disk sources.
+
+  #### Remediation
+  By default, Stackdriver Monitoring is enabled when you create a new cluster using the gcloud command-line tool or Google Cloud Platform Console.
+
+  Terraform example
+  ```
+  resource "google_container_cluster" "primary" {
+      name               = "marcellus-wallace"
+      location           = "us-central1-a"
+      initial_node_count = 3
+
+  +   monitoring_service = "monitoring.googleapis.com/kubernetes"
+  }
+  ```
+
+  Using *Console*
+    1. Go to [Kubernetes GCP Console](https://console.cloud.google.com/kubernetes/list)
+    2. Select reported Kubernetes clusters for which monitoring is disabled
+    3. Click on EDIT button and Set `Stackdriver Monitoring` to Enabled
+
+  Using *Command Line*
+  To enable monitoring for an existing cluster, run the following command:
+  ```
+  gcloud container clusters update [CLUSTER_NAME] --zone [COMPUTE_ZONE] - monitoring-service monitoring.googleapis.com
+  ```
+
+  #### Impact
+  You are charged for the accrued storage costs when you export logs to another Google Cloud Platform service, such as BigQuery. Exporting logs from Stackdriver has no Stackdriver charge.
+
+  #### References
+  * https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-container-cluster
+  * https://cloud.google.com/kubernetes-engine/docs/how-to/monitoring?hl=en_US
+  * https://cloud.google.com/monitoring/agent/
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#monitoring_service
+
+  #### Notes
+  If you are using Stackdriver Logging, Stackdriver Error Reporting, Debugging, or Stackdriver Trace, and you are not using any services from Stackdriver Monitoring, then you do not have to associate your GCP project with a Stackdriver account and you do not have to select a service tier. By default, Stackdriver limits the features available to your project to those features in the Basic Tier of service.
+lwid:
+  - GCP_CIS_7_2
+  - GCP_K8S_1_2
+provider: GCP
+ruleId: CKV_GCP_8
+severity: High
+sid: ckv-gcp-8
+title: Ensure Stackdriver Monitoring is set to Enabled on Kubernetes Engine Clusters

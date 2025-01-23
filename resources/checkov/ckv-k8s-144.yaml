@@ -1,0 +1,93 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    kubelet is the primary "node agent" that runs on each node in a Kubernetes cluster. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    Kubelet configuration has a `protectKernelDefaults` flag that controls how the Kubelet behaves if it finds a sysctl with a value that doesn’t match what it expects.
+
+    This is option is set to false by default, which means that the kubelet will set sysctl’s as necessary to operate as expected. Setting this to `true` is desired, as it would ensure that the kubelet leaves your defaults untouched and hardened.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    kubelet is the primary "node agent" that runs on each node in a Kubernetes cluster. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    Kubelet configuration has a `protectKernelDefaults` flag that controls how the Kubelet behaves if it finds a sysctl with a value that doesn’t match what it expects.
+
+    This is option is set to false by default, which means that the kubelet will set sysctl’s as necessary to operate as expected. Setting this to `true` is desired, as it would ensure that the kubelet leaves your defaults untouched and hardened.
+
+    #### Rationale
+    Kernel parameters are usually tuned and hardened by the system administrators before putting the systems into production. These parameters protect the kernel and the system. Your kubelet kernel defaults that rely on such parameters should be appropriately set to match the desired secured system state. Ignoring this could potentially lead to running pods with undesired kernel behavior.
+
+    #### Audit
+    Run the following command on each node:
+    ```
+     ps -ef | grep kubelet
+    ```
+    Verify that the `--protect-kernel-defaults` argument is set to `true`.
+
+    If the `--protect-kernel-defaults` argument is not present, check that there is a Kubelet config file specified by `--config`, and that the file sets `protectKernelDefaults` to `true`.
+
+    #### Remediation
+    If using a Kubelet config file, edit the file to set `protectKernelDefaults: true`.
+
+    If using executable arguments, edit the kubelet service file `/etc/systemd/system/kubelet.service.d/10-kubeadm.conf` on each worker node and set the below parameter in `KUBELET_AUTHZ_ARGS` variable.
+    ```
+        --protect-kernel-defaults=true
+    ```
+
+    Based on your system, restart the `kubelet` service. For example:
+    ```
+       systemctl daemon-reload
+       systemctl restart kubelet.service
+    ```
+
+    By default, `--protect-kernel-defaults` is not set.
+
+    Example of Kubelet Configuration file:
+    ```yaml
+         apiVersion: kubelet.config.k8s.io/v1beta1
+         kind: KubeletConfiguration
+         address: 0.0.0.0
+         authentication:
+            anonymous:
+              enabled: false
+            x509:
+              clientCaFile: "/etc/pf9/kube.d/certs/kubelet/server/ca.crt"
+         evictionHard:
+            memory.available:  "200Mi"
+         podCIDR: 10.200.0.0/16
+         authorization:
+            mode: Webhook
+         maxPods: 200
+         readOnlyPort: 0
+    +    protectKernelDefaults: true
+         ...
+         ...
+    ```
+
+    #### Impact
+    You would have to re-tune kernel parameters to match kubelet parameters.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kubelet/
+    * https://www.openshift.com/blog/12-kubernetes-configuration-best-practices
+    * https://jaosorior.dev/2020/protectkerneldefaults-in-openshift/
+
+    #### CIS Controls:
+    **Version 6**
+      *3 Secure Configurations for Hardware and Software on Mobile Devices, Laptops, Workstations, and Servers* -- Secure Configurations for Hardware and Software on Mobile Devices, Laptops, Workstations, and Servers.
+provider: Kubernetes
+ruleId: CKV_K8S_144
+severity: Medium
+sid: ckv-k8s-144
+title: "Ensure that the --protect-kernel-defaults argument is set to true"

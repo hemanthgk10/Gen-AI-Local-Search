@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that SQL server disables public network access"
+extra:
+  entity: azurerm_mssql_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_113
+severity: High
+sid: ckv-azure-113
+title: "Ensure that SQL server disables public network access"

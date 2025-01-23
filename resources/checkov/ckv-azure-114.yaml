@@ -1,0 +1,14 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that key vault secrets have 'content_type' set"
+extra:
+  entity: azurerm_key_vault_secret
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_114
+severity: Low
+sid: ckv-azure-114
+title: "Ensure that key vault secrets have 'content_type' set"

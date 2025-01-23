@@ -1,0 +1,67 @@
+---
+autofix: true
+category: Storage
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Datalake storage encryption defaults to Enabled, it shouldn't be overridden to Disabled."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/azu004.go"
+guidelines: |-
+    #### Description
+    Encryption in Azure Data Lake Storage Gen1 helps you protect your data, implement enterprise security policies, and meet regulatory compliance requirements.
+
+    Data Lake Storage Gen1 supports encryption of data both at rest and in transit. For data at rest, Data Lake Storage Gen1 supports "on by default," transparent encryption.
+
+    #### Rationale
+    Azure Data Lake Storage transparent data encryption helps protect against the threat of malicious activity by performing real-time encryption and decryption of the data, associated backups, and transaction log files at rest without requiring changes to the application.
+
+    #### Remediation
+    Possible values for `encryption_state` are
+    * Enabled
+    * Disabled
+
+    Default value is `Enabled`.
+
+    Terraform example
+    ```
+    resource "azurerm_resource_group" "example" {
+         name     = "example-resources"
+         location = "northeurope"
+    }
+
+    resource "azurerm_data_lake_store" "example" {
+          name                = "consumptiondatalake"
+          resource_group_name = azurerm_resource_group.example.name
+          location            = azurerm_resource_group.example.location
+    -     encryption_state    = "Disabled"
+    + 	  encryption_state    = "Enabled"
+          encryption_type     = "ServiceManaged"
+          ...
+          ...
+    }
+    ```
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/data-lake-store/data-lake-store-security-overview
+    * https://www.terraform.io/docs/providers/azurerm/r/data_lake_store.html
+    * https://docs.microsoft.com/en-us/azure/data-lake-store/data-lake-store-encryption
+lwid: []
+provider: Azure
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: encryption_state
+        resourceAttributeType: string
+        resourceAttributeValue: Enabled
+        resourceType:
+          - azurerm_data_lake_store
+ruleId: AZU004
+severity: Medium
+sid: tfsec-azu004
+title: "Unencrypted data lake storage"

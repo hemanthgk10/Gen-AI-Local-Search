@@ -1,0 +1,53 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Security Center contacts the subscription owners whenever a high-severity
+  alert is triggered for their subscription. You should provide a security contact
+  along with the email address.
+extra:
+  entity: Microsoft.Security/securityContacts
+  type: resource
+guidelines: |-
+  #### Description
+  Security Center contacts the subscription owners whenever a high-severity alert is triggered for their subscription. You should provide a security contact along with the email address.
+
+  #### Rationale
+  Azure Security Center contacts the Subscription Owner to notify them about security alerts. Adding your Security Contact's phone number to ensures that your organization's Security Team is included in these alerts. This ensures that the proper people are aware of any potential compromise in order to mitigate the risk in a timely fashion.
+
+  #### Remediation
+  Set the `phone` attribute in `azurerm_security_center_contact`.
+
+  Terraform example
+  ```
+  resource "azurerm_security_center_contact" "example" {
+      email = "contact@example.com"
+  +   phone = "+1-555-555-5555"
+
+      alert_notifications = true
+      alerts_to_admins    = true
+  }
+  ```
+
+  From Azure Console
+    1. Go to `Security Center`
+    2. Click on `Pricing & settings`
+    3. Click on the appropriate Management Group, Subscription, or Workspace
+    4. Click on `Email notifications`
+    5. Enter a valid security contact `phone number`.
+    6. Click `Save`
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/security-center/security-center-provide-security-contact-details
+  * https://docs.microsoft.com/en-us/rest/api/securitycenter/securitycontacts/update
+  * https://docs.microsoft.com/en-us/rest/api/securitycenter/securitycontacts/list
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-governance-strategy#gs-3-define-security-posture-management-strategy
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/security_center_contact#phone
+lwid:
+  - Azure_CIS_2_17
+provider: Azure
+ruleId: CKV_AZURE_20
+severity: Medium
+sid: ckv-azure-20
+title: Ensure that security contact 'Phone number' is set

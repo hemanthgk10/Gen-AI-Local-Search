@@ -1,0 +1,65 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure 'Automatic node upgrade' is enabled for Kubernetes Clusters
+extra:
+  entity: google_container_node_pool
+  type: resource
+guidelines: |-
+  #### Description
+  Node auto-upgrades help you keep the nodes in your cluster or node pool up to date with the latest stable version of Kubernetes. Auto-Upgrades use the same update mechanism as manual node upgrades.
+
+  #### Rationale
+  Node pools with auto-upgrades enabled are automatically scheduled for upgrades when a new stable Kubernetes version becomes available. When the upgrade is performed, the node pool is upgraded to match the current cluster master version. Some benefits of using enabling auto-upgrades are:
+    * Lower management overhead: You don't have to manually track and update to the latest version of Kubernetes.
+    * Better security: Sometimes new binaries are released to fix a security issue. With auto-upgrades, Kubernetes Engine automatically ensures that security updates are applied and kept up to date.
+    * Ease of use: Provides a simple way to keep your nodes up to date with the latest Kubernetes features.
+
+  #### Remediation
+  By default, subsequent node pools do not have auto-upgrades enabled.
+
+  Terraform example
+  ```
+  resource "google_container_node_pool" "primary_preemptible_nodes" {
+      name       = "my-node-pool"
+      location   = "us-central1"
+      cluster    = google_container_cluster.primary.name
+      node_count = 1
+
+  +   management {
+  +      auto_upgrade = "true"
+  +   }
+      ...
+      ...
+  }
+  ```
+
+  Using *Console*
+    1. Go to [Kubernetes GCP Console](https://console.cloud.google.com/kubernetes/list)
+    2. Select reported Kubernetes clusters for which Automatic node upgrades is disabled.
+    3. Click on EDIT button and Set `Automatic node upgrades` to Enabled.
+
+  Using *Command Line*
+  To enable Automatic node upgrades for an existing cluster's node pool, run the following command:
+  ```
+  gcloud container node-pools update [NODE_POOL] --cluster [CLUSTER_NAME] --zone [COMPUTE_ZONE] --enable-autoupgrade
+  ```
+
+  #### Impact
+  Enabling auto-upgrades does not cause your nodes to upgrade immediately. Automatic upgrades occur at regular intervals at the discretion of the Kubernetes Engine team.
+
+  #### References
+  * https://cloud.google.com/kubernetes-engine/docs/concepts/node-auto-upgrades
+
+  #### Notes
+  Node auto-upgrades is not available for Alpha Clusters or clusters running the Ubuntu node image
+lwid:
+  - GCP_CIS_7_8
+  - GCP_K8S_1_8
+provider: GCP
+ruleId: CKV_GCP_10
+severity: Medium
+sid: ckv-gcp-10
+title: Ensure 'Automatic node upgrade' is enabled for Kubernetes Clusters

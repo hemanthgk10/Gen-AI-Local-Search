@@ -1,0 +1,84 @@
+---
+autofix: true
+category: Network
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Auditing helps you maintain regulatory compliance, understand database activity, and gain insight into discrepancies and anomalies that could indicate business concerns or suspected security violations."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/azu018.go"
+guidelines: |-
+    #### Description
+    Ensure that 'Auditing' is set to 'Enabled' for SQL servers
+
+    #### Rationale
+    The Azure platform allows a SQL server to be created as a service. Enabling auditing at the server level ensures that all existing and newly created databases on the SQL server instance are audited. Auditing policy applied on the SQL database does not override auditing policy and settings applied on the particular SQL server where the database is hosted.
+    Auditing tracks database events and writes them to an audit log in the Azure storage account. It also helps to maintain regulatory compliance, understand database activity, and gain insight into discrepancies and anomalies that could indicate business concerns or suspected security violations.
+
+    #### Remediation
+    *Azure Console*
+      1. Go to SQL servers
+      2. For each server instance
+      3. Click on Auditing
+      4. Set Auditing to On
+
+    Terraform example
+    ```
+    resource "azurerm_mssql_server" "example" {
+        name                         = "mssqlserver"
+        resource_group_name          = azurerm_resource_group.example.name
+        location                     = azurerm_resource_group.example.location
+        version                      = "12.0"
+        administrator_login          = "missadministrator"
+        administrator_login_password = "thisIsKat11"
+        minimum_tls_version          = "1.2"
+
+    +   extended_auditing_policy {
+    +     storage_endpoint                        = azurerm_storage_account.example.primary_blob_endpoint
+    +     storage_account_access_key              = azurerm_storage_account.example.primary_access_key
+    +     storage_account_access_key_is_secondary = true
+    +     retention_in_days                       = 6
+    +   }
+
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/security-center/security-center-enable-auditing-on-sql-servers
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-logging-threat-detection#lt-4-enable-logging-for-azure-resources
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/sql_server#extended_auditing_policy
+
+    #### Additional Information
+    * A server policy applies to all existing and newly created databases on the server.
+    * If server blob auditing is enabled, it always applies to the database. The database will be audited, regardless of the database auditing settings. Auditing type table is already depricated leaving only type blob available.
+    * Enabling blob auditing on the database, in addition to enabling it on the server, does not override or change any of the settings of the server blob auditing. Both audits will exist side by side. In other words, the database is audited twice in parallel; once by the server policy and once by the database policy.
+lwid:
+  - Azure_CIS_131_4_1_1
+  - Azure_CIS_4_1_1
+  - Azure_CIS_4_2_1
+provider: Azure
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: extended_auditing_policy
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            extended_auditing_policy {
+              storage_endpoint                        = "<Provide storage endpoint>"
+              storage_account_access_key              = "<Provide storage account access key>"
+              storage_account_access_key_is_secondary = true
+              retention_in_days                       = 6
+            }
+        resourceType:
+          - azurerm_mssql_server
+ruleId: AZU018
+severity: Low
+sid: tfsec-azu018
+title: "Auditing should be enabled on Azure SQL Databases"

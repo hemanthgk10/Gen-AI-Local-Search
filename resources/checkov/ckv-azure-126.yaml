@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensures that Active Directory is used for authentication for Service Fabric"
+extra:
+  entity: azurerm_service_fabric_cluster
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_126
+severity: Medium
+sid: ckv-azure-126
+title: "Ensures that Active Directory is used for authentication for Service Fabric"

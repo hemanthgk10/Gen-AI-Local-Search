@@ -1,0 +1,61 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Elastic Load Balancing automatically distributes your incoming traffic across multiple targets, such as EC2 instances, containers, and IP addresses, in one or more Availability Zones. It monitors the health of its registered targets, and routes traffic only to the healthy targets. Elastic Load Balancing scales your load balancer as your incoming traffic changes over time."
+extra:
+  entity: aws_alb
+  type: resource
+guidelines: |-
+    #### Description
+    Elastic Load Balancing automatically distributes your incoming traffic across multiple targets, such as EC2 instances, containers, and IP addresses, in one or more Availability Zones. It monitors the health of its registered targets, and routes traffic only to the healthy targets. Elastic Load Balancing scales your load balancer as your incoming traffic changes over time.
+
+    #### Rationale
+    To prevent your load balancer from being deleted accidentally, you should enable deletion protection.
+
+    #### Remediation
+    If `enable_deletion_protection` is set to true, deletion of the load balancer will be disabled via the AWS API. This will prevent Terraform from deleting the load balancer.
+
+    Terraform example
+    ```
+    resource "aws_lb" "test" {
+        name               = "test-lb-tf"
+        internal           = false
+        load_balancer_type = "application"
+        security_groups    = [aws_security_group.lb_sg.id]
+        subnets            = aws_subnet.public.*.id
+
+    +   enable_deletion_protection = true
+        ...
+        ...
+    }
+    ```
+
+    Using *Console*:
+
+    1. Open the [Amazon EC2 console](https://console.aws.amazon.com/ec2/).
+    2. On the navigation pane, under `LOAD BALANCING`, choose `Load Balancers`.
+    3. Select the load balancer.
+    4. On the `Description` tab, choose `Edit` attributes.
+    5. On the `Edit` load balancer attributes page, select `Enable for Delete Protection`, and then choose `Save`.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb#enable_deletion_protection
+    * https://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html#deletion-protection
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_150
+severity: High
+sid: ckv-aws-150
+title: "Ensure that Load Balancer has deletion protection enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: enable_deletion_protection
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_lb" ]

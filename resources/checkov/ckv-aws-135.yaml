@@ -1,0 +1,80 @@
+---
+category: Compute
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Elastic Compute Cloud (Amazon EC2) provides scalable computing capacity in the Amazon Web Services (AWS) Cloud. Using Amazon EC2 eliminates your need to invest in hardware up front, so you can develop and deploy applications faster. You can use Amazon EC2 to launch as many or as few virtual servers as you need, configure security and networking, and manage storage. Amazon EC2 enables you to scale up or down to handle changes in requirements or spikes in popularity, reducing your need to forecast traffic.
+
+    Amazon Elastic Block Store (Amazon EBS) provides block level storage volumes for use with EC2 instances. EBS volumes behave like raw, unformatted block devices. You can mount these volumes as devices on your instances. EBS volumes that are attached to an instance are exposed as storage volumes that persist independently from the life of the instance.
+
+    EBS–optimized instances deliver dedicated bandwidth to Amazon EBS. When attached to an EBS–optimized instance, General Purpose SSD (gp2 and gp3) volumes are designed to deliver their baseline and burst performance 99% of the time, and Provisioned IOPS SSD (io1 and io2) volumes are designed to deliver their provisioned performance 99.9% of the time.
+extra:
+  entity: aws_instance
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elastic Compute Cloud (Amazon EC2) provides scalable computing capacity in the Amazon Web Services (AWS) Cloud. Using Amazon EC2 eliminates your need to invest in hardware up front, so you can develop and deploy applications faster. You can use Amazon EC2 to launch as many or as few virtual servers as you need, configure security and networking, and manage storage. Amazon EC2 enables you to scale up or down to handle changes in requirements or spikes in popularity, reducing your need to forecast traffic.
+
+    Amazon Elastic Block Store (Amazon EBS) provides block level storage volumes for use with EC2 instances. EBS volumes behave like raw, unformatted block devices. You can mount these volumes as devices on your instances. EBS volumes that are attached to an instance are exposed as storage volumes that persist independently from the life of the instance.
+
+    EBS–optimized instances deliver dedicated bandwidth to Amazon EBS. When attached to an EBS–optimized instance, General Purpose SSD (gp2 and gp3) volumes are designed to deliver their baseline and burst performance 99% of the time, and Provisioned IOPS SSD (io1 and io2) volumes are designed to deliver their provisioned performance 99.9% of the time.
+
+    #### Rationale
+    Enabling optimization provides the best performance for your EBS volumes by minimizing contention between Amazon EBS I/O and other traffic from your instance.
+
+    #### Remediation
+    Set `ebs_optimized` to `true`.
+
+    Terraform example
+    ```
+    resource "aws_instance" "foo" {
+        ami           = "ami-005e54dee72cc1d00"
+        instance_type = "t2.micro"
+
+        network_interface {
+          network_interface_id = aws_network_interface.foo.id
+          device_index         = 0
+        }
+    +   ebs_optimized = true
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+          "AvailabilityZone" : "us-west-2a",
+          "DisableApiTermination" : true,
+    +     "EbsOptimized" : true,
+          "ImageId" : "ami-005e54dee72cc1d00",
+          "InstanceType" : "t2.micro",
+          "Monitoring" : true,
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance#ebs_optimized
+    * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-optimized.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_135
+severity: Low
+sid: ckv-aws-135
+title: "Ensure that EC2 is EBS optimized"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: ebs_optimized
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_instance" ]

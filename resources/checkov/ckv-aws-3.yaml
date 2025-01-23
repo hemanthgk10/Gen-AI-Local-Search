@@ -1,0 +1,86 @@
+---
+autofix: true
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+  - HIPAA
+description: "Ensure that all Amazon Elastic Block Store (EBS) volumes attached to web-tier EC2 instances are encrypted in order to meet security and compliance requirements. When an encrypted AWS EBS volume is attached to a web-tier EC2 instance, the data stored at rest on the volume, disk I/O and the snapshots created from the volume is encrypted. The EBS volumes encryption/decryption process is handled transparently and does not require any additional action from you, your EC2 instance, or your application. The encryption keys used to encrypt your web-tier data are entirely managed and protected by Amazon Key Management Service (KMS)."
+extra:
+  entity: "AWS::EC2::Volume"
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure that all Amazon Elastic Block Store (EBS) volumes attached to production EC2 instances are encrypted to meet security and compliance requirements. When EBS encryption is enabled, data stored to disk (and data in subsequent disk snapshots) is encrypted at rest. This encryption is handled transparently by Amazon's Key Management Service (KMS) and requires no additional action on your part.
+
+    #### Rationale
+    Unencrypted EBS volumes means that data is stored on Amazon's disks unencrypted, and could be readable by anyone who obtains access to the physical disk where your data is stored. Enabling encryption at rest to mitigate this issue is a common regulatory requirement.
+
+    #### Remediation
+    Set `encrypted` flag as true and provide the `kms_key_id` for encryption.
+
+    Terraform Example
+    ```
+    data "aws_ebs_default_kms_key" "current" {}
+
+    resource "aws_ebs_volume" "example" {
+        availability_zone = "us-west-2a"
+    +   encrypted  = true
+        kms_key_id = data.aws_ebs_default_kms_key.current.key_arn
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation Example:
+    ```json
+    {
+        "Type" : "AWS::EC2::Volume",
+        "Properties" : {
+            "AutoEnableIO" : true,
+            "AvailabilityZone" : "us-west-2a",
+    +       "Encrypted" : true,
+            "Size" : 30,
+            ...
+            ...
+          }
+    }
+    ```
+
+    #### References
+    * https://aws.amazon.com/blogs/compute/must-know-best-practices-for-amazon-ebs-encryption/
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume
+    * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-ebs-volume.html
+lwid:
+  - LW_AWS_GENERAL_SECURITY_2
+provider: AWS
+remediation:
+  -
+    checkType: CloudFormation
+    steps:
+      -
+        actions: add
+        resource:
+          - resource
+        resourceAttribute: Encrypted
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - "AWS::EC2::Volume"
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: encrypted
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_ebs_volume
+ruleId: CKV_AWS_3
+severity: Medium
+sid: ckv-aws-3
+title: "Ensure all data stored in the EBS is secured"

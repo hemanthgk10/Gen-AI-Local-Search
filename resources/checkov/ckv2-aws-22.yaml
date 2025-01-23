@@ -1,0 +1,46 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS IAM policies are JSON-formatted objects that specify actions and resources on which those actions can be taken. The policy is then attached to a resource, such as a user account, EC2 instance, or internal AWS function, allowing that resource to make API calls to execute actions within the account.
+
+    AWS console defaults to no check boxes selected when creating a new IAM user. When cerating the IAM User credentials you have to determine what type of access they require. IAM users are created mainly for programatic access (APIs, CLI etc) only. If any user required to access the console, they should assume role instead of being given direct console access.
+extra:
+  entity: aws_iam_user
+  type: resource
+guidelines: |-
+    #### Description
+    AWS IAM policies are JSON-formatted objects that specify actions and resources on which those actions can be taken. The policy is then attached to a resource, such as a user account, EC2 instance, or internal AWS function, allowing that resource to make API calls to execute actions within the account.
+
+    AWS console defaults to no check boxes selected when creating a new IAM user. When cerating the IAM User credentials you have to determine what type of access they require. IAM users are created mainly for programatic access (APIs, CLI etc) only. If any user required to access the console, they should assume role instead of being given direct console access.
+
+    #### Rationale
+    Having direct access to console can increase the chances of exposure to risk. Assuming a role, to gain access to console provides time restricted access only. This will also help us to control the account exposure to the hackers, if that particular IAM user account is compromised.
+
+    #### Remediation
+    Make sure that there is no `aws_iam_user_login_profile` configured for any IAM user.
+
+    Terraform example
+    ```
+    resource "aws_iam_user" "example" {
+        name = "test-user"
+    }
+
+    - resource "aws_iam_user_login_profile" "example" {
+    -    user    = aws_iam_user.example.name
+    -    pgp_key = "keybase:some_person_that_exists"
+    - }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user_login_profile
+    * https://docs.aws.amazon.com/IAM/latest/UserGuide/console_controlling-access.html
+    * https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_22
+severity: Medium
+sid: ckv2-aws-22
+title: "Ensure an IAM User does not have access to the console"

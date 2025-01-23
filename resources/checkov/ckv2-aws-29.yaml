@@ -1,0 +1,58 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon API Gateway is a fully managed service that makes it easy for developers to create, publish, maintain, monitor, and secure APIs at any scale. APIs act as the "front door" for applications to access data, business logic, or functionality from your backend services.
+
+    AWS Web Application Firewall (WAF) helps to protect your web applications from common application-layer exploits that can affect availability or consume excessive resources. WAF allows you to use access control lists (ACLs), rules, and conditions that define acceptable or unacceptable requests or IP addresses.
+extra:
+  entity: aws_api_gateway_rest_api
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon API Gateway is a fully managed service that makes it easy for developers to create, publish, maintain, monitor, and secure APIs at any scale. APIs act as the "front door" for applications to access data, business logic, or functionality from your backend services.
+
+    AWS Web Application Firewall (WAF) helps to protect your web applications from common application-layer exploits that can affect availability or consume excessive resources. WAF allows you to use access control lists (ACLs), rules, and conditions that define acceptable or unacceptable requests or IP addresses.
+
+    #### Rationale
+    Having WAF infront of the API Gateway helps to protect your API Gateway API from common web exploits, such as SQL injection and cross-site scripting (XSS) attacks.
+
+    #### Remediation
+    Configure the `aws_wafv2_web_acl_association` for the API Gateway and WAF.
+
+    Terraform example
+    ```
+    resource "aws_api_gateway_stage" "example_gw" {
+        deployment_id = aws_api_gateway_deployment.example.id
+        rest_api_id   = aws_api_gateway_rest_api.example.id
+        stage_name    = "example"
+    }
+
+    resource "aws_wafv2_web_acl" "example" {
+        name  = "web-acl-association-example"
+        scope = "REGIONAL"
+
+        default_action {
+          allow {}
+        }
+        ...
+        ...
+    }
+
+    + resource "aws_wafv2_web_acl_association" "example" {
+    +    resource_arn = aws_api_gateway_stage.example_gw.arn
+    +    web_acl_arn  = aws_wafv2_web_acl.example.arn
+    + }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association
+    * https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-control-access-aws-waf.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_29
+severity: High
+sid: ckv2-aws-29
+title: "Ensure public API gateway are protected by WAF"

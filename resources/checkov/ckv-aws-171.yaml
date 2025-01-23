@@ -1,0 +1,65 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon EMR (previously called Amazon Elastic MapReduce) is a managed cluster platform that simplifies running big data frameworks, such as Apache Hadoop and Apache Spark, on AWS to process and analyze vast amounts of data.
+
+    The central component of Amazon EMR is the cluster. A cluster is a collection of Amazon Elastic Compute Cloud (Amazon EC2) instances.
+
+    Security configurations in Amazon EMR are templates for different security setups. You can create a security configuration to conveniently re-use a security setup whenever you create a cluster.
+extra:
+  entity: aws_emr_security_configuration
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon EMR (previously called Amazon Elastic MapReduce) is a managed cluster platform that simplifies running big data frameworks, such as Apache Hadoop and Apache Spark, on AWS to process and analyze vast amounts of data.
+
+    The central component of Amazon EMR is the cluster. A cluster is a collection of Amazon Elastic Compute Cloud (Amazon EC2) instances.
+
+    Security configurations in Amazon EMR are templates for different security setups. You can create a security configuration to conveniently re-use a security setup whenever you create a cluster.
+
+    #### Rationale
+    Security configurations in Amazon EMR help secure cluster resources and data according to your business requirements.
+
+    #### Remediation
+    Possible options are `SSE-S3` | `SSE-KMS` | `CSE-KMS` | `CSE-Custom`. Recommended is to set the `EncryptionMode` to `SSE-KMS`. SSE-KMS is server-side encryption with AWS KMS-managed keys (SSE-KMS).
+
+    Terraform example
+    ```
+    resource "aws_emr_security_configuration" "foo" {
+        name = "emrsc_other"
+
+        configuration = <<EOF
+        {
+          "EncryptionConfiguration": {
+            "AtRestEncryptionConfiguration": {
+              "S3EncryptionConfiguration": {
+    +           "EncryptionMode": "SSE-KMS",
+    +           "AwsKmsKey": "arn:aws:kms:us-west-2:187416307283:alias/tf_emr_test_key1"
+              },
+              "LocalDiskEncryptionConfiguration": {
+                "EncryptionKeyProviderType": "AwsKms",
+                "AwsKmsKey": "arn:aws:kms:us-west-2:187416307283:alias/tf_emr_test_key2"
+              }
+            },
+            "EnableInTransitEncryption": false,
+            "EnableAtRestEncryption": true
+          }
+        }
+        EOF
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/qldb_ledger#permissions_mode
+    * https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-security-configurations.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_171
+severity: High
+sid: ckv-aws-171
+title: "Ensure Cluster security configuration encryption is using SSE-KMS"

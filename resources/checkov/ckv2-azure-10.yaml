@@ -1,0 +1,55 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Microsoft Anti-malware is configured to automatically updates for Virtual Machines"
+extra:
+  entity: azurerm_virtual_machine
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure that Microsoft Anti-malware is configured to automatically update for Virtual Machines.
+
+    #### Rationale
+    Installing endpoint protection systems (like Antimalware for Azure) provides for real-time protection capability that helps identify and remove viruses, spyware, and other malicious software, with configurable alerts when known malicious or unwanted software attempts to install itself or run on Azure systems.
+
+    #### Remediation
+    Make sure `type` is set to `IaaSAntimalware` and `auto_upgrade_minor_version` to `true` in `azurerm_virtual_machine_extension`.
+
+    Terraform example
+    ```
+    resource "azurerm_virtual_machine" "example" {
+        name                  = "acctvm"
+        vm_size               = "Standard_F2"
+        ...
+        ...
+    }
+
+    + resource "azurerm_virtual_machine_extension" "example" {
+    +    name                       = "hostname"
+    +    virtual_machine_id         = azurerm_virtual_machine.example.id
+    +    publisher                  = "Microsoft.Azure.Extensions"
+    +    type                       = "IaaSAntimalware"
+    +    type_handler_version       = "2.0"
+    +    auto_upgrade_minor_version = true
+    +    ...
+    +    ...
+    + }
+    ```
+
+    #### Impact
+    Endpoint protection will incur an additional cost to you.
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/security-center/security-center-install-endpoint-protection
+    * https://docs.microsoft.com/en-us/azure/security/azure-security-antimalware
+    * https://docs.microsoft.com/en-us/cli/azure/vm/extension?view=azure-cli-latest#az_vm_extension_list
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-endpoint-security#es-1-use-endpoint-detection-and-response-edr
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine_extension
+lwid: []
+provider: Azure
+ruleId: CKV2_AZURE_10
+severity: Medium
+sid: ckv2-azure-10
+title: "Ensure that Microsoft Anti-malware is configured to automatically updates for Virtual Machines"

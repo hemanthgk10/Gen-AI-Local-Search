@@ -1,0 +1,64 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Release Channels signal a graduating level of stability and production-readiness. These are based on observed performance of GKE clusters running that version and represent experience and confidence in the cluster version.
+
+    The Regular release channel upgrades every few weeks and is for production users who need features not yet offered in the Stable channel. These versions have passed internal validation, but don't have enough historical data to guarantee their stability. Known issues generally have known workarounds.
+
+    The Stable release channel upgrades every few months and is for production users who need stability above all else, and for whom frequent upgrades are too risky. These versions have passed internal validation and have been shown to be stable and reliable in production, based on the observed performance of those clusters.
+
+    Critical security patches are delivered to all release channels.
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Release Channels signal a graduating level of stability and production-readiness. These are based on observed performance of GKE clusters running that version and represent experience and confidence in the cluster version.
+
+    The Regular release channel upgrades every few weeks and is for production users who need features not yet offered in the Stable channel. These versions have passed internal validation, but don't have enough historical data to guarantee their stability. Known issues generally have known workarounds.
+
+    The Stable release channel upgrades every few months and is for production users who need stability above all else, and for whom frequent upgrades are too risky. These versions have passed internal validation and have been shown to be stable and reliable in production, based on the observed performance of those clusters.
+
+    Critical security patches are delivered to all release channels.
+
+    #### Rationale
+    Subscribe to the Regular or Stable Release Channel to automate version upgrades to the GKE cluster and to reduce version management complexity to the number of features and level of stability required.
+
+    #### Remediation
+    Currently, release channels are not enabled by default. Accepted values are `UNSPECIFIED`, `RAPID`, `REGULAR` and `STABLE`.
+
+    Terraform example
+    ```
+    resource "google_container_cluster" "example" {
+        name                        = "my-gke-cluster"
+        location                    = "us-central1"
+        remove_default_node_pool    = true
+        initial_node_count          = 1
+    +   release_channel {
+    +     channel = "STABLE"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### Impact
+    Once release channels are enabled on a cluster, they cannot be disabled. To stop using release channels, you must recreate the cluster without the `--release-channel` flag.
+
+    Node auto-upgrade is enabled (and cannot be disabled), so your cluster is updated automatically from releases available in the chosen release channel.
+
+    #### Note
+    Currently, cluster Release Channels are only configurable at cluster provisioning time.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#channel
+    * https://cloud.google.com/kubernetes-engine/docs/concepts/release-channels
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_70
+severity: Low
+sid: ckv-gcp-70
+title: "Ensure the GKE Release Channel is set"

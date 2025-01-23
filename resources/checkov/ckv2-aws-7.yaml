@@ -1,0 +1,72 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: |-
+    Amazon EMR is a cloud big data platform for running large-scale distributed data processing jobs, interactive SQL queries, and machine learning (ML) applications using open-source analytics frameworks such as Apache Spark, Apache Hive, and Presto.
+
+    A security group acts as a virtual firewall for your AWS resources to control inbound and outbound traffic. Having a security group with right rules attached to the AWS resource can prevent it from attackers.
+extra:
+  entity: aws_emr_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon EMR is a cloud big data platform for running large-scale distributed data processing jobs, interactive SQL queries, and machine learning (ML) applications using open-source analytics frameworks such as Apache Spark, Apache Hive, and Presto.
+
+    A security group acts as a virtual firewall for your AWS resources to control inbound and outbound traffic. Having a security group with right rules attached to the AWS resource can prevent it from attackers.
+
+    #### Rationale
+    Removing unfettered connectivity to the AWS EMR cluster, reduces exposure to risk.
+
+    #### Remediation
+    Do not have `cidr_block` set to `0.0.0.0/0`. Instead have it configured with a specific subnet IP CIDR blocks.
+
+    Terraform example
+    ```
+    resource "aws_emr_cluster" "cluster" {
+        name          = "emr-test-arn"
+        release_label = "emr-4.6.0"
+        ec2_attributes {
+          subnet_id                         = aws_subnet.main.id
+    +     emr_managed_master_security_group = aws_security_group.allow_access.id
+    +     emr_managed_slave_security_group  = aws_security_group.allow_access.id
+          instance_profile                  = aws_iam_instance_profile.emr_profile.arn
+        }
+        ...
+        ...
+    }
+
+    resource "aws_security_group" "allow_access" {
+        name        = "allow_access"
+
+        ingress {
+          from_port   = 0
+          to_port     = 0
+          protocol    = "-1"
+    -     cidr_blocks = ["0.0.0.0/0"]
+    +     cidr_blocks = ["10.0.1.0./24"]
+        }
+
+        egress {
+          from_port   = 0
+          to_port     = 0
+          protocol    = "-1"
+    -     cidr_blocks = ["0.0.0.0/0"]
+    +     cidr_blocks = ["10.0.1.0./24"]
+        }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group#cidr_blocks
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/emr_cluster
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_7
+severity: Low
+sid: ckv2-aws-7
+title: "Ensure that Amazon EMR clusters' security groups are not open to the world"

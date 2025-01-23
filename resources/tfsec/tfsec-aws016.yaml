@@ -1,0 +1,52 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "Queues should be encrypted with customer managed KMS keys and not default AWS managed keys, in order to allow granular control over access to specific queues."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws016.go"
+guidelines: |-
+    #### Description
+    Ensure that Server-Side Encryption (SSE) is enabled for your AWS Simple Notification Service (SNS) topics for additional protection of sensitive data delivered as messages to subscribers. With the SSE feature enabled, when messages are published to encrypted topics, AWS SNS immediately encrypts the messages using an encryption algorithm.
+
+    #### Rationale
+    Unencrypted SNS topics mean that data stored might be at risk of potential security attack. Hence it is important to make sure that no compromise has been done as far as the security of your sensitive or confidential data is concerned.
+
+    #### Remediation
+    Enable server-side encryption (SSE) for an Amazon SNS topic, specify the CMK ID by setting the KmsMasterKeyId attribute
+
+    Terraform example:
+    ```
+    resource "aws_sns_topic" "my_topic" {
+      name              = "my_topic"
+    + kms_master_key_id = "alias/aws/sns"
+      ...
+      ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic#kms_master_key_id
+    * https://docs.aws.amazon.com/sns/latest/dg/sns-server-side-encryption.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: kms_master_key_id
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide the ARN of the KMS key>"
+        resourceType:
+          - aws_sns_topic
+ruleId: AWS016
+severity: Medium
+sid: tfsec-aws016
+title: "Unencrypted SNS topic"

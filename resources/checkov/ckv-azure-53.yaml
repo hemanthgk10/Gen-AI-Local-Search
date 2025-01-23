@@ -1,0 +1,15 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure 'public network access enabled' is set to 'False' for mySQL servers"
+extra:
+  entity: azurerm_mssql_server
+  type: resource
+lwid:
+  - GCP_CIS_6_4
+provider: Azure
+ruleId: CKV_AZURE_53
+severity: Medium
+sid: ckv-azure-53
+title: "Ensure 'public network access enabled' is set to 'False' for mySQL servers"

@@ -1,0 +1,70 @@
+---
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "AWS Glue is a managed ETL (extract, transform, and load) service that provides categorization, cleaning and enriching the data. It also helps in moving data across datastores. AWS Glue Data Catalog is a central metadata repository. The data in Glue can contain sensitive information that can be of interest to an unauthorized person. So ensure encrypting the data and data catalog."
+extra:
+  entity: aws_glue_data_catalog_encryption_settings
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Glue is a managed ETL (extract, transform, and load) service that provides categorization, cleaning and enriching the data. It also helps in moving data across datastores. AWS Glue Data Catalog is a central metadata repository. The data in Glue can contain sensitive information that can be of interest to an unauthorized person. So ensure encrypting the data and data catalog.
+
+    #### Rationale
+    Glue Data catalog is a central metadata repository that generates Python or Scala code, and a flexible scheduler that handles dependency resolution, job monitoring, and retries for an ETL job. With AWS KMS, you can encrypt the objects, data tables, partitions, connections and user-defined functions. This helps you meet the security and compliance requirements of data handling.
+
+    #### Remediation
+    Set `connection_password_encryption` and `encryption_at_rest` blocks for `aws_glue_data_catalog_encryption_settings` to encrypt the data at rest and also encrypting the password connection.
+
+    Terraform example:
+    ```
+    resource "aws_glue_data_catalog_encryption_settings" "example" {
+        data_catalog_encryption_settings {
+    +      connection_password_encryption {
+    +        aws_kms_key_id                       = "arn:aws:kms:us-west-2:111122223333:key/1234abcd"
+    +        return_connection_password_encrypted = true
+    +      }
+
+    +      encryption_at_rest {
+    +        catalog_encryption_mode = "SSE-KMS"
+    +        sse_aws_kms_key_id      = "arn:aws:kms:us-west-2:111122223333:key/1234567890ab"
+    +      }
+        }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+        "Type" : "AWS::Glue::DataCatalogEncryptionSettings",
+        "Properties" : {
+            "CatalogId" : String,
+    +       "DataCatalogEncryptionSettings" : {
+    +           "ConnectionPasswordEncryption" : {
+    +               "KmsKeyId" : "arn:aws:kms:us-west-2:111122223333:key/1234abcd",
+    +               "ReturnConnectionPasswordEncrypted" : true
+    +           },
+    +           "EncryptionAtRest" : {
+    +             "CatalogEncryptionMode" : "SSE-KMS",
+    +             "SseAwsKmsKeyId" : "arn:aws:kms:us-west-2:111122223333:key/1234567890ab"
+    +           }
+            }
+            ...
+            ...
+        }
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/glue/latest/dg/encrypt-glue-data-catalog.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/glue_data_catalog_encryption_settings#encryption_at_rest
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/glue_data_catalog_encryption_settings#connection_password_encryption
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_94
+severity: Medium
+sid: ckv-aws-94
+title: "Ensure Glue Data Catalog Encryption is enabled"

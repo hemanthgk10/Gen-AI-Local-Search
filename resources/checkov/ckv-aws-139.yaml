@@ -1,0 +1,76 @@
+---
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud. It provides cost-efficient, resizable capacity for an industry-standard relational database and manages common database administration tasks.
+
+    When a database instance or cluster is configured with deletion protection, the database cannot be deleted by any user. Deletion protection is available for Amazon Aurora and Amazon RDS for MySQL, MariaDB, Oracle, PostgreSQL, and SQL Server database instances in all AWS Regions.
+extra:
+  entity: aws_rds_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud. It provides cost-efficient, resizable capacity for an industry-standard relational database and manages common database administration tasks.
+
+    When a database instance or cluster is configured with deletion protection, the database cannot be deleted by any user. Deletion protection is available for Amazon Aurora and Amazon RDS for MySQL, MariaDB, Oracle, PostgreSQL, and SQL Server database instances in all AWS Regions.
+
+    #### Rationale
+    When you request the deletion of a database instance with deletion protection in the AWS Console, you are blocked and may not continue without first modifying the instance and disabling deletion protection. This helps us from accidental deletion of the production databases.
+
+    #### Remediation
+    Set `deletion_protection` to `true` for protecting databases from accidental deletion. Default value is `false`.
+
+    Terraform example
+    ```
+    resource "aws_rds_cluster" "postgresql" {
+        cluster_identifier      = "aurora-cluster-demo"
+        engine                  = "aurora-postgresql"
+        availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
+        database_name           = "mydb"
+        master_username         = "foo"
+        master_password         = "bar"
+        backup_retention_period = 5
+        preferred_backup_window = "07:00-09:00"
+    +   deletion_protection     = true
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::RDS::DBCluster",
+      "Properties" : {
+          "AvailabilityZones" : ["us-west-2a", "us-west-2b", "us-west-2c"],
+          "BackupRetentionPeriod" : 5,
+          "DatabaseName" : "mydb",
+          "StorageEncrypted" : true,
+    +     "DeleteProtection" : true
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster#deletion_protection
+    * https://aws.amazon.com/about-aws/whats-new/2018/09/amazon-rds-now-provides-database-deletion-protection/
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_139
+severity: Critical
+sid: ckv-aws-139
+title: "Ensure that RDS clusters have deletion protection enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: deletion_protection
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_rds_cluster" ]

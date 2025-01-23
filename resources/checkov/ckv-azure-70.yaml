@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Function apps is only accessible over HTTPS"
+extra:
+  entity: azurerm_function_app
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_70
+severity: Medium
+sid: ckv-azure-70
+title: "Ensure that Function apps is only accessible over HTTPS"

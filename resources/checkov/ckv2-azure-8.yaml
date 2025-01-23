@@ -1,0 +1,77 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: "The storage account container containing the activity log export should not be publicly accessible."
+extra:
+  entity: azurerm_storage_account
+  type: resource
+guidelines: |-
+    #### Description
+    The storage account container containing the activity log export should not be publicly accessible.
+
+    #### Rationale
+    Allowing public access to activity log content may aid an adversary in identifying weaknesses in the affected account's use or configuration.
+
+    #### Remediation
+    Make sure `container_access_type` is set to `private`. Possible values are `blob`, `container` or `private`. Default is `private`.
+    Also make sure that `azurerm_monitor_activity_log_alert` is configured with the required `criteria`.
+
+    Terraform example
+    ```
+    resource "azurerm_storage_account" "example" {
+        name                     = "storageaccountname"
+        account_tier             = "Standard"
+        account_replication_type = "GRS"
+        ...
+        ...
+    }
+
+    resource "azurerm_storage_container" "example" {
+        name                  = "vhds"
+        storage_account_name  = azurerm_storage_account.example.name
+    +   container_access_type = "private"
+        ...
+        ...
+    }
+
+    resource "azurerm_monitor_activity_log_alert" "main" {
+        name         = "example-activitylogalert"
+        scopes       = [azurerm_resource_group.main.id]
+        description  = "This alert will monitor a specific storage account updates."
+    +   enabled      = true
+
+    +   criteria {
+    +      resource_id    = azurerm_storage_account.to_monitor.id
+    +      operation_name = "Microsoft.Storage/storageAccounts/write"
+    +      category       = "Recommendation"
+    +   }
+
+        action {
+          action_group_id = azurerm_monitor_action_group.main.id
+
+          webhook_properties = {
+            from = "terraform"
+          }
+        }
+    }
+    ```
+
+    #### Impact
+    Configuring container `Access policy` to `private` will remove access from the container for everyone except owners of the storage account. Access policy needs to be set explicitly in order to allow access to other desired users.
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-configure
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-network-security#ns-1-implement-security-for-internal-traffic
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_activity_log_alert#criteria
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_activity_log_alert#enabled
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container
+lwid:
+  - Azure_CIS_131_5_1_3
+provider: Azure
+ruleId: CKV2_AZURE_8
+severity: Medium
+sid: ckv2-azure-8
+title: "Ensure the storage container storing the activity logs is not publicly accessible"

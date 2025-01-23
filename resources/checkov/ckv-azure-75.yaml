@@ -1,0 +1,14 @@
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Azure Data Explorer uses double encryption"
+extra:
+  entity: azurerm_kusto_cluster
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_75
+severity: Low
+sid: ckv-azure-75
+title: "Ensure that Azure Data Explorer uses double encryption"

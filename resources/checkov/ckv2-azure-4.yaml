@@ -1,0 +1,82 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: "Configure `Send scan reports to` with email ids of concerned data owners/stakeholders for a critical SQL servers."
+extra:
+  entity: azurerm_sql_server
+  type: resource
+guidelines: |-
+    #### Description
+    Configure `Send scan reports to` with email ids of concerned data owners/stakeholders for a critical SQL servers.
+
+    #### Rationale
+    Vulnerability Assessment (VA) scan reports and alerts will be sent to email ids configured at `Send scan reports to`. This may help in reducing time required for identifying risks and taking corrective measures.
+
+    #### Impact
+    Enabling the `Azure Defender for SQL` features will incur additional costs for each SQL server.
+
+    #### Remediation
+    By default, `Send reports to` is blank for `recurring_scans`. Make sure to have it configured as shown in example below.
+
+    Terraform example
+    ```
+    resource "azurerm_mysql_server" "example" {
+        name                         = "mysqlserver"
+        version                      = "12.0"
+        ...
+        ...
+    }
+
+    resource "azurerm_storage_account" "example" {
+        name                     = "storageaccountname"
+        account_kind             = "StorageV2"
+        account_tier             = "Standard"
+        account_replication_type = "GRS"
+        ...
+        ...
+    }
+
+    resource "azurerm_mssql_server_security_alert_policy" "example" {
+        server_name                = azurerm_mysql_server.example.name
+    +   state                      = "Enabled"
+        storage_endpoint           = azurerm_storage_account.example.primary_blob_endpoint
+        storage_account_access_key = azurerm_storage_account.example.primary_access_key
+        ...
+        ...
+    }
+
+    resource "azurerm_mssql_server_vulnerability_assessment" "example" {
+        server_security_alert_policy_id = azurerm_mssql_server_security_alert_policy.example.id
+        storage_container_path          = "${azurerm_storage_account.example.primary_blob_endpoint}${azurerm_storage_container.example.name}/"
+        storage_account_access_key      = azurerm_storage_account.example.primary_access_key
+
+        recurring_scans {
+          enabled = true
+    +     emails = [
+    +        "email@example1.com",
+    +        "email@example2.com"
+    +     ]
+        }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/sql-database/sql-vulnerability-assessment
+    * https://docs.microsoft.com/en-us/rest/api/sql/servervulnerabilityassessments/listbyserver
+    * https://docs.microsoft.com/en-in/powershell/module/Az.Sql/Update-AzSqlServerVulnerabilityAssessmentSetting?view=azps-2.6.0
+    * https://docs.microsoft.com/en-in/powershell/module/Az.Sql/Get-AzSqlServerVulnerabilityAssessmentSetting?view=azps-2.6.0
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-posture-vulnerability-management#pv-6-perform-software-vulnerability-assessments
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_vulnerability_assessment#emails
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_security_alert_policy
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server
+lwid: []
+provider: Azure
+ruleId: CKV2_AZURE_4
+severity: Low
+sid: ckv2-azure-4
+title: "Ensure Azure SQL server ADS VA `Send scan reports to` is configured for a SQL Server"

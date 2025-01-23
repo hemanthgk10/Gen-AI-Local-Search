@@ -1,0 +1,53 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    A virtual private cloud (VPC) is a virtual network dedicated to your AWS account. It is logically isolated from other virtual networks in the AWS Cloud. You can launch your AWS resources, such as Amazon EC2 instances, into your VPC. A VPC spans all of the Availability Zones in the Region.
+
+    A default VPC is readily available to use so that you don't have to create and configure your own VPC. You can immediately start launching Amazon EC2 instances into your default VPC. You can also use services such as Elastic Load Balancing, Amazon RDS, and Amazon EMR in your default VPC.
+
+    A default VPC is suitable for getting started quickly, and for launching public instances such as a blog or simple website. This is an advanced resource, and has special caveats to be aware of when using it.
+
+    The `aws_default_vpc` behaves differently from normal resources, in that Terraform does not create this resource, but instead "adopts" it into management.
+extra:
+  entity: aws_default_vpc
+  type: resource
+guidelines: |-
+    #### Description
+    A virtual private cloud (VPC) is a virtual network dedicated to your AWS account. It is logically isolated from other virtual networks in the AWS Cloud. You can launch your AWS resources, such as Amazon EC2 instances, into your VPC. A VPC spans all of the Availability Zones in the Region.
+
+    A default VPC is readily available to use so that you don't have to create and configure your own VPC. You can immediately start launching Amazon EC2 instances into your default VPC. You can also use services such as Elastic Load Balancing, Amazon RDS, and Amazon EMR in your default VPC.
+
+    A default VPC is suitable for getting started quickly, and for launching public instances such as a blog or simple website. This is an advanced resource, and has special caveats to be aware of when using it.
+
+    The `aws_default_vpc` behaves differently from normal resources, in that Terraform does not create this resource, but instead "adopts" it into management.
+
+    #### Rationale
+    It is not advised to use default vpc for production workloads. The default VPC lacks the proper security and auditing controls and the default VPC does not make the best use of critical VPC functionality. Production workloads needs many of the resources to be private but the default VPC lacks such controls making the resources deployed there public.
+
+    #### Remediation
+    The `aws_default_vpc` resource allows you to manage a region's default VPC, but Terraform cannot destroy it. Removing this resource from your configuration will remove it from your statefile and management, but will not destroy the VPC. You can resume managing the VPC via the AWS Console.
+
+    Terraform example
+    ```
+    - resource "aws_default_vpc" "default" {
+    -    tags = {
+    -      Name = "Default VPC"
+    -    }
+    -    ...
+    -    ...
+    - }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/default_vpc
+    * https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html
+lwid:
+  - LW_AWS_GENERAL_SECURITY_5
+provider: AWS
+ruleId: CKV_AWS_148
+severity: Medium
+sid: ckv-aws-148
+title: "Ensure no default VPC is planned to be provisioned"

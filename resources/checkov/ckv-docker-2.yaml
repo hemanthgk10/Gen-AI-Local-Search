@@ -1,0 +1,42 @@
+---
+category: Networking
+checkTool: checkov
+checkType: Docker
+compliance: []
+description: "Add HEALTHCHECK instruction in your docker container images to perform the health check on running containers."
+guidelines: |-
+    #### Description
+    Add `HEALTHCHECK` instruction in your docker container images to perform the health check on running containers.
+
+    #### Rationale
+    One of the important security triads is availability. Adding `HEALTHCHECK` instruction to your container image ensures that the docker engine periodically checks the running container instances against that instruction to ensure that the instances are still working.
+
+    Based on the reported health status, the docker engine could then exit non-working containers and instantiate new ones.
+
+    #### Remediation
+    Follow Docker documentation and rebuild your container image with HEALTHCHECK instruction.
+
+    Dockerfile example:
+    ```
+      FROM node:12-alpine
+      RUN apk add --no-cache python2 g++ make
+      WORKDIR /app
+      COPY . .
+      RUN yarn install --production
+    + HEALTHCHECK --interval=5m --timeout=3s CMD curl -f http://localhost/ || exit 1
+      EXPOSE 3000
+      CMD ["node", "src/index.js"]
+    ```
+
+    #### Default Value
+    By default, `HEALTHCHECK` is not set.
+
+    #### References
+    * https://github.com/moby/moby/pull/22719
+    * https://docs.docker.com/engine/reference/builder/#healthcheck
+lwid: []
+provider: Docker
+ruleId: CKV_DOCKER_2
+severity: Low
+sid: ckv-docker-2
+title: "Ensure that HEALTHCHECK instructions have been added to container images"

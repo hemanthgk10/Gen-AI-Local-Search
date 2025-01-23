@@ -1,0 +1,17 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "Ensure that Azure Defender is set to On for Key Vault"
+extra:
+  entity: azurerm_security_center_subscription_pricing
+  type: resource
+lwid:
+  - Azure_CIS_131_2_8
+provider: Azure
+ruleId: CKV_AZURE_87
+severity: Medium
+sid: ckv-azure-87
+title: "Ensure that Azure Defender is set to On for Key Vault"

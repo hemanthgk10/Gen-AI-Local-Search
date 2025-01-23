@@ -1,0 +1,49 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Kinesis Data Streams helps in collecting and processing large streams of data records in real time.
+
+    You can use Kinesis Data Streams for rapid and continuous data intake and aggregation. The type of data used can include IT infrastructure log data, application logs, social media, market data feeds, and web clickstream data.
+
+    Server-side encryption using AWS Key Management Service (AWS KMS) keys makes it easy for you to meet strict data management requirements by encrypting your data at rest within Amazon Kinesis Data Streams.
+extra:
+  entity: aws_kinesis_stream
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Kinesis Data Streams helps in collecting and processing large streams of data records in real time.
+
+    You can use Kinesis Data Streams for rapid and continuous data intake and aggregation. The type of data used can include IT infrastructure log data, application logs, social media, market data feeds, and web clickstream data.
+
+    Server-side encryption using AWS Key Management Service (AWS KMS) keys makes it easy for you to meet strict data management requirements by encrypting your data at rest within Amazon Kinesis Data Streams.
+
+    #### Rationale
+    Encryption helps you protect your stored data against unauthorized access and other security risks.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_kinesis_stream`.
+
+    Terraform example
+    ```
+    resource "aws_kinesis_stream" "test_stream" {
+        name             = "terraform-kinesis-test"
+        shard_count      = 1
+        retention_period = 48
+    +   kms_key_id       = ${aws_kms_key.example.arn}
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kinesis_stream#kms_key_id
+    * https://docs.aws.amazon.com/streams/latest/dev/server-side-encryption.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_185
+severity: High
+sid: ckv-aws-185
+title: "Ensure Kinesis Stream is encrypted by KMS using a customer managed Key (CMK)"

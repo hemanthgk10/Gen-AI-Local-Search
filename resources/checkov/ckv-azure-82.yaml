@@ -1,0 +1,15 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that 'Python version' is the latest, if used to run the web app"
+extra:
+  entity: azurerm_app_service
+  type: resource
+lwid:
+  - Azure_CIS_131_9_7
+provider: Azure
+ruleId: CKV_AZURE_82
+severity: Low
+sid: ckv-azure-82
+title: "Ensure that 'Python version' is the latest, if used to run the web app"

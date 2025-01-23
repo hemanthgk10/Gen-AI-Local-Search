@@ -1,0 +1,82 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon EMR is a managed cluster platform that simplifies running big data frameworks, such as Apache Hadoop and Apache Spark, on AWS to process and analyze vast amounts of data. By using these frameworks and related open-source projects, such as Apache Hive and Apache Pig, you can process data for analytics purposes and business intelligence workloads.
+    Kerberos uses secret-key cryptography to provide strong authentication so that passwords or other credentials aren't sent over the network in an unencrypted format.
+    In Kerberos, services and users that need to authenticate are known as principals. Principals exist within a Kerberos realm. Within the realm, a Kerberos server known as the key distribution center (KDC) provides the means for principals to authenticate. The KDC does this by issuing tickets for authentication. The KDC maintains a database of the principals within its realm, their passwords, and other administrative information about each principal. A KDC can also accept authentication credentials from principals in other realms, which is known as a cross-realm trust. In addition, an EMR cluster can use an external KDC to authenticate principals.
+extra:
+  entity: aws_emr_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon EMR is a managed cluster platform that simplifies running big data frameworks, such as Apache Hadoop and Apache Spark, on AWS to process and analyze vast amounts of data. By using these frameworks and related open-source projects, such as Apache Hive and Apache Pig, you can process data for analytics purposes and business intelligence workloads.
+
+    Kerberos uses secret-key cryptography to provide strong authentication so that passwords or other credentials aren't sent over the network in an unencrypted format.
+
+    In Kerberos, services and users that need to authenticate are known as principals. Principals exist within a Kerberos realm. Within the realm, a Kerberos server known as the key distribution center (KDC) provides the means for principals to authenticate. The KDC does this by issuing tickets for authentication. The KDC maintains a database of the principals within its realm, their passwords, and other administrative information about each principal. A KDC can also accept authentication credentials from principals in other realms, which is known as a cross-realm trust. In addition, an EMR cluster can use an external KDC to authenticate principals.
+
+    #### Rationale
+    Kerberos uses secret-key cryptography to provide strong authentication so that passwords or other credentials aren't sent over the network in an unencrypted format between the EMR and it's sub-systems.
+
+    #### Remediation
+    Specify the `kerberos_attributes` with `realm` option in `aws_emr_cluster`.
+
+    Terraform example
+    ```
+    resource "aws_emr_cluster" "example" {
+        master_instance_fleet {
+          instance_type_configs {
+            instance_type = "m4.xlarge"
+          }
+          target_on_demand_capacity = 1
+        }
+        core_instance_fleet {
+          instance_type_configs {
+            bid_price_as_percentage_of_on_demand_price = 80
+            ebs_config {
+              size                 = 100
+              type                 = "gp2"
+              volumes_per_instance = 1
+            }
+            instance_type     = "m3.xlarge"
+            weighted_capacity = 1
+          }
+          instance_type_configs {
+            bid_price_as_percentage_of_on_demand_price = 100
+            ebs_config {
+              size                 = 100
+              type                 = "gp2"
+              volumes_per_instance = 1
+            }
+            instance_type     = "m4.xlarge"
+            weighted_capacity = 1
+          }
+          name                      = "core fleet"
+          target_on_demand_capacity = 2
+          target_spot_capacity      = 2
+        }
+
+    +   kerberos_attributes {
+    +     realm         = "EC2.INTERNAL"
+    +     ...
+    +     ...
+    +   }
+
+      ...
+      ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/emr_cluster#realm
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/emr_cluster#kerberos_attributes
+    * https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-kerberos-configure.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_114
+severity: Medium
+sid: ckv-aws-114
+title: "Ensure that EMR clusters have Kerberos Enabled"

@@ -1,0 +1,66 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that sql servers enables data security policy"
+extra:
+  entity: azurerm_sql_server
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure that sql servers enables data security policy.
+
+    #### Rationale
+    Enabling Azure Defender for SQL server does not enables Vulnerability Assessment capability for individual SQL databases unless storage account is set to store the scanning data and reports.
+
+    The Vulnerability Assessment service scans databases for known security vulnerabilities and highlight deviations from best practices, such as misconfigurations, excessive permissions, and unprotected sensitive data. Results of the scan include actionable steps to resolve each issue and provide customized remediation scripts where applicable. Additionally an assessment report can be customized by setting an acceptable baseline for permission configurations, feature configurations, and database settings.
+
+    #### Impact
+    Enabling the `Azure Defender for SQL` features will incur additional costs for each SQL server.
+
+    #### Remediation
+    Configure `azurerm_mssql_server_security_alert_policy` and set the attribute `state` as `Enabled`.
+
+    Terraform example
+    ```
+    resource "azurerm_sql_server" "example" {
+        name    = "mysqlserver"
+        version = "12.0"
+        ...
+        ...
+    }
+
+    resource "azurerm_storage_account" "example" {
+        name                     = "storageaccountname"
+        account_kind             = "StorageV2"
+        account_tier             = "Standard"
+        account_replication_type = "GRS"
+        ...
+        ...
+    }
+
+    resource "azurerm_mssql_server_security_alert_policy" "example" {
+        resource_group_name        = azurerm_resource_group.example.name
+        server_name                = azurerm_mysql_server.example.name
+    +   state                      = "Enabled"
+        storage_endpoint           = azurerm_storage_account.example.primary_blob_endpoint
+        storage_account_access_key = azurerm_storage_account.example.primary_access_key
+        disabled_alerts = [
+          "Sql_Injection",
+          "Data_Exfiltration"
+        ]
+        retention_days = 20
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/sql_server
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_security_alert_policy
+    * https://docs.microsoft.com/en-us/azure/azure-sql/database/policy-reference?view=azuresql
+lwid: []
+provider: Azure
+ruleId: CKV2_AZURE_13
+severity: Medium
+sid: ckv2-azure-13
+title: "Ensure that sql servers enables data security policy"

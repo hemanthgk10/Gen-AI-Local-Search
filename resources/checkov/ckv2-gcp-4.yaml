@@ -1,0 +1,81 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: "Enabling retention policies on log buckets will protect logs stored in cloud storage buckets from being overwritten or accidentally deleted. It is recommended to set up retention policies and configure Bucket Lock on all storage buckets that are used as log sinks."
+extra:
+  entity: google_logging_organization_sink
+  type: resource
+guidelines: |-
+    #### Description
+    Enabling retention policies on log buckets will protect logs stored in cloud storage buckets from being overwritten or accidentally deleted. It is recommended to set up retention policies and configure Bucket Lock on all storage buckets that are used as log sinks.
+
+    #### Rationale
+    Logs can be exported by creating one or more sinks that include a log filter and a destination. As Stackdriver Logging receives new log entries, they are compared against each sink. If a log entry matches a sink's filter, then a copy of the log entry is written to the destination.
+
+    Sinks can be configured to export logs in storage buckets. It is recommended to configure a data retention policy for these cloud storage buckets and to lock the data retention policy; thus permanently preventing the policy from being reduced or removed. This way, if the system is ever compromised by an attacker or a malicious insider who wants to cover their tracks, the activity logs are definitely preserved for forensics and security investigations.
+
+    #### Audit
+    *From Console:*
+    1. Open the Cloud Storage browser in the Google Cloud Console by visiting https://console.cloud.google.com/storage/browser.
+    2. In the Column display options menu, make sure Retention policy is checked.
+    3. In the list of buckets, the retention period of each bucket is found in the Retention policy column. If the retention policy is locked, an image of a lock appears directly
+    to the left of the retention period.
+
+    #### Remediation
+    Set `is_locked` to `false`. If set to true, the bucket will be locked and permanently restrict edits to the bucket's retention policy. Caution: Locking a bucket is an irreversible action.
+
+    Terraform example
+    ```
+    resource "google_storage_bucket" "static-site" {
+        name          = "image-store.com"
+        location      = "EU"
+        force_destroy = true
+
+        retention_policy {
+           retention_period = 1000
+    -      is_locked = true
+    +      is_locked = false
+        }
+    }
+    ```
+
+    *From Console:*
+    1. If sinks are not configured, first follow the instructions in the recommendation: Ensure that sinks are configured for all Log entries.
+    2. For each storage bucket configured as a sink, go to the `Cloud Storage` browser at https://console.cloud.google.com/storage/browser/<BUCKET_NAME>.
+    3. Select the `Bucket Lock` tab near the top of the page.
+    4. In the Retention policy entry, click the `Add Duration` link. The Set a retention policy dialog box appears.
+    5. Enter the desired length of time for the retention period and click `Save policy`.
+    6. Set the `Lock status` for this retention policy to Locked.
+
+    *From Command Line*
+    1. To list all sinks destined to storage buckets:
+      ```
+       gcloud logging sinks list --folder=FOLDER_ID | --organization=ORGANIZATION_ID | --project=PROJECT_ID
+      ```
+    2. For each storage bucket listed above, set a retention policy and lock it:
+      ```
+       gsutil retention set [TIME_DURATION] gs://[BUCKET_NAME]
+       gsutil retention lock gs://[BUCKET_NAME]
+      ```
+
+    #### Impact
+    Locking a bucket is an irreversible action. Once you lock a bucket, you cannot remove the retention policy from the bucket or decrease the retention period for the policy.
+
+    *Default Value:*
+    By default, storage buckets used as log sinks do not have retention policies and Bucket Lock configured.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket#retention_policy
+    * https://cloud.google.com/storage/docs/bucket-lock
+    * https://cloud.google.com/storage/docs/using-bucket-lock
+    * https://cloud.google.com/storage/docs/using-bucket-lock#set-policy
+lwid:
+  - GCP_CIS12_2_3
+provider: GCP
+ruleId: CKV2_GCP_4
+severity: Low
+sid: ckv2-gcp-4
+title: "Ensure that retention policies on log buckets are configured using Bucket Lock"

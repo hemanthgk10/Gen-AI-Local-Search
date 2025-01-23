@@ -1,0 +1,73 @@
+category: Monitoring
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+- CIS
+- HIPAA
+description: CloudTrail log file validation creates a digitally signed digest file
+  containing a hash of each log that CloudTrail writes to S3. These digest files can
+  be used to determine whether a log file was changed, deleted, or unchanged after
+  CloudTrail delivered the log. It is recommended that file validation be enabled
+  on all CloudTrails.
+extra:
+  entity: AWS::CloudTrail::Trail
+  type: resource
+guidelines: |-
+  #### Description
+  CloudTrail log file validation creates a digitally signed digest file containing a hash of each log that CloudTrail writes to S3. These digest files can be used to determine whether a log file was changed, deleted, or unchanged after CloudTrail delivered the log. It is recommended that file validation be enabled on all CloudTrails.
+
+  #### Rationale
+  Enabling log file validation will provide additional integrity checking of CloudTrail logs.
+
+  #### Remediation
+  To enable log file integrity validation with the CloudTrail console, choose Yes for the Enable log file validation option when you create or update a trail. By default, this feature is enabled for new trails.
+
+  Terraform example:
+  ```
+  resource "aws_cloudwatch_log_group" "example" {
+     name = "Example"
+  }
+
+  resource "aws_cloudtrail" "example" {
+     cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.example.arn}:*"
+  +  enable_log_file_validation = true
+     ...
+     ...
+  }
+  ```
+
+  CloudFormation example:
+  ```json
+  {
+    "Type" : "AWS::CloudTrail::Trail",
+    "Properties" : {
+  +     "EnableLogFileValidation" : true,
+        "IsLogging" : true,
+        "S3BucketName" : "my-bucket",
+        "TrailName" : "my-trail"
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-validation-enabling.html
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudtrail#enable_log_file_validation
+lwid:
+  - AWS_CIS_2_2
+provider: AWS
+ruleId: CKV_AWS_36
+severity: Low
+sid: ckv-aws-36
+title: Ensure CloudTrail log file validation is enabled
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: enable_log_file_validation
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_cloudtrail" ]

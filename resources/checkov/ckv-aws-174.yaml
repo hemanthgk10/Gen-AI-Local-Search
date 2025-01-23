@@ -1,0 +1,67 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon CloudFront is a web service that speeds up distribution of your static and dynamic web content, such as .html, .css, .js, and image files, to your users. CloudFront delivers your content through a worldwide network of data centers called edge locations.
+
+    You can configure one or more cache behaviors in your CloudFront distribution to require HTTPS for communication between viewers and CloudFront. Having a secure connection between the viewer and the CloudFront will prevent Man in the middle attacks.
+extra:
+  entity: aws_cloudfront_distribution
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon CloudFront is a web service that speeds up distribution of your static and dynamic web content, such as .html, .css, .js, and image files, to your users. CloudFront delivers your content through a worldwide network of data centers called edge locations.
+
+    You can configure one or more cache behaviors in your CloudFront distribution to require HTTPS for communication between viewers and CloudFront. Having a secure connection between the viewer and the CloudFront will prevent Man in the middle attacks.
+
+    #### Rationale
+    TLS v1.2, the minimum protocol recommended for AWS CloudFront, and the cipher used to encrypt this content, improve application security.
+
+    #### Remediation
+    Specify the `minimum_protocol_version` should be set to `TLSv1.2_2021` or `TLSv1.2_2019` or `TLSv1.2_2018`
+
+    Terraform example
+    ```
+    resource "aws_cloudfront_distribution" "s3_distribution" {
+      origin_group {
+        origin_id = "groupS3"
+      }
+
+      viewer_certificate {
+         cloudfront_default_certificate = true
+    +    minimum_protocol_version       = "TLSv1.2_2021"
+        ...
+        ...
+      }
+      ...
+      ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::CloudFront::Distribution",
+      "Properties" : {
+          "ViewerCertificate": {
+            "CloudFrontDefaultCertificate:": true,
+    +       "MinimumProtocolVersion": "TLSv1.2_2021",
+            ...
+          }
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_distribution#minimum_protocol_version
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-cloudfront-distribution-viewercertificate.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_174
+severity: High
+sid: ckv-aws-174
+title: "Verify CloudFront Distribution Viewer Certificate is using TLS v1.2"

@@ -1,0 +1,74 @@
+---
+category: "Load Balancers"
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud. It provides cost-efficient, resizable capacity for an industry-standard relational database and manages common database administration tasks.
+
+    Amazon RDS creates and saves automated backups of your DB instance during the backup window of your DB instance. RDS creates a storage volume snapshot of your DB instance, backing up the entire DB instance and not just individual databases. RDS saves the automated backups of your DB instance according to the backup retention period that you specify. If necessary, you can recover your database to any point in time during the backup retention period.
+extra:
+  entity: aws_rds_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud. It provides cost-efficient, resizable capacity for an industry-standard relational database and manages common database administration tasks.
+
+    Amazon RDS creates and saves automated backups of your DB instance during the backup window of your DB instance. RDS creates a storage volume snapshot of your DB instance, backing up the entire DB instance and not just individual databases. RDS saves the automated backups of your DB instance according to the backup retention period that you specify. If necessary, you can recover your database to any point in time during the backup retention period.
+
+    #### Rationale
+    Enabling a backup policy for RDS instance ensures that the data can be restored in the event of a compromised system or hardware failures.
+
+    #### Remediation
+    Set the `backup_retention_period` to any value between `1` to `35`.
+
+    Terraform example
+    ```
+    resource "aws_rds_cluster" "postgresql" {
+        cluster_identifier      = "aurora-cluster-demo"
+        engine                  = "aurora-postgresql"
+        availability_zones      = ["us-west-2a", "us-west-2b", "us-west-2c"]
+        database_name           = "mydb"
+        master_username         = "foo"
+        master_password         = "bar"
+    +   backup_retention_period = 5
+        preferred_backup_window = "07:00-09:00"
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::RDS::DBCluster",
+      "Properties" : {
+          "AvailabilityZones" : ["us-west-2a", "us-west-2b", "us-west-2c"],
+    +     "BackupRetentionPeriod" : 5,
+          "DatabaseName" : "mydb",
+          "StorageEncrypted" : true,
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster#backup_retention_period
+    * https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_CommonTasks.BackupRestore.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_133
+severity: Low
+sid: ckv-aws-133
+title: "Ensure that RDS instances has backup policy"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: backup_retention_period
+    resourceAttributeType: integer
+    resourceAttributeValue: "5"
+    resourceType: [ "aws_rds_cluster" ]

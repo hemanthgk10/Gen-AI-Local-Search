@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Azure Event Grid Domain public network access is disabled"
+extra:
+  entity: azurerm_eventgrid_domain
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_106
+severity: High
+sid: ckv-azure-106
+title: "Ensure that Azure Event Grid Domain public network access is disabled"

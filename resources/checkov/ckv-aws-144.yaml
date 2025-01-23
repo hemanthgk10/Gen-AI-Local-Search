@@ -1,0 +1,94 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon S3 has a simple web services interface that you can use to store and retrieve any amount of data, at any time, from anywhere on the web. It gives any developer access to the same highly scalable, reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.
+
+    Aamazon S3 supports replicating a bucket object(s) to another S3 bucket(s). Replication enables automatic, asynchronous copying of objects across Amazon S3 buckets. Buckets that are configured for object replication can be owned by the same AWS account or by different accounts. Object may be replicated to a single destination bucket or multiple destination buckets. Destination buckets can be in different AWS Regions or within the same Region as the source bucket. By default, replication only supports copying new Amazon S3 objects after it is enabled.
+
+    Amazon S3 also supports replication across regions. Cross-Region Replication (CRR) is used to copy objects across Amazon S3 buckets in different AWS Regions.
+extra:
+  entity: aws_s3_bucket
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon S3 has a simple web services interface that you can use to store and retrieve any amount of data, at any time, from anywhere on the web. It gives any developer access to the same highly scalable, reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.
+
+    Aamazon S3 supports replicating a bucket object(s) to another S3 bucket(s). Replication enables automatic, asynchronous copying of objects across Amazon S3 buckets. Buckets that are configured for object replication can be owned by the same AWS account or by different accounts. Object may be replicated to a single destination bucket or multiple destination buckets. Destination buckets can be in different AWS Regions or within the same Region as the source bucket. By default, replication only supports copying new Amazon S3 objects after it is enabled.
+
+    Amazon S3 also supports replication across regions. Cross-Region Replication (CRR) is used to copy objects across Amazon S3 buckets in different AWS Regions.
+
+    #### Rationale
+    CRR can help you do the following:
+
+    * `Meet compliance requirements` — Although Amazon S3 stores your data across multiple geographically distant Availability Zones by default, compliance requirements might dictate that you store data at even greater distances. Cross-Region Replication allows you to replicate data between distant AWS Regions to satisfy these requirements.
+    * `Minimize latency` — If your customers are in two geographic locations, you can minimize latency in accessing objects by maintaining object copies in AWS Regions that are geographically closer to your users.
+    * `Increase operational efficiency` — If you have compute clusters in two different AWS Regions that analyze the same set of objects, you might choose to maintain object copies in those Regions.
+
+    #### Remediation
+    Configure the `replication_configuration` module and specify the IAM role ARN.
+
+    Terraform example
+    ```
+    resource "aws_s3_bucket" "source" {
+        provider = aws.central
+        bucket   = "tf-test-bucket-source-12345"
+        acl      = "private"
+
+        versioning {
+          enabled = true
+        }
+
+    +   replication_configuration {
+    +     role = aws_iam_role.replication.arn
+    +
+    +     rules {
+    +       id     = "foobar"
+    +       prefix = "foo"
+    +       status = "Enabled"
+    +
+    +       destination {
+    +         bucket        = aws_s3_bucket.destination.arn
+    +         storage_class = "STANDARD"
+    +        }
+    +      }
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+          "BucketName" : "mybucket",
+    +     "ReplicationConfiguration" : {
+    +         "Role" : "arn:aws:iam::123123123:role/role-with-replication",
+    +         "Rules" : [{
+    +           "Id" : "foobar",
+    +           "Prefix" : "foo",
+    +           "Priority" : 5,
+    +           "Status" : "Enabled"
+    +           ...
+    +           ...
+    +       }]
+    +     }
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket#replication_configuration
+    * https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_144
+severity: Medium
+sid: ckv-aws-144
+title: "Ensure that S3 bucket has cross-region replication enabled"

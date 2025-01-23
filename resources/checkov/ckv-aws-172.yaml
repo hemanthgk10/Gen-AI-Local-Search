@@ -1,0 +1,57 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Quantum Ledger Database (Amazon QLDB) is a fully managed ledger database that provides a transparent, immutable, and cryptographically verifiable transaction log owned by a central trusted authority. You can use Amazon QLDB to track all application data changes, and maintain a complete and verifiable history of changes over time.
+
+    Ledgers are typically used to record a history of economic and financial activity in an organization. Deleting a ledger accidentally can cause a huge data loss.
+extra:
+  entity: aws_qldb_ledger
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Quantum Ledger Database (Amazon QLDB) is a fully managed ledger database that provides a transparent, immutable, and cryptographically verifiable transaction log owned by a central trusted authority. You can use Amazon QLDB to track all application data changes, and maintain a complete and verifiable history of changes over time.
+
+    Ledgers are typically used to record a history of economic and financial activity in an organization. Deleting a ledger accidentally can cause a huge data loss.
+
+    #### Rationale
+    Deletion protection flag prevents a ledger from being deleted by any user accidentally. If this feature is enabled, you must first disable it by setting the flag to `false` before you can delete the ledger.
+
+    #### Remediation
+    Specify the `deletion_protection` to `true`.
+
+    Terraform example
+    ```
+    resource "aws_qldb_ledger" "sample-ledger" {
+        name             = "sample-ledger"
+        permissions_mode = "STANDARD"
+    +   deletion_protection = true
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::QLDB::Ledger",
+      "Properties" : {
+    +     "DeletionProtection": true,
+          "PermissionsMode": "STANDARD",
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/qldb_ledger#deletion_protection
+    * https://docs.aws.amazon.com/qldb/latest/developerguide/ledger-management.basics.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_172
+severity: Medium
+sid: ckv-aws-172
+title: "Ensure QLDB ledger has deletion protection enabled"

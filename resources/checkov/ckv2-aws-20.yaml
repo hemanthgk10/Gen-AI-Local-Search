@@ -1,0 +1,93 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Elastic Load Balancing automatically distributes your incoming traffic across multiple targets, such as EC2 instances, containers, and IP addresses, in one or more Availability Zones. Using a load balancer increases the availability and fault tolerance of your applications.
+
+    Application Load Balancer, must contain one or more listeners. A listener is a process that checks for connection requests, using the protocol and port that you configure. The rules that you define for a listener determine how the load balancer routes requests to its registered targets.
+extra:
+  entity: aws_lb
+  type: resource
+guidelines: |-
+    #### Description
+    Elastic Load Balancing automatically distributes your incoming traffic across multiple targets, such as EC2 instances, containers, and IP addresses, in one or more Availability Zones. Using a load balancer increases the availability and fault tolerance of your applications.
+
+    Application Load Balancer, must contain one or more listeners. A listener is a process that checks for connection requests, using the protocol and port that you configure. The rules that you define for a listener determine how the load balancer routes requests to its registered targets.
+
+    #### Rationale
+    HTTPS is the defacto standard in the internet for public facing websites as the HTTPS is more secure than the HTTP. So any request that coming on a HTTP should be redirected to the secured connection of HTTPS to avoid security issues.
+
+    #### Remediation
+    Make sure that all the HTTP requests are redirected to HTTPS by default. We need to add the `redirect` configuration in the `aws_alb_listener` to enable the redirection.
+
+    Terraform example
+    ```
+    resource "aws_lb" "test" {
+        name               = "test-lb-tf"
+        internal           = false
+        load_balancer_type = "application"
+        security_groups    = [aws_security_group.lb_sg.id]
+        subnets            = [for subnet in aws_subnet.public : subnet.id]
+        ...
+        ...
+    }
+
+    resource "aws_alb_listener" "front_end" {
+        load_balancer_arn = aws_lb.front_end.arn
+        port              = "80"
+        protocol          = "HTTP"
+
+        default_action {
+          type = "redirect"
+
+    +     redirect {
+    +       port        = "443"
+    +       protocol    = "HTTPS"
+    +       status_code = "HTTP_301"
+    +     }
+        }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation Example:
+    ```json
+    {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+          "DefaultActions": [
+    +          {
+    +             "Type": "redirect",
+    +             "RedirectConfig": {
+    +             "Protocol": "HTTPS",
+    +             "Port": 443,
+    +             "Host": "#{host}",
+    +             "Path": "/#{path}",
+    +             "Query": "#{query}",
+    +             "StatusCode": "HTTP_301"
+    +           }
+              }
+            ],
+            "LoadBalancerArn": {
+                 "Ref": "myLoadBalancer"
+             },
+              "Port": 80,
+              "Protocol": "HTTP"
+         }
+         ...
+         ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener#redirect
+    * https://aws.amazon.com/premiumsupport/knowledge-center/elb-redirect-http-to-https-using-alb/#:~:text=Select%20a%20load%20balancer%2C%20and%20then%20choose%20HTTP%20Listener.,appropriate%20for%20your%20use%20case)
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_20
+severity: Medium
+sid: ckv2-aws-20
+title: "Ensure that ALB redirects HTTP requests into HTTPS ones"

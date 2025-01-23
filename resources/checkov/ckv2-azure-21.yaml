@@ -1,0 +1,16 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure Storage logging is enabled for Blob service for read requests"
+extra:
+  entity: azurerm_storage_container
+  type: resource
+lwid:
+  - Azure_CIS_131_3_10
+provider: Azure
+ruleId: CKV2_AZURE_21
+severity: Low
+sid: ckv2-azure-21
+title: "Ensure Storage logging is enabled for Blob service for read requests"

@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure 'Enforce SSL connection' is set to 'ENABLED' for MariaDB servers"
+extra:
+  entity: azurerm_mariadb_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_47
+severity: Low
+sid: ckv-azure-47
+title: "Ensure 'Enforce SSL connection' is set to 'ENABLED' for MariaDB servers"

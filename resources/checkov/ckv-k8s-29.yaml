@@ -1,0 +1,72 @@
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+- CIS
+description: A security context defines privilege and access control settings for a Pod or Container. Apply security context to your pods and containers per recommendations to prevent misuse from improper configuration.
+extra:
+  entity: CronJob
+guidelines: |-
+  #### Description
+  A security context defines privilege and access control settings for a Pod or Container. Apply security context to your pods and containers per recommendations to prevent misuse from improper configuration.
+
+  #### Rationale
+  A security context defines the operating system security settings (uid, gid, capabilities, SELinux role, etc.) applied to a container. When designing your containers and pods, make sure that you configure the security context for your pods, containers, and volumes. A security context is a property you define in the deployment yaml file. It controls the security parameters that will be assigned to the pod/container/volume. There are two levels of security context: pod- level security context, and container- level security context.
+
+  #### Remediation
+  Security context can be added to both containers and pods. A security context alert may indicate that the security context was not able to be detected. Check the location of your added security context with the Kubernetes documentation guidelines. 
+  
+  
+  ```
+  # Location: Pod.spec.securityContext
+  # Location: CronJob.spec.jobTemplate.spec.template.spec.securityContext
+  # Location: *.spec.template.spec.securityContext
+  ```
+
+  Note that security contexts must be located in the above locations or IaC cannot properly detect them.
+
+  The following yaml is an example of a Pod with added security context. As a best practice, make sure you don't assign more privileges than required.
+
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: view-pid
+  spec:
+    containers:
+      - name: view-pid
+        image: discr33t/discr33t-centos:v0.1.3
+        command: ["sh", "-c"]
+        args: ["while true; do echo 'foo'; done;"]
+  +     securityContext:
+  +       allowPrivilegeEscalation: false
+        ...
+        ...
+    initContainers:
+    - image: nginx-preconfig
+      name: configeditor
+  +   securityContext:
+  +     allowPrivilegeEscalation: false
+      ...
+      ...
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/concepts/policy/security-context/
+  * https://learn.cisecurity.org/benchmarks
+provider: Kubernetes
+ruleId: CKV_K8S_29
+severity: Medium
+sid: ckv-k8s-29
+title: Apply security context to your pods and containers
+autofix: true
+remediation:
+- checkType: Kubernetes
+  steps:
+  - action: add
+    resource: [ "Pod", "Deployment", "ReplicaSet", "StatefulSet", "DaemonSet", "Job", "CronJob", "ReplicationController" ]
+    resourceAttribute: securityContext.allowPrivilegeEscalation
+    resourceAttributeType: nestedBlock
+    resourceAttributeValue: "false"
+    resourceType: [ "containers", "initContainers" ]

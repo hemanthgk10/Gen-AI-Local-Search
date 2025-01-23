@@ -1,0 +1,45 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon S3 is an object storage service that stores data as objects within buckets. Objects are the fundamental entities stored in Amazon S3. Objects consist of object data and metadata. The metadata is a set of name-value pairs that describe the object.
+
+    If we want to copy data in some S3 bucket from a source account to some destination account, this means that our buckets in both accounts must also be encrypted.
+extra:
+  entity: aws_s3_object_copy
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon S3 is an object storage service that stores data as objects within buckets. Objects are the fundamental entities stored in Amazon S3. Objects consist of object data and metadata. The metadata is a set of name-value pairs that describe the object.
+
+    If we want to copy data in some S3 bucket from a source account to some destination account, this means that our buckets in both accounts must also be encrypted.
+
+    #### Rationale
+    Encryption helps you protect your stored data against unauthorized access and other security risks.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_imagebuilder_component`.
+
+    Terraform example
+    ```
+    resource "aws_s3_object_copy" "test" {
+        bucket = "destination_bucket"
+        key    = "destination_key"
+        source = "source_bucket/source_key"
+    +   kms_key_id = ${aws_kms_key.example.arn}
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_object_copy#kms_key_id
+    * https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_181
+severity: High
+sid: ckv-aws-181
+title: "Ensure S3 Object Copy is encrypted by KMS using a customer managed Key (CMK)"

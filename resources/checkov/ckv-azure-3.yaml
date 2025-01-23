@@ -1,0 +1,42 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure that storage account to accept requests from secure connections
+  only. Any requests from insecured connection should be rejected. Microsoft recommends
+  that you always require secure transfer for all of your storage accounts.
+extra:
+  entity: Microsoft.Storage/storageAccounts
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure that storage account to accept requests from secure connections only. Any requests from insecured connection should be rejected. Microsoft recommends that you always require secure transfer for all of your storage accounts.
+
+  #### Rationale
+  Allowing requests from insecure connection can lead to security attacks, so it always safe to allow connections only from secured connections.
+
+  #### Remediation
+  Set the attribute `azurerm_storage_account.enable_https_traffic_only` to `true`.
+
+  Terraform example for Azure storage account
+  ```
+  data "azurerm_storage_account" "example" {
+      name                      = "packerimages"
+      resource_group_name       = "packer-storage"
+  -   enable_https_traffic_only = false
+  +   enable_https_traffic_only = true
+      ...
+      ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/storage_account#enable_https_traffic_only
+  * https://docs.microsoft.com/en-us/azure/storage/common/storage-require-secure-transfer
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_3
+severity: Critical
+sid: ckv-azure-3
+title: Ensure that 'supportsHttpsTrafficOnly' is set to 'true'

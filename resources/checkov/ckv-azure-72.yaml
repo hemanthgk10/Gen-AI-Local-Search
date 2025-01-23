@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that remote debugging is not enabled for app services"
+extra:
+  entity: azurerm_app_service
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_72
+severity: Low
+sid: ckv-azure-72
+title: "Ensure that remote debugging is not enabled for app services"

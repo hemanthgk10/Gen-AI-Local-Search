@@ -1,0 +1,84 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud. It provides cost-efficient, resizable capacity for an industry-standard relational database and manages common database administration tasks.
+
+    Amazon RDS is available on several database instance types - optimized for memory, performance or I/O - and provides you with six familiar database engines to choose from, including Amazon Aurora, PostgreSQL, MySQL, MariaDB, Oracle Database, and SQL Server.
+extra:
+  entity: aws_db_instance
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud. It provides cost-efficient, resizable capacity for an industry-standard relational database and manages common database administration tasks.
+
+    Amazon RDS is available on several database instance types - optimized for memory, performance or I/O - and provides you with six familiar database engines to choose from, including Amazon Aurora, PostgreSQL, MySQL, MariaDB, Oracle Database, and SQL Server.
+
+    #### Rationale
+    As RDS is a critical component in the application for acting as database or store information that is critical to application, it is necessary to collect the information on the slow indexes, slow searches and application information bottlenecks. Enabling logs can help in providing audit, access and error information for all the queries and transactions.
+
+    #### Remediation
+    Set the `enabled_cloudwatch_logs_exports` field to required value. If the field is not set, no logs will be exported.
+
+    Possible values depending on the engine:
+
+    * MySQL and MariaDB: `audit`, `error`, `general`, `slowquery`.
+    * PostgreSQL: `postgresql`, `upgrade`
+    * MSSQL: `agent`, `error`
+    * Oracle: `alert`, `audit`, `listener`, `trace`
+
+    Terraform example
+    ```
+    resource "aws_db_instance" "example" {
+        allocated_storage                = 50
+        max_allocated_storage            = 100
+        engine                           = "mysql"
+        engine_version                   = 5.7
+    +   enabled_cloudwatch_logs_exports  = ["audit", "error", "general", "slowquery"]
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+        "Type" : "AWS::RDS::DBInstance",
+        "Properties" : {
+            "AllocatedStorage" : 50,
+            "AllowMajorVersionUpgrade" : true,
+            "AutoMinorVersionUpgrade" : true,
+            "AvailabilityZone" : ["us-west-2a", "us-west-2b"],
+            "BackupRetentionPeriod" : 30,
+            "DBName" : "my-db",
+            "Engine" : "mysql"
+            "EngineVersion" : "5.7"
+    +       "EnableCloudwatchLogsExports" : [ "audit", "error", "general", "slowquery" ],
+            ...
+            ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance#enabled_cloudwatch_logs_exports
+    * https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html
+    * https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_129
+severity: Low
+sid: ckv-aws-129
+title: "Ensure that respective logs of Amazon Relational Database Service (Amazon RDS) are enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: enabled_cloudwatch_logs_exports
+    resourceAttributeType: array
+    resourceAttributeValue: "audit,error,general,slowquery"
+    resourceType: [ "aws_db_instance" ]

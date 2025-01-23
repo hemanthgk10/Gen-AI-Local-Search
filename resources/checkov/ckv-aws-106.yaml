@@ -1,0 +1,35 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that all Amazon Elastic Block Store (EBS) volumes attached to production EC2 instances are encrypted to meet security and compliance requirements. When EBS encryption is enabled, data stored to disk (and data in subsequent disk snapshots) is encrypted at rest. This encryption is handled transparently by Amazon's Key Management Service (KMS) and requires no additional action on your part."
+extra:
+  entity: aws_ebs_encryption_by_default
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure that all Amazon Elastic Block Store (EBS) volumes attached to production EC2 instances are encrypted to meet security and compliance requirements. When EBS encryption is enabled, data stored to disk (and data in subsequent disk snapshots) is encrypted at rest. This encryption is handled transparently by Amazon's Key Management Service (KMS) and requires no additional action on your part.
+
+    #### Rationale
+    Unencrypted EBS volumes means that data is stored on Amazon's disks unencrypted, and could be readable by anyone who obtains access to the physical disk where your data is stored. Enabling encryption at rest to mitigate this issue is a common regulatory requirement.
+
+    #### Remediation
+    Set the `aws_ebs_encryption_by_default` parameter to `enabled`. Setting the option, provides a resource to manage whether default EBS encryption is enabled for your AWS account in the current AWS region.
+
+    Terraform example
+    ```
+    resource "aws_ebs_encryption_by_default" "example" {
+    +   enabled = true
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/2.56.0/docs/resources/ebs_encryption_by_default
+lwid:
+  - LW_AWS_GENERAL_SECURITY_2
+provider: AWS
+ruleId: CKV_AWS_106
+severity: Medium
+sid: ckv-aws-106
+title: "Ensure EBS default encryption is enabled"

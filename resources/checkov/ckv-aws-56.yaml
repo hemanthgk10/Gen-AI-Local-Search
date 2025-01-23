@@ -1,0 +1,78 @@
+---
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+  - HIPAA
+description: "AWS S3 block by default doesn't allow public access to S3 objects in new buckets. Users can modify bucket policies access point policies, or object permissions to allow public access. By enabling this, Amazon S3 restricts access to buckets with public policies to only AWS service principals and authorized users within this account."
+extra:
+  entity: "AWS::S3::Bucket"
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon S3 has a simple web services interface that you can use to store and retrieve any amount of data, at any time, from anywhere on the web. It gives any developer access to the same highly scalable, reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.
+
+    The Amazon S3 Block Public Access feature provides settings for access points, buckets, and accounts to help you manage public access to Amazon S3 resources.
+
+    AWS S3 block by default doesn't allow public access to S3 objects in new buckets. Users can modify bucket policies access point policies, or object permissions to allow public access. By enabling `restrict_public_buckets`, Amazon S3 restricts access to buckets with public policies to only AWS service principals and authorized users within this account.
+
+    #### Rationale
+    S3 buckets should restrict public policies for the bucket. By enabling, the restrict_public_buckets, only the bucket owner and AWS Services can access if it has a public policy.
+
+    #### Remediation
+    Set `aws_s3_bucket_public_access_block.restrict_public_buckets` to true.
+
+    Terraform example:
+    ```
+    resource "aws_s3_bucket" "example" {
+        bucket = "example"
+    }
+
+    resource "aws_s3_bucket_public_access_block" "example" {
+        bucket = aws_s3_bucket.example.id
+        block_public_acls       = true
+        block_public_policy     = true
+        ignore_public_acls      = true
+    +   restrict_public_buckets = true
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+          "BucketName" : "my-bucket",
+          "PublicAccessBlockConfiguration" : {
+            "BlockPublicAcls"       : true,
+            "BlockPublicPolicy"     : true,
+            "IgnorePublicAcls"      : true,
+    +       "RestrictPublicBuckets" : true
+          },
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block#restrict_public_buckets
+    * https://docs.aws.amazon.com/AmazonS3/latest/dev/access-control-block-public-access.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_56
+severity: Medium
+sid: ckv-aws-56
+title: "Ensure S3 bucket has 'restrict_public_bucket' enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: restrict_public_buckets
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_s3_bucket_public_access_block" ]

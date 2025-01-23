@@ -1,0 +1,52 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: Ensure Google storage bucket have encryption enabled
+extra:
+  entity: google_storage_bucket
+  type: resource
+guidelines: |-
+  #### Description
+  Storage buckets allows you to store any kind of data in the cloud and allows you to access it by keys. It is recommended that all the data stored in *Storage buckets* are encrypted completely.
+
+  Encryption at rest is a standard feature of Google Storage buckets and all objects in a bucket are encrypted at rest.
+
+  #### Rationale
+  Storage buckets are used to store files and data which can has sensitive information or business information that can be potential interest to hackers. So ensuring that the data is not easily readable when exposed is possible when the data is encrypted.
+
+  #### Remediation
+  Set the `encryption.default_kms_key_name` to KMS key id.
+
+  Terraform example
+  ```
+  resource "google_storage_bucket" "auto-expire" {
+      name          = "auto-expiring-bucket"
+      location      = "US"
+      force_destroy = true
+
+  +   encryption {
+  +     default_kms_key_name = "kms-key-id"
+  +   }
+      ...
+      ...
+  }
+  ```
+
+  Using *Console*
+    1. Open the [Cloud Storage browser](https://console.cloud.google.com/storage/browser).
+    2. In the list of buckets, click on the desired bucket.
+    3. In the bucket details page, click on the `Configuration` tab.
+    4. Click on the `Pencil` icon associated with the Encryption type entry.
+    5. Click `Save`.
+
+  #### References
+  * https://cloud.google.com/storage/docs/xml-api/put-bucket-encryption-config
+  * https://cloud.google.com/storage/docs/gsutil/addlhelp/UsingEncryptionKeys
+  * https://cloud.google.com/storage/docs/encryption/using-customer-managed-keys
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_5
+severity: Medium
+sid: ckv-gcp-5
+title: Ensure Google storage bucket have encryption enabled

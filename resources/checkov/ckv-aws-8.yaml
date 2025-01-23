@@ -1,0 +1,79 @@
+---
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+  - HIPAA
+description: "Ensure all data stored in the Launch configuration EBS is securely encrypted"
+extra:
+  entity: "AWS::AutoScaling::LaunchConfiguration"
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure that all Amazon Elastic Block Store (EBS) volumes are encrypted, meeting security and compliance requirements.
+
+    When encryption is enabled for EBS, the encryption is handled by Amazon's Key Management Service (KMS) transparently, and requires no additional action on your part.
+
+    #### Rationale
+    When EBS volumes are unencrypted, data is written to disk in cleartext.
+
+    The unencrypted data could be readable by anyone who obtains access to the physical disk where your data is stored.
+
+    Enabling encryption at rest to mitigate this issue is a common regulatory requirement.
+
+    #### Remediation
+    Set `encrypted` flag as true for `root_block_device` and other additional volumes being used. When the encryption flag is turned on, you need to provide the `kms_key_id` as well.
+    This can be done either on the AWS Launch Configuration or the AWS Instance as well.
+
+    Terraform example:
+    ```
+    resource "aws_launch_configuration" "sample_lc" {
+       name_prefix = "sample_lc-"
+       image_id = data.aws_ami.centos.id
+       instance_type = "t2.medium"
+       root_block_device {
+    +    encrypted             = true
+    +    kms_key_id            = "arn:aws:kms:us-east-1:1112213231:key/example-123"
+         volume_size           = 100
+        ...
+       }
+       ...
+       ...
+    }
+    ```
+
+    Cloudformation example:
+    ```json
+    {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Properties" : {
+          "AssociatePublicIpAddress" : true,
+          "BlockDeviceMappings" : [ {
+            "DeviceName" : String,
+            "Ebs" : {
+               "DeleteOnTermination" : true,
+    +          "Encrypted" : true,
+    +          "KmsKeyId" : "arn:aws:kms:us-east-1:1112213231:key/example-123",
+               ...
+               ...
+            },
+            "NoDevice" : false,
+            "VirtualName" : "my_ebs"
+          } ],
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_configuration#encrypted
+    * https://aws.amazon.com/blogs/compute/must-know-best-practices-for-amazon-ebs-encryption/
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-launchconfig-blockdev-template.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance#ebs_block_device
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_8
+severity: Medium
+sid: ckv-aws-8
+title: "Ensure EBS in Launch configuration is securely encrypted"

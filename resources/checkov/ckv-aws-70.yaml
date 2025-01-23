@@ -1,0 +1,87 @@
+---
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+  - HIPAA
+description: "Ensure S3 bucket does not allow an action with `Principal` set to `*`"
+extra:
+  entity: aws_s3_bucket_policy
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure S3 bucket does not allow an action with `Principal` set to `*`.
+
+    #### Rationale
+    Having principal set to `*` means the policy is set for all users and accounts, instead of a specific user. Best security practices is to always allow only for few specific required users.
+
+    #### Remediation
+    Do not set the `principal` to `*`. Instead specify the IAM ARN or the user id.
+
+    Terraform example:
+    ```
+    resource "aws_s3_bucket" "b" {
+      bucket = "my_tf_example_bucket"
+    }
+
+    resource "aws_s3_bucket_policy" "b" {
+      bucket = aws_s3_bucket.b.id
+      policy = <<POLICY
+      {
+        "Version": "2012-10-17",
+        "Id": "MYBUCKETPOLICY",
+        "Statement": [
+          {
+            "Sid": "IPAllow",
+            "Effect": "Deny",
+    -       "Principal": "*",
+    +       "Principal": { AWS: "arn:aws:iam::1234523:user/example-user" },
+    -       "Action": "s3:*",
+    +       "Action": [ "s3:GetObject" ]
+            "Resource": "arn:aws:s3:::my_tf_test_bucket/*",
+            "Condition": {
+               "IpAddress": {"aws:SourceIp": "8.8.8.8/32"}
+            }
+          }
+        ]
+      }
+      POLICY
+    }
+    ```
+
+    CloudFormation example:
+    ```
+    {
+        "Type" : "AWS::S3::BucketPolicy",
+        "Properties" : {
+            "Bucket" : "my_example_bucket",
+            "PolicyDocument" : {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                      {
+    -                     "Action": "s3:*",
+    +                     "Action": [ "s3:GetObject" ],
+                          "Effect": "Allow",
+                          "Resource": "arn:aws:s3:::my_tf_test_bucket/*",
+    -                     "Principal": "*",
+    +                     "Principal": { AWS: "arn:aws:iam::1234523:user/example-user" },
+                          ...
+                          ...
+                      }
+                 ]
+            }
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy
+    * https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-bucket-user-policy-specifying-principal-intro.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-policy.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_70
+severity: Medium
+sid: ckv-aws-70
+title: "Ensure S3 bucket does not allow an action with any Principal"

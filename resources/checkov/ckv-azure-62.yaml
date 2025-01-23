@@ -1,0 +1,14 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure function apps are not accessible from all regions"
+extra:
+  entity: azurerm_function_app
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_62
+severity: Low
+sid: ckv-azure-62
+title: "Ensure function apps are not accessible from all regions"

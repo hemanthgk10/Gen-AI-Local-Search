@@ -1,0 +1,102 @@
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: IAM Password policy should require a minimum password length 15
+extra:
+  entity: aws_iam_account_password_policy
+  type: resource
+guidelines: |-
+  #### Description
+  Password policies are, in part, used to enforce password complexity requirements. IAM password policies can be used to ensure password are at least a given length. It is recommended that the password policy require a minimum password length 15.
+
+  #### Rationale
+  Setting a password policy increases account resiliency against brute force login attempts. While it is possible to set additinal complexity requirements such as requiring an upper-case letter and numbers, this often leads to passwords like "Soluble123!". Instead, enforcing a longer password length but NOT mandating character sets is ideal.
+
+  #### Remediation
+  Set `minimum_password_length` to 15 or greater to keep password more secure.
+
+  Terraform example:
+  ```
+  resource "aws_iam_account_password_policy" "strict" {
+  -   minimum_password_length        = 5
+  +   minimum_password_length        = 15
+      max_password_age               = 0
+      require_lowercase_characters   = false
+      require_numbers                = false
+      require_uppercase_characters   = false
+      require_symbols                = false
+      allow_users_to_change_password = true
+
+      ...
+      ...
+  }
+  ```
+
+  Cloudformation example:
+  ```
+  {
+    "AWSTemplateFormatVersion": "2020-12-12",
+    "Description": "",
+    "Resources": {
+        "IamPasswordPolicy": {
+            "Type": "Custom::PasswordPolicy",
+            "Properties": {
+                "HardExpiry": false,
+                "AllowUsersToChangePassword": true,
+                "MaxPasswordAge": 0,
+  -             "MinimumPasswordLength": 5,
+  +             "MinimumPasswordLength": 15,
+                "RequireLowercaseCharacters": false,
+                "RequireNumbers": false,
+                "RequireSymbols": false,
+                "RequireUppercaseCharacters": false,
+                ...
+                ...
+            }
+        },
+        ...
+        ...
+  }
+  ```
+
+  From *Console*:
+
+  1. Go to IAM Service on the [AWS Console](https://console.aws.amazon.com/iam)
+  2. Click on Account Settings on the Left Pane
+  3. Set `Minimum password length` to `15 or greater`
+  4. Click `Apply password policy`
+
+  #### Note
+  All commands starting with `aws iam update-account-password-policy` can be combined into a single command.
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_account_password_policy#minimum_password_length
+  * https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_passwords_account-policy.html
+  * https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#configure-strong-password-policy
+lwid:
+  - AWS_CIS_1_9
+provider: AWS
+ruleId: CKV_AWS_10
+severity: Medium
+sid: ckv-aws-10
+title: Ensure IAM password policy requires more than 15 characters
+autofix: true
+remediation:
+- checkType: CloudFormation
+  steps:
+  - actions: modify
+    resource: [ "resource" ]
+    resourceAttribute: MinimumPasswordLength
+    resourceAttributeType: integer
+    resourceAttributeValue: "15"
+    resourceType: [ "Custom::PasswordPolicy" ]
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: minimum_password_length
+    resourceAttributeType: integer
+    resourceAttributeValue: "15"
+    resourceType: [ "aws_iam_account_password_policy" ]

@@ -1,0 +1,59 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Route 53 is a highly available and scalable cloud Domain Name System (DNS) web service. Amazon Route 53 effectively connects user requests to infrastructure running in AWS – such as Amazon EC2 instances, Elastic Load Balancing load balancers, or Amazon S3 buckets.
+
+    You use an A record to route traffic to a resource, such as a web server, using an IPv4 address in dotted decimal notation.
+extra:
+  entity: aws_route53_record
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Route 53 is a highly available and scalable cloud Domain Name System (DNS) web service. Amazon Route 53 effectively connects user requests to infrastructure running in AWS – such as Amazon EC2 instances, Elastic Load Balancing load balancers, or Amazon S3 buckets.
+
+    You use an A record to route traffic to a resource, such as a web server, using an IPv4 address in dotted decimal notation.
+
+    #### Rationale
+    When a A record is set to a random IP address, it is hard to correlate the IP address to the AWS resource. Tracing back to the corresponding AWS resource is easy, if an alias is set to a `data`, `module` or an AWS resource.
+
+    #### Remediation
+    It is recommended to not set the Route53 A record to a random IP address, instead an alias should be set to any EIP or an AWS resource.
+
+    Terraform example
+    ```
+    resource "aws_elb" "main" {
+        name               = "foobar-terraform-elb"
+        availability_zones = ["us-east-1c"]
+        ...
+        ...
+    }
+
+    resource "aws_route53_record" "www" {
+        zone_id = aws_route53_zone.primary.zone_id
+        name    = "example.com"
+        type    = "A"
+        ttl     = "300"
+    -   records = ["10.0.1.23"]
+
+    +   alias {
+    +     name                   = aws_elb.main.dns_name
+    +     zone_id                = aws_elb.main.zone_id
+    +     evaluate_target_health = true
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record#alias-record
+    * https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/ResourceRecordTypes.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_23
+severity: Medium
+sid: ckv2-aws-23
+title: "Route53 A Record has Attached Resource"

@@ -1,0 +1,75 @@
+---
+autofix: true
+category: RBAC
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - CIS
+  - HIPAA
+description: "Using Kubernetes role-based access control (RBAC), you can grant users, groups, and service accounts access to only the resources they need."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/azu007.go"
+guidelines: |-
+    #### Description
+    Azure AKS is a managed Kubernetes cluster service from Microsoft. AKS operationalize your workload containers on Kubernetes.
+
+    RBAC provides role based access control to the container workloads in AKS cluster. If RBAC is not enabled, the granularity of permissions granted to Kubernetes resources is diminished presenting more permissions than needed to users requiring access to Kubernetes resources in AKS, so ensure that RBAC is enabled on all Azure Kubernetes Services Instances
+
+    #### Rationale
+    Azure Kubernetes Services has the capability to integrate Azure Active Directory users and groups into Kubernetes RBAC controls within the AKS Kubernetes API Server. This should be utilized to enable granular access to Kubernetes resources within the AKS clusters supporting RBAC controls not just of the overarching AKS instance but also the individual resources managed within Kubernetes.
+
+    #### Remediation
+    Set the `azurerm_kubernetes_cluster.role_based_access_control.enabled` to `true` and provide the `azure_active_directory` block to integrate with Azure active directory.
+
+    Terraform example for Azure Kubernetes cluster
+    ```
+    resource "azurerm_kubernetes_cluster" "example" {
+        name                = "example-aks1"
+        location            = azurerm_resource_group.example.location
+        resource_group_name = azurerm_resource_group.example.name
+        dns_prefix          = "exampleaks1"
+
+        default_node_pool {
+          name       = "default"
+          node_count = 1
+          vm_size    = "Standard_D2_v2"
+        }
+    +   role_based_access_control {
+    +     azure_active_directory {
+    +      ...
+    +      ...
+    +     }
+    +     enabled   = true
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/aks/aad-integrationhttps://kubernetes.io/docs/reference/access-authn-authz/rbac/https://docs.microsoft.com/en-us/cli/azure/aks?view=azure-cli-latest#az-aks-list
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-governance-strategy#gs-6-define-identity-and-privileged-access-strategy
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster#role_based_access_control
+lwid:
+  - Azure_CIS_131_8_5
+provider: Azure
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: role_based_access_control
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            role_based_access_control {
+               enabled  = true
+            }
+        resourceType:
+          - azurerm_kubernetes_cluster
+ruleId: AZU007
+severity: High
+sid: tfsec-azu007
+title: "Ensure RBAC is enabled on AKS clusters"

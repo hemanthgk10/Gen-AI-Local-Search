@@ -1,0 +1,65 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud.
+
+    You can authenticate to your DB instance using AWS Identity and Access Management (IAM) database authentication. IAM database authentication works with MySQL and PostgreSQL. With this authentication method, you don't need to use a password when you connect to a DB instance. Instead, you use an authentication token.
+extra:
+  entity: aws_db_instance
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud.
+
+    You can authenticate to your DB instance using AWS Identity and Access Management (IAM) database authentication. IAM database authentication works with MySQL and PostgreSQL. With this authentication method, you don't need to use a password when you connect to a DB instance. Instead, you use an authentication token.
+
+    #### Rationale
+    IAM database authentication provides the following benefits:
+
+      a. Network traffic to and from the database is encrypted using Secure Socket Layer (SSL) or Transport Layer Security (TLS)
+      b. You can use IAM to centrally manage access to your database resources, instead of managing access individually on each DB instance.
+      c. For applications running on Amazon EC2, you can use profile credentials specific to your EC2 instance to access your database instead of a password, for greater security.
+
+    #### Remediation
+    By default, IAM database authentication is disabled on DB instances. You can turn on the IAM database authentication by setting `iam_database_authentication_enabled` to `true`.
+
+    Terraform example
+    ```
+    resource "aws_db_instance" "default" {
+        allocated_storage    = 10
+        engine               = "mysql"
+        engine_version       = "5.7"
+        instance_class       = "db.t3.micro"
+    +   iam_database_authentication_enabled  = true
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::RDS::DBInstance",
+      "Properties" : {
+          "AllocatedStorage" : "10,
+          "DBName" : "default",
+    +     "EnableIAMDatabaseAuthentication": true
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/db_instance#iam_database_authentication_enabled
+    * https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.Enabling.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-rds-database-instance.html#cfn-rds-dbinstance-enableiamdatabaseauthentication
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_161
+severity: Medium
+sid: ckv-aws-161
+title: "Ensure RDS database has IAM authentication enabled"

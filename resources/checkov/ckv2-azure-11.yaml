@@ -1,0 +1,74 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Azure Data Explorer encryption at rest uses a customer-managed key"
+extra:
+  entity: azurerm_kusto_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure that Azure Data Explorer encryption at rest uses a customer-managed key.
+
+    #### Rationale
+    Installing endpoint protection systems (like Antimalware for Azure) provides for real-time protection capability that helps identify and remove viruses, spyware, and other malicious software, with configurable alerts when known malicious or unwanted software attempts to install itself or run on Azure systems.
+
+    #### Remediation
+    Make sure `azurerm_kusto_cluster_customer_managed_key` is configured to use custom managed keys.
+
+    Terraform example
+    ```
+    resource "azurerm_kusto_cluster" "example" {
+        name                = "kustocluster"
+        sku {
+          name     = "Standard_D13_v2"
+          capacity = 2
+        }
+        ...
+        ...
+    }
+
+    + resource "azurerm_key_vault" "example" {
+    +  name                = "examplekv"
+    +  sku_name            = "standard"
+    +  purge_protection_enabled = true
+    +  ...
+    +  ...
+    + }
+
+    + resource "azurerm_key_vault_key" "example" {
+    +   name         = "tfex-key"
+    +   key_vault_id = azurerm_key_vault.example.id
+    +   key_type     = "RSA"
+    +   key_size     = 2048
+    +   key_opts     = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+
+    +   depends_on = [
+    +     azurerm_key_vault_access_policy.client,
+    +     azurerm_key_vault_access_policy.cluster,
+    +   ]
+    +   ...
+    +   ...
+    + }
+
+    + resource "azurerm_kusto_cluster_customer_managed_key" "example" {
+    +   cluster_id   = azurerm_kusto_cluster.example.id
+    +   key_vault_id = azurerm_key_vault.example.id
+    +   key_name     = azurerm_key_vault_key.example.name
+    +   key_version  = azurerm_key_vault_key.example.version
+    + }
+    ```
+
+    #### Impact
+    Using Customer Managed Keys may also incur additional man-hour requirements to create, store, manage, and protect the keys as needed.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kusto_cluster
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kusto_cluster_customer_managed_key
+lwid: []
+provider: Azure
+ruleId: CKV2_AZURE_11
+severity: Medium
+sid: ckv2-azure-11
+title: "Ensure that Azure Data Explorer encryption at rest uses a customer-managed key"

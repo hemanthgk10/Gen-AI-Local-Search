@@ -1,0 +1,78 @@
+---
+autofix: true
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "When we create a web application, we specify one or more CloudFront distributions to delivery the data, videos, applications and APIs to customers globally with low latency, high transfer speeds, all within a developer-friendly environment. CloudFront provides security capabilities, including field level encryption and HTTPS support, seamlessly integrated with AWS Shield, AWS Web Application Firewall and Route 53 to protect against multiple types of attacks including network and application layer DDoS attacks. AWS WAF starts to allow, block, or count web requests for those distributions based on the conditions that you identify in the web ACL. Enabling WAF on CloudFront helps to inspect the data."
+extra:
+  entity: aws_cloudfront_distribution
+  type: resource
+guidelines: |-
+    #### Description
+    When we create a web application, we specify one or more CloudFront distributions to delivery the data, videos, applications and APIs to customers globally with low latency, high transfer speeds, all within a developer-friendly environment. CloudFront provides security capabilities, including field level encryption and HTTPS support, seamlessly integrated with AWS Shield, AWS Web Application Firewall and Route 53 to protect against multiple types of attacks including network and application layer DDoS attacks. AWS WAF starts to allow, block, or count web requests for those distributions based on the conditions that you identify in the web ACL. Enabling WAF on CloudFront helps to inspect the data.
+
+    #### Rationale
+    AWS WAF starts to allow, block, or count web requests for those distributions based on the conditions that you identify in the web ACL. Enabling WAF on CloudFront helps to inspect the data.
+
+    #### Remediation
+    Specify the `web_acl_id` unique identifier that specifies the AWS WAF web ACL, if any, to associate with this distribution.
+
+    Terraform example:
+    ```
+    resource "aws_cloudfront_distribution" "example" {
+        ordered_cache_behavior {
+          lambda_function_association {
+            event_type   = "viewer-request"
+            lambda_arn   = aws_lambda_function.example.qualified_arn
+            include_body = false
+          }
+          ...
+          ...
+        }
+    +   web_acl_id       =  "arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b"
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```
+    {
+      "Type" : "AWS::CloudFront::Distribution",
+      "Properties" : {
+          "DistributionConfig" : {
+              "Enabled" : true,
+              "IPV6Enabled" : false,
+    +         "WebACLId" : "arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b",
+              ...
+              ...
+          },
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/waf/latest/developerguide/cloudfront-features.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_distribution#web_acl_id
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: web_acl_id
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide the arn of the ACL>"
+        resourceType:
+          - aws_cloudfront_distribution
+ruleId: CKV_AWS_68
+severity: High
+sid: ckv-aws-68
+title: "CloudFront Distribution should have WAF enabled"

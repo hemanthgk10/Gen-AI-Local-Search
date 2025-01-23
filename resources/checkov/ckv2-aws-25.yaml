@@ -1,0 +1,57 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon MSK (Managed Streaming for Apache Kafka) enabled you to build and run streaming applications that uses Apache Kafka. MSK detects and automatically recovers from the most common failure scenarios for clusters so that your producer and consumer applications can continue their write and read operations with minimal impact. When Amazon MSK detects a broker failure, it mitigates the failure or replaces the unhealthy or unreachable broker with a new one. MSK can contain security configuration and management tasks for the AWS services that you use."
+extra:
+  entity: aws_msk_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon MSK (Managed Streaming for Apache Kafka) enabled you to build and run streaming applications that uses Apache Kafka. MSK detects and automatically recovers from the most common failure scenarios for clusters so that your producer and consumer applications can continue their write and read operations with minimal impact. When Amazon MSK detects a broker failure, it mitigates the failure or replaces the unhealthy or unreachable broker with a new one. MSK can contain security configuration and management tasks for the AWS services that you use.
+
+    #### Rationale
+    Broker logs enable you to troubleshoot your Apache Kafka applications and to analyze their communications with your MSK cluster. You can configure your new or existing MSK cluster to deliver INFO-level broker logs to one or more of the following types of destination resources: a CloudWatch log group, an S3 bucket, a Kinesis Data Firehose delivery stream.
+
+    #### Remediation
+    Set the `kms_key_id` in the `aws_sagemaker_notebook_instance`.
+
+    Terraform example
+    ```
+    resource "aws_msk_cluster" "example" {
+        cluster_name           = "example"
+        kafka_version          = "2.4.1"
+        number_of_broker_nodes = 3
+
+    +   logging_info {
+    +     broker_logs {
+    +       cloudwatch_logs {
+    +         enabled   = true
+    +         log_group = aws_cloudwatch_log_group.test.name
+    +       }
+    +       firehose {
+    +         enabled         = true
+    +         delivery_stream = aws_kinesis_firehose_delivery_stream.test_stream.name
+    +       }
+    +       s3 {
+    +          enabled = true
+    +          bucket  = aws_s3_bucket.bucket.id
+    +          prefix  = "logs/msk-"
+    +       }
+    +     }
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sagemaker_notebook_instance#kms_key_id
+    * https://docs.aws.amazon.com/msk/latest/developerguide/msk-logging.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_25
+severity: Low
+sid: ckv2-aws-25
+title: "Ensure MSK Cluster logging is enabled"

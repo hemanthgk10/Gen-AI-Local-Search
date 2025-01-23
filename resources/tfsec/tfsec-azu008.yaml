@@ -1,0 +1,57 @@
+---
+autofix: true
+category: Network
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "The API server is the central way to interact with and manage a cluster. To improve cluster security and minimize attacks, the API server should only be accessible from a limited set of IP address ranges."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/azu008.go"
+guidelines: |-
+    #### Description
+    Azure AKS is a managed Kubernetes cluster service from Microsoft. AKS operationalize your workload containers on Kubernetes.
+
+    In AKS cluster, the API server receives requests to perform actions in the cluster such as create, delete, update and scale resources. So having it exposed to everywhere can lead to security attacks.
+
+    #### Rationale
+    The API server is the central way to interact with Kubernetes cluster. Inorder to mitigate any security risk of exposure of this API server, we should allow only few authorized IP ranges only to interact with it.
+
+    #### Remediation
+    Do not allow traffic from everywhere. Only allow traffic from specific IP ranges approved by the security team using `api_server_authorized_ip_ranges`.
+
+    Terraform example for AKS cluster
+    ```
+    resource "azurerm_kubernetes_cluster" "example" {
+        name                = "example-aks1"
+        location            = azurerm_resource_group.example.location
+        resource_group_name = azurerm_resource_group.example.name
+        dns_prefix          = "exampleaks1"
+    -   api_server_authorized_ip_ranges = "0.0.0.0/0" # Remove default from everywhere
+    +   api_server_authorized_ip_ranges = "192.168.0.1/16"
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/kubernetes_cluster#api_server_authorized_ip_ranges
+    * https://docs.microsoft.com/en-us/azure/aks/api-server-authorized-ip-ranges
+lwid: []
+provider: Azure
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: api_server_authorized_ip_ranges
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide the a specific CIDR range instead of 0.0.0.0/0>"
+        resourceType:
+          - azurerm_kubernetes_cluster
+ruleId: AZU008
+severity: High
+sid: tfsec-azu008
+title: "Ensure AKS has an API Server Authorized IP Ranges enabled"

@@ -1,0 +1,81 @@
+---
+autofix: true
+category: Storage
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "Buckets should have logging enabled so that access can be audited"
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws002.go"
+guidelines: |-
+    #### Description
+    S3 Bucket Access Logging generates a log that contains access records for each request made to your S3 bucket. An access log record contains details about the request, such as the request type, the resources specified in the request worked, and the time and date the request was processed. It is recommended that bucket access logging be enabled on the CloudTrail S3 bucket.
+
+    #### Rationale
+    By enabling S3 bucket logging on target S3 buckets, it is possible to capture all events which may affect objects within an target buckets. Configuring logs to be placed in a separate bucket allows access to log information which can be useful in security and incident response workflows.
+
+    #### Remediation
+    set `logging` argument for `aws_s3_bucket` with bucket id for storing the logs
+
+    Terraform example
+    ```
+    resource "aws_s3_bucket" "b" {
+        bucket = "my-tf-test-bucket"
+        acl    = "private"
+
+    +   logging {
+    +      target_bucket = aws_s3_bucket.log_bucket.id
+    +      target_prefix = "log/"
+    +   }
+
+        ...
+        ...
+    }
+    ```
+
+    Cloudformation example
+    ```json
+    {
+        "Type": "AWS::S3::Bucket",
+        "Properties": {
+             "AccessControl": "LogDeliveryWrite",
+    +        "LoggingConfiguration": {
+    +            "DestinationBucketName": {"Ref" : "LoggingBucket"},
+    +            "LogFilePrefix": "log"
+    +        }
+
+            ...
+            ...
+        }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket#logging
+    * https://docs.aws.amazon.com/AmazonS3/latest/user-guide/server-access-logging.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: logging
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            logging {
+               target_bucket = "<Target Bucket ID to which logs needs to be sent>"
+               target_prefix = "log/"
+            }
+        resourceType:
+          - aws_s3_bucket
+ruleId: AWS002
+severity: Low
+sid: tfsec-aws002
+title: "S3 Bucket does not have logging enabled"

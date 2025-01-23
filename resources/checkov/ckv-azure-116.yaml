@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that AKS uses Azure Policies Add-on"
+extra:
+  entity: azurerm_kubernetes_cluster
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_116
+severity: Low
+sid: ckv-azure-116
+title: "Ensure that AKS uses Azure Policies Add-on"

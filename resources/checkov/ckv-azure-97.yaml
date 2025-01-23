@@ -1,0 +1,14 @@
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Virtual machine scale sets have encryption at host enabled"
+extra:
+  entity: azurerm_linux_virtual_machine_scale_set
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_97
+severity: Medium
+sid: ckv-azure-97
+title: "Ensure that Virtual machine scale sets have encryption at host enabled"

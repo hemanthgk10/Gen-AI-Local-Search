@@ -1,0 +1,65 @@
+---
+autofix: true
+category: TLS
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Azure Storage currently supports three versions of the TLS protocol: 1.0, 1.1, and 1.2. Azure Storage uses TLS 1.2 on public HTTPS endpoints, but TLS 1.0 and TLS 1.1 are still supported for backward compatibility. This check will warn if the minimum TLS is not set to TLS1_2."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/azu015.go"
+guidelines: |-
+    #### Description
+    An Azure Storage Account contains all of your Azure Storage data objects: blobs, files, queues, tables, and disks. The storage account provides a unique namespace for your Azure Storage data that is accessible from anywhere in the world over HTTP or HTTPS.
+    The TLS(Transport Layer Security) protocol secures transmission of data over the internet using standard encryption technology. Encryption should be set with the latest version of TLS. App service allows TLS 1.2 by default, which is the recommended TLS level by industry standards, such as PCI DSS.
+
+    #### Rationale
+    Storage Account might contain sensitive information in files, table or disks. It is very important to make sure that this information is accessible to only authorized user but not to everyone on HTTP. So, let's use only HTTPS with latest TLS encryption to
+    prevent any security breaches. It is highly recommended to use the latest TLS 1.2 version for web app secure connections.
+
+    #### Remediation
+    Set the `min_tls_version` to `TLS1_2` only. Possible values are TLS1_0, TLS1_1, and TLS1_2. Defaults to TLS1_0 for new storage accounts.
+
+    Terraform example
+    ```
+    data "azurerm_storage_account" "test" {
+        name                 = "packerimages"
+        resource_group_name  = "packer-storage"
+    +   min_tls_version      = "TLS1_2"
+        ...
+        ...
+    }
+    ```
+    Using *Azure Console*
+       1. Login to [Azure Portal](https://portal.azure.com)
+       2. Go to `Storage Account`
+       3. Under `Configuration` settings, Click on `SSL settings`
+       4. Set Minimum TLS Version to 1.2 there.
+
+    Using *Command Line*
+
+    ```
+    az storage account update --resource-group <RESOURCE_GROUP_NAME> --name <STORAGE_ACCOUNT_NAME> --min-tls-version 1.2
+    ```
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview#naming-storage-accounts
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/storage_account#min_tls_version
+lwid: []
+provider: Azure
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: min_tls_version
+        resourceAttributeType: string
+        resourceAttributeValue: TLS1_2
+        resourceType:
+          - azurerm_storage_account
+ruleId: AZU015
+severity: High
+sid: tfsec-azu015
+title: "The minimum TLS version for Storage Accounts should be TLS1_2"

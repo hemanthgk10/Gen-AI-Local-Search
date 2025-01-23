@@ -1,0 +1,46 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Flow Logs is a feature that enables users to capture information about the IP traffic going to and from Kubernetes cluster. Once a flow log is created, the user can view and retrieve its data in Stackdriver Logging. It is recommended that Flow Logs be enabled for every production cluster."
+extra:
+  entity: google_storage_bucket
+  type: resource
+guidelines: |-
+    #### Description
+    Flow Logs is a feature that enables users to capture information about the IP traffic going to and from Kubernetes cluster. Once a flow log is created, the user can view and retrieve its data in Stackdriver Logging. It is recommended that Flow Logs be enabled for every production cluster.
+
+    #### Rationale
+    Intranode visibility ensures that packets sent between Pods are always processed by the VPC network, which ensures that firewall rules, routes, flow logs, and packet mirroring configurations apply to the packets.
+
+    #### Remediation
+    Set the `enable_intranode_visibility` to `true`. This makes same node pod to pod traffic visible for VPC network.
+
+    Enable the `log_config` with `WORKLOADS` or `SYSTEM_COMPONENTS`.
+
+    Terraform example
+    ```
+    resource "google_container_cluster" "primary" {
+        name                        = "marcellus-wallace"
+        location                    = "us-central1-a"
+        initial_node_count          = 3
+    +   enable_intranode_visibility = true
+    +   log_config {
+    +      enable_components  = "WORKLOADS"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#enable_intranode_visibility
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/intranode-visibility
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#logging_config
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_62
+severity: Low
+sid: ckv-gcp-62
+title: "Bucket should log access"

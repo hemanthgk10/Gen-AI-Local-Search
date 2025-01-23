@@ -1,0 +1,69 @@
+category: Secrets
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+- CIS
+description: "Kubernetes Secrets provides is kube native way of storing and managing
+  sensitive information, such as passwords, OAuth tokens, and ssh keys.\nKubernetes
+  supports mounting secrets as data volumes or as environment variables. Minimize
+  the use of environment variable secrets. "
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  Kubernetes Secrets provides is kube native way of storing and managing sensitive information, such as passwords, OAuth tokens, and ssh keys.
+
+  Kubernetes supports mounting secrets as data volumes or as environment variables. Minimize the use of environment variable secrets.
+
+  #### Rationale
+  It is reasonably common for application code to log out its environment (particularly in the event of an error). This will include any secret values passed in as environment variables, so secrets can easily be exposed to any user or entity who has access to the logs.
+  Mounting secrets as volumes has the additional benefit that secret values can be updated without restarting the pod
+
+  #### Remediation
+  Run the following command to find references to objects which use environment variables defined from secrets.
+
+  ```
+    kubectl get all -o jsonpath='{range .items[?(@..secretKeyRef)]} {.kind} {.metadata.name} {"\n"}{end}' -A
+  ```
+  If possible, rewrite application code to read secrets from mounted secret files, rather than from environment variables.
+
+  Example of using secrets with file on volume
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: secret-env-pod
+  spec:
+    containers:
+    - name: mycontainer
+      image: redis
+      volumeMounts:
+  +   - name: foo
+  +     mountPath: "/etc/foo"
+  +     readOnly: true
+  + volumes:
+  + - name: foo
+  +   secret:
+  +     secretName: mysecret
+  -   env:
+  -     - name: SECRET_USERNAME
+  -       valueFrom:
+  -         secretKeyRef:
+  -           name: mysecret
+  -           key: username
+  -     - name: SECRET_PASSWORD
+  -       valueFrom:
+  -         secretKeyRef:
+  -           name: mysecret
+  -           key: password
+    restartPolicy: Never
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets
+provider: Kubernetes
+ruleId: CKV_K8S_35
+severity: Medium
+sid: ckv-k8s-35
+title: Prefer using secrets as files over secrets as environment variables

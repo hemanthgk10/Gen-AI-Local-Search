@@ -1,0 +1,69 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: |-
+    Amazon Elastic Kubernetes Service (Amazon EKS) is a managed service that you can use to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes. Kubernetes is an open-source system for automating the deployment, scaling, and management of containerized applications.
+    Ensure Amazon EKS public endpoint not accessible to 0.0.0.0/0. If we enabled public access, we should specify which addresses from the Internet can communicate to the public endpoint. If you specify no blocks, then the public API server endpoint receives requests from all (0.0.0.0/0) IP addresses. If you restrict access to your public endpoint using CIDR blocks, it is recommended that you also enable private endpoint access so that nodes and Fargate pods (if you use them) can communicate with the cluster. Without the private endpoint enabled, your public access endpoint CIDR sources must include the egress sources from your VPC. For example, if you have a node in a private subnet that communicates to the internet through a NAT Gateway, you will need to add the outbound IP address of the NAT gateway as part of an allowed CIDR block on your public endpoint.
+extra:
+  entity: aws_eks_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elastic Kubernetes Service (Amazon EKS) is a managed service that you can use to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes. Kubernetes is an open-source system for automating the deployment, scaling, and management of containerized applications.
+
+    Ensure Amazon EKS public endpoint not accessible to 0.0.0.0/0. If we enabled public access, we should specify which addresses from the Internet can communicate to the public endpoint. If you specify no blocks, then the public API server endpoint receives requests from all (0.0.0.0/0) IP addresses. If you restrict access to your public endpoint using CIDR blocks, it is recommended that you also enable private endpoint access so that nodes and Fargate pods (if you use them) can communicate with the cluster. Without the private endpoint enabled, your public access endpoint CIDR sources must include the egress sources from your VPC. For example, if you have a node in a private subnet that communicates to the internet through a NAT Gateway, you will need to add the outbound IP address of the NAT gateway as part of an allowed CIDR block on your public endpoint.
+
+    #### Rationale
+    Allowing access to public access without any restrictions can cause attackers to easily access the cluster and attack the vulnerable parts of the clsuter. They can also cause DDoS attack so the concerned users can not access the service.
+
+    #### Remediation
+    Set the `public_access_cidrs` to a specific cidr block rather than leaving it open to `0.0.0.0/0`.
+
+    Terraform example:
+    ```
+    resource "aws_eks_cluster" "example" {
+       name     = "example"
+       role_arn = aws_iam_role.example.arn
+
+       vpc_config {
+         subnet_ids           = [aws_subnet.example1.id, aws_subnet.example2.id]
+    -    public_access_cidrs  = [ "0.0.0.0/0" ]
+    +    public_access_cidrs  = ["23.11.123.4/24"]
+         ...
+         ...
+       }
+       ...
+       ...
+    }
+    ```
+
+    CloudFormation example:
+    ```
+    {
+        "Type" : "AWS::EKS::Cluster",
+        "Properties" : {
+            "Name" : "example",
+            "ResourcesVpcConfig" : {
+    -          "PublicAccessCidrs" : [ "0.0.0.0/0" ]
+    +          "PublicAccessCidrs" : [ "23.11.123.4/24" ]
+            },
+            ...
+            ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_cluster#public_access_cidrs
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_cluster#endpoint_public_access
+    * https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-eks-cluster-resourcesvpcconfig.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_38
+severity: Critical
+sid: ckv-aws-38
+title: "Ensure Amazon EKS public endpoint not accessible to 0.0.0.0/0"

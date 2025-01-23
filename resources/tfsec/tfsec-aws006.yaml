@@ -1,0 +1,52 @@
+---
+autofix: true
+category: Security
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Opening up ports to the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that explicitly require it where possible."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws006.go"
+guidelines: |-
+    #### Description
+    Security groups provide stateful filtering of ingress/egress network traffic to AWS resources. It is recommended that no security group allows unrestricted ingress access.
+
+    #### Rationale
+    Removing unfettered connectivity to remote console services, such as SSH, reduces a server's exposure to risk.
+
+    #### Remediation
+    Do not have `cidr_block` set to `0.0.0.0/0`. Instead have it configured with a specific subnet IP CIDR blocks.
+
+    Terraform example
+    ```
+    resource "aws_security_group_rule" "my-rule" {
+         type        = "ingress"
+    -    cidr_blocks = ["0.0.0.0/0"]
+    +	 cidr_blocks = ["10.0.0.0/16"]
+       ...
+       ...
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules-reference.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule#cidr_blocks
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: cidr_blocks
+        resourceAttributeType: array
+        resourceAttributeValue: "<Provide specific cidir block>"
+        resourceType:
+          - aws_security_group_rule
+ruleId: AWS006
+severity: Critical
+sid: tfsec-aws006
+title: "An ingress security group rule allows traffic from `/0`"

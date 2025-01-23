@@ -1,0 +1,14 @@
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Data Lake Store accounts enables encryption"
+extra:
+  entity: azurerm_data_lake_store
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_105
+severity: High
+sid: ckv-azure-105
+title: "Ensure that Data Lake Store accounts enables encryption"

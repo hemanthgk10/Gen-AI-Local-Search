@@ -1,0 +1,67 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure all Cloud SQL database instance requires all incoming connections
+  to use SSL
+extra:
+  entity: google_sql_database_instance
+  type: resource
+guidelines: |-
+  #### Description
+  It is recommended to enforce all incoming connections to SQL database instance to use SSL.
+
+  #### Rationale
+  SQL database connections if successfully trapped (MITM); can reveal sensitive data like credentials, database queries, query outputs etc. For security, it is recommended to always use SSL encryption when connecting to your instance. This recommendation is applicable for Postgresql, MySql generation 1 and MySql generation 2 Instances.
+
+  #### Remediation
+  By default parameter `settings: ipConfiguration: requireSsl` is not set which is equivalent to `requireSsl:false`.
+
+  Terraform example
+  ```
+  resource "google_sql_database_instance" "master" {
+      name             = "master-instance"
+      database_version = "POSTGRES_11"
+      region           = "us-central1"
+
+      settings {
+  +      ip_configuration {
+  +        require_ssl = true
+  +        ...
+  +        ...
+  +      }
+      }
+      ...
+      ...
+  }
+  ```
+
+  Using *Command-line*
+
+  To enforce SSL encryption for an Instance run command:
+
+  ```
+  gcloud sql instances patch [INSTANCE_NAME] --require-ssl
+  ```
+
+  *Note:*
+  `RESTART` is required for type MySQL Generation 1 Instances `(backendType: FIRST_GEN)` to get this configuration in effect.
+
+  #### Impact
+  After enforcing SSL connection, existing client will not be able to communicate with SQL server unless configured with appropriate client-certificates to communicate to SQL database instance.
+
+  #### References
+  * https://cloud.google.com/sql/docs/postgres/configure-ssl-instance
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/sql_database_instance#require_ssl
+
+  #### Notes
+  By default `Settings: ipConfiguration` has no `authorizedNetworks` set/configured. In that case even if by default `requireSsl` is not set, which is equivalent to `requireSsl:false` there is no risk as instance cannot be accessed outside of the network unless `authorizedNetworks` are configured. However, If default for `requireSsl` is not updated to `true` any `authorizedNetworks` created later on will not enforce SSL only connection.
+lwid:
+  - GCP_CIS_6_1
+  - GCP_CIS12_6_4
+provider: GCP
+ruleId: CKV_GCP_6
+severity: High
+sid: ckv-gcp-6
+title: Google sql database with SSL incoming connections check

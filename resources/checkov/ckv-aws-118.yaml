@@ -1,0 +1,58 @@
+---
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud. It provides cost-efficient, resizable capacity for an industry-standard relational database and manages common database administration tasks.
+
+    Amazon RDS provides metrics in real time for the operating system (OS) that your DB instance runs on. You can view the metrics for your DB instance using the console.
+extra:
+  entity: aws_rds_cluster_instance
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud. It provides cost-efficient, resizable capacity for an industry-standard relational database and manages common database administration tasks.
+
+    Amazon RDS provides metrics in real time for the operating system (OS) that your DB instance runs on. You can view the metrics for your DB instance using the console.
+
+    #### Rationale
+    With Enhanced Monitoring, you can monitor the operating system of your DB instance in real time. When you want to see how different processes or threads use the CPU, Enhanced Monitoring metrics are useful.
+
+    #### Remediation
+    Set the `monitoring_interval` to some value `1`, `5`, `10`, `15`, `30`, `60` in seconds. Default is `0`, which disables the collection of metrics from the instance.
+
+    Terraform example
+    ```
+    resource "aws_rds_cluster_instance" "cluster_instances" {
+        count               = 2
+        identifier          = "aurora-cluster-demo-${count.index}"
+        cluster_identifier  = aws_rds_cluster.default.id
+        instance_class      = "db.r4.large"
+        engine              = aws_rds_cluster.default.engine
+        engine_version      = aws_rds_cluster.default.engine_version
+    +   monitoring_interval = 60
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster_instance#monitoring_interval
+    * https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_Monitoring.OS.overview.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_118
+severity: Low
+sid: ckv-aws-118
+title: "Ensure that enhanced monitoring is enabled for Amazon RDS instances"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: monitoring_interval
+    resourceAttributeType: integer
+    resourceAttributeValue: "60"
+    resourceType: [ "aws_rds_cluster_instance" ]

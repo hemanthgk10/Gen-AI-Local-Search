@@ -1,0 +1,65 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Timestream is a fast, scalable, fully managed, purpose-built time series database that makes it easy to store and analyze trillions of time series data points per day. You can send data to Aamazon Timestream from all of the AWS services.
+
+    We strongly recommend that you never put confidential or sensitive information. AWS provides different encryptions to protect the sensitive information.
+
+    a. Encryption at Rest
+    b. Encryption in Transit
+extra:
+  entity: aws_timestreamwrite_database
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Timestream is a fast, scalable, fully managed, purpose-built time series database that makes it easy to store and analyze trillions of time series data points per day. You can send data to Aamazon Timestream from all of the AWS services.
+
+    We strongly recommend that you never put confidential or sensitive information. AWS provides different encryptions to protect the sensitive information.
+
+    a. Encryption at Rest
+    b. Encryption in Transit
+
+    #### Rationale
+    Encrypting the Amazon Timestream data can prevent from unauthorized access to information.
+
+    #### Remediation
+    Specify the `kms_key_id` to encrypt the TimeStream data.
+
+    Terraform example
+    ```
+    resource "aws_timestreamwrite_database" "example" {
+        database_name = "database-example"
+    +   kms_key_id    = "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c"
+
+        tags = {
+          Name = "service"
+        }
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::Timestream::Database",
+      "Properties" : {
+           "DatabaseName" : "database-example",
+    +      "KmsKeyId" : "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c",
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/timestreamwrite_database#kms_key_id
+    * https://docs.aws.amazon.com/timestream/latest/developerguide/best-practices-security-preventative.html
+    * https://docs.aws.amazon.com/timestream/latest/developerguide/data-protection.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_160
+severity: High
+sid: ckv-aws-160
+title: "Ensure that Timestream database is encrypted with KMS CMK"

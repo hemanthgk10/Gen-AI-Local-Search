@@ -1,0 +1,79 @@
+---
+autofix: true
+category: Storage
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - CIS
+  - HIPAA
+description: "Storage container public access should be off. It can be configured for blobs only, containers and blobs or off entirely. The default is off, with no public access. Explicitly overriding publicAccess to anything other than off should be avoided."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/azu011.go"
+guidelines: |-
+    #### Description
+    Disable anonymous access to blob containers.
+
+    #### Rationale
+    Anonymous, public read access to a container and its blobs can be enabled in Azure Blob storage. It grants read-only access to these resources without sharing the account key, and without requiring a shared access signature. It is recommended not to provide anonymous access to blob containers until, and unless, it is strongly desired. A shared access signature token should be used for providing controlled and timed access to blob containers.
+
+    #### Remediation
+
+    Terraform example
+    ```
+     resource "azure_storage_container" "example" {
+        name                  = "vhds"
+        storage_account_name  = azurerm_storage_account.example.name
+        container_access_type = "blob"
+        properties = {
+    -     "publicAccess" = "blob"
+    +     "publicAccess" = "off"
+        }
+        ...
+        ...
+     }
+    ```
+
+    From *Azure Console*
+    First, follow Microsoft documentation and created shared access signature tokens for your blob containers. Then,
+      1. Go to `Storage Accounts`
+      2. For each storage account, go to `Containers` under `BLOB SERVICE`
+      3. For each container, click `Access policy`
+      4. Set `Public access level` to `Private (no anonymous access)`
+
+    From *Azure Command Line Interface 2.0*
+
+      1. Identify the container name from the audit command
+      2. Set the permission for public access to `private`(off) for the above container name, using the below command
+
+    ```
+    az storage container set-permission --name <containerName> --public-access off --account-name <accountName> --account-key <accountKey>
+    ```
+
+    By default, `Public access level` is set to `Private (no anonymous access)` for blob containers.
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/storage/blobs/storage-manage-access-to-resources
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-privileged-access#pa-4-set-up-emergency-access-in-azure-ad
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-privileged-access#pa-5-automate-entitlement-management
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-privileged-access#pa-8-choose-approval-process-for-microsoft-support
+    * http://man.hubwiz.com/docset/Terraform.docset/Contents/Resources/Documents/docs/providers/azure/r/storage_container.html#properties
+lwid:
+  - Azure_CIS_131_3_5
+provider: Azure
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: properties.publicAccess
+        resourceAttributeType: blockAttribute
+        resourceAttributeValue: "off"
+        resourceType:
+          - azure_storage_container
+ruleId: AZU011
+severity: Critical
+sid: tfsec-azu011
+title: "Storage containers in blob storage mode should not have public access"

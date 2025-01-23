@@ -1,0 +1,91 @@
+---
+autofix: true
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+  - HIPAA
+description: "Ensure the S3 bucket does not allow WRITE permissions to everyone. S3 access control list (ACL) grants predefined permissions for the bucket. ACL can be set to one of the values: `Private, PublicRead, PublicReadWrite, AuthenticatedRead, LogDeliveryWrite, BucketOwnerRead, BucketOwnerFullControl, or AwsExecRead.` Granting `PublicReadWrite` should be restricted and should done by case by case."
+extra:
+  entity: "AWS::S3::Bucket"
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure the S3 bucket does not allow WRITE permissions to everyone. S3 access control list (ACL) grants predefined permissions for the bucket. ACL can be set to one of the values: `Private, PublicRead, PublicReadWrite, AuthenticatedRead, LogDeliveryWrite, BucketOwnerRead, BucketOwnerFullControl, or AwsExecRead.` Granting `PublicReadWrite` should be restricted and should done by case by case.
+
+    #### Rationale
+    By default every user of the S3 shouldn't be given `WRITE` permissions. Limited permissions should be given and the permissions should be escalated only when required.
+
+    #### Remediation
+    Set `aws_s3_bucket.acl` to any value except `public-read-write`.
+
+    Terraform example:
+    ```
+    resource "aws_s3_bucket" "b" {
+       bucket = "my-tf-test-bucket"
+    -  acl    = "public-read-write"
+    +  acl    = "private"
+
+       versioning {
+          enabled = true
+       }
+       ...
+       ...
+    }
+
+    OR
+
+    Add an `aws_s3_bucket_acl` block for the S3 bucket.
+
+    resource "aws_s3_bucket" "my_bucket" {
+        bucket = "my-tf-bucket"
+        tags = {
+          Name        = "My bucket"
+          Environment = "Prod"
+        }
+        ...
+        ...
+    }
+
+    + resource "aws_s3_bucket_acl" "my_bucket_acl" {
+    +   bucket = aws_s3_bucket.my_bucket.id
+    +   acl    = "private"
+    + }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+          "BucketName" : "my-tf-test-bucket",
+    -     "AccessControl" : "PublicReadWrite",
+    +     "AccessControl" : "Private",
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket#acl
+    * https://docs.aws.amazon.com/AmazonS3/latest/user-guide/set-permissions.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: acl
+        resourceAttributeType: string
+        resourceAttributeValue: private
+        resourceType:
+          - aws_s3_bucket
+ruleId: CKV_AWS_57
+severity: Medium
+sid: ckv-aws-57
+title: "S3 Bucket has an ACL defined which allows public WRITE access"

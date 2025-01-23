@@ -1,0 +1,99 @@
+category: Containers
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: AWS ECR provides a managed docker registry service that stores docker
+  container images. Each registry can have only one policy assigned to it currently.
+  The policy ensures who has access to the container images.
+extra:
+  entity: AWS::ECR::Repository
+  type: resource
+guidelines: |-
+  #### Description
+  AWS ECR provides a managed docker registry service that stores docker container images. Each registry can have only one policy assigned to it currently. The policy ensures who has access to the container images.
+
+  #### Rationale
+  ECR policies with `Principal` set to `*` provides read access to everyone. This can cause a security breach as the information about your container vulnerabilities and business logic can be exposed easily. This should be restricted to specific users only.
+
+  #### Remediation
+
+  Do not set the principal to `*` in the AWS ECR policy.
+
+  Terraform example:
+  ```
+  data aws_iam_policy_document "ecr_policy" {
+    statement {
+      sid = "ECROrgReadAccess"
+
+      actions = [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:GetRepositoryPolicy",
+        "ecr:DescribeRepositories",
+        "ecr:ListImages",
+        "ecr:DescribeImages"
+      ]
+      principals {
+  -      identifiers = ["*"]
+
+         // provide only specific ARNs
+  +      identifiers = ["arn:aws:iam::account-id:user/push-pull-user-1"]
+         type        = "AWS"
+      }
+    }
+  }
+
+  resource "aws_ecr_repository" "foo" {
+    name = "bar"
+  }
+
+  resource "aws_ecr_repository_policy" "foopolicy" {
+    repository = aws_ecr_repository.foo.name
+    policy = "${data.aws_iam_policy_document.ecr_policy.json}"
+  }
+  ```
+
+  Cloudformation example:
+  ```json
+  {
+    "Type" : "AWS::ECR::Repository",
+    "Properties" : {
+        "RepositoryName" : "foo-repo",
+        "RepositoryPolicyText" : {
+            "Version": "2008-10-17",
+            "Statement": [
+                {
+                    "Sid": "AllowPushPull",
+                    "Effect": "Allow",
+                    "Principal": {
+  -                      "AWS": ["*"]
+
+                         // provide only specific ARNs                 
+  +                      "AWS": ["arn:aws:iam::account-id:user/push-pull-user-1"]
+                    },
+                    "Action": [
+                        "ecr:BatchCheckLayerAvailability",
+                        "ecr:GetDownloadUrlForLayer",
+                        "ecr:GetRepositoryPolicy",
+                        "ecr:DescribeRepositories",
+                        "ecr:ListImages",
+                        "ecr:DescribeImages"
+                    ]
+                }
+            ]
+        }
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository_policy
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecr-repository.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_32
+severity: High
+sid: ckv-aws-32
+title: Ensure ECR policy is not set to public

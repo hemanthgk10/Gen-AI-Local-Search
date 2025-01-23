@@ -1,0 +1,64 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Provide the email address where alerts will be sent when anomalous activities
+  are detected on SQL servers.
+extra:
+  entity: Microsoft.Sql/servers/databases
+  type: resource
+guidelines: |-
+  #### Description
+  Provide the email address where alerts will be sent when anomalous activities are detected on SQL servers.
+
+  #### Rationale
+  Providing the email address to receive alerts ensures that any detection of anomalous activities is reported as soon as possible, making it more likely to mitigate any potential risk sooner.
+
+  #### Remediation
+  Set the `email_addresses` to email address.
+
+  Terraform example:
+  ```
+  resource "azurerm_mssql_server_security_alert_policy" "example" {
+      resource_group_name        = azurerm_resource_group.example.name
+      server_name                = azurerm_sql_server.example.name
+      state                      = "Enabled"
+      storage_endpoint           = azurerm_storage_account.example.primary_blob_endpoint
+      storage_account_access_key = azurerm_storage_account.example.primary_access_key
+      disabled_alerts = [
+        "Sql_Injection",
+        "Data_Exfiltration"
+      ]
+      retention_days  = 20
+  +   email_addresses = "contact@example.com"
+  }
+  ```
+
+  From *Azure Console*
+    1. Go to `SQL servers`
+    2. For each server instance
+    3. Click on `Advanced Threat Protection`
+    4. Set `Send alerts to` as appropriate
+
+  *Azure PowerShell*
+  For each Server, set Send alerts to
+  ```
+  Set-AzureRmSqlServerThreatDetectionPolicy -ResourceGroupName <resource group name> -ServerName <server name> -NotificationRecipientsEmails "<Recipient Email ID>"
+  ```
+  By default, `Send alerts to` is not set.
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/sql-database/sql-advanced-threat-protection
+  * https://docs.microsoft.com/cs-cz/powershell/module/azurerm.sql/get-azurermsqlserverthreatdetectionpolicy?view=azurermps-5.2.0
+  * https://docs.microsoft.com/en-us/azure/sql-database/sql-database-advanced-data-security
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-incident-response#ir-1-preparation--update-incident-response-process-for-azure
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_security_alert_policy#email_addresses
+lwid:
+  - Azure_CIS_4_1_4
+  - Azure_CIS_4_2_4
+provider: Azure
+ruleId: CKV_AZURE_26
+severity: Medium
+sid: ckv-azure-26
+title: Ensure that 'Send Alerts To' is enabled for MSSQL servers

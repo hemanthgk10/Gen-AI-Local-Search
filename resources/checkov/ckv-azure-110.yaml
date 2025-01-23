@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that key vault enables purge protection"
+extra:
+  entity: azurerm_key_vault
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_110
+severity: High
+sid: ckv-azure-110
+title: "Ensure that key vault enables purge protection"

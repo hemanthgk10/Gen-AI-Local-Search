@@ -1,0 +1,66 @@
+---
+autofix: true
+category: Storage
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - HIPAA
+description: |-
+    Amazon S3 has a simple web services interface that you can use to store and retrieve any amount of data, at any time, from anywhere on the web. It gives any developer access to the same highly scalable, reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.
+
+    The Amazon S3 Block Public Access feature provides settings for access points, buckets, and accounts to help you manage public access to Amazon S3 resources.
+
+    AWS S3 block by default doesn't allow public access to S3 objects in new buckets. Users can modify bucket policies access point policies, or object permissions to allow public access. By enabling `block_public_policy`, Amazon S3 rejects calls to `PUT` bucket policy, if the specified bucket policy allows public access.
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws076.go"
+guidelines: |-
+    #### Description
+    Amazon S3 has a simple web services interface that you can use to store and retrieve any amount of data, at any time, from anywhere on the web. It gives any developer access to the same highly scalable, reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.
+
+    The Amazon S3 Block Public Access feature provides settings for access points, buckets, and accounts to help you manage public access to Amazon S3 resources.
+
+    AWS S3 block by default doesn't allow public access to S3 objects in new buckets. Users can modify bucket policies access point policies, or object permissions to allow public access. By enabling `block_public_policy`, Amazon S3 rejects calls to `PUT` bucket policy, if the specified bucket policy allows public access.
+
+    #### Rationale
+    With AWS S3 Block Public Access, you can easily set up centralized controls to limit public access to your Amazon S3 resources that are enforced regardless of how the resources are created.
+
+    #### Remediation
+    Set `aws_s3_bucket_public_access_block.block_public_policy` to true.
+
+    Terraform example:
+    ```
+    resource "aws_s3_bucket" "example" {
+       bucket = "example"
+    }
+    resource "aws_s3_bucket_public_access_block" "example" {
+       bucket = aws_s3_bucket.example.id
+       block_public_acls   = true
+    -  block_public_policy = false
+    +  block_public_policy = true
+       ...
+       ...
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/AmazonS3/latest/dev-retired/access-control-block-public-access.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block#block_public_policy
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: block_public_policy
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_s3_bucket_public_access_block
+ruleId: AWS076
+severity: Medium
+sid: tfsec-aws076
+title: "S3 Access block should block public policy"

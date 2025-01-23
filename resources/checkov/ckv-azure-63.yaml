@@ -1,0 +1,14 @@
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that App service enables HTTP logging"
+extra:
+  entity: azurerm_app_service
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_63
+severity: Low
+sid: ckv-azure-63
+title: "Ensure that App service enables HTTP logging"

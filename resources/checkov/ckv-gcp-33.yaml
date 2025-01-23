@@ -1,0 +1,69 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure oslogin is enabled for a Project
+extra:
+  entity: google_compute_project_metadata
+  type: resource
+guidelines: |-
+  #### Description
+  Enabling OS login binds SSH certificates to IAM users and facilitates effective SSH certificate management.
+
+  #### Rationale
+  Enabling osLogin ensures that SSH keys used to connect to instances are mapped with IAM users. Revoking access to IAM user will revoke all the SSH keys associated with that particular user. It facilitates centralized and automated SSH key pair management which is useful in handling cases like response to compromised SSH key pairs and/or revocation of external/third-party/Vendor users.
+
+  #### Remediation
+  By default, parameter `enable-oslogin` is not set which is equivalent to setting it to `FALSE`. Set `enable-oslogin` in project-wide metadata so that it applies to all of the instances in your project:
+
+  Terraform example
+  ```
+  resource "google_compute_project_metadata" "default" {
+      metadata = {
+  +     enable-oslogin = true
+      }
+  }
+  ```
+
+  Using *Console*
+  1. Go to the [VM compute metadata](https://console.cloud.google.com/compute/metadata)
+  2. Click `Edit`.
+  3. Add a metadata entry where the key is `enable-oslogin` and the value is `TRUE`.
+  4. Click `Save` to apply the changes.
+
+  Using *CLI*
+  ```
+  gcloud compute project-info add-metadata --metadata enable-oslogin=TRUE
+  ```
+
+  #### Impact
+  Enabling OS Login on project disables metadata-based SSH key configurations on all instances from a project. Disabling OS Login restores SSH keys that you have configured in project or instance meta-data.
+
+
+  #### References
+  * https://cloud.google.com/compute/docs/instances/managing-instance-access
+  * https://cloud.google.com/compute/docs/instances/managing-instance-access#enable_oslogin
+
+  #### Notes
+  1. In order to use osLogin, instance using Custom Images must have the latest version of the Linux Guest Environment installed. The following image families do not yet support OS Login
+
+  ```
+  Project cos-cloud (Container-Optimized OS) image family cos-stable.
+
+  All project coreos-cloud (CoreOS) image families
+
+  Project suse-cloud (SLES) image family sles-11
+
+  All Windows Server and SQL Server image families
+  ```
+
+  2. Project enable-oslogin can be over-ridden by setting enable-oslogin parameter to an instance metadata individually
+lwid:
+  - GCP_CIS_4_3
+  - GCP_CIS12_4_4
+provider: GCP
+ruleId: CKV_GCP_33
+severity: Low
+sid: ckv-gcp-33
+title: Ensure oslogin is enabled for a Project

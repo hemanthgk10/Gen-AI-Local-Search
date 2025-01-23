@@ -1,0 +1,41 @@
+---
+category: General
+checkTool: checkov
+checkType: Docker
+compliance: []
+description: "Ensure that LABEL maintainer is used instead of MAINTAINER (deprecated)"
+guidelines: |-
+    #### Description
+    The `MAINTAINER` instruction sets the author field of the generated images. But the `LABEL` instruction is much more flexible version of this.
+
+    #### Rationale
+    `LABEL` is a key-value pair instead of a single value field like `MAINTAINER`.  An image can have more than one `LABEL`, which helps to assign more metadata to the container image.
+
+    #### Remediation
+    Use `LABEL` instruction rather than `MAINTAINER` in the dockerfile.
+
+    Dockerfile example:
+    ```
+      FROM ubuntu:18.04
+    - MAINTAINER support@lacework.com
+    + LABEL owner=Lacework \
+            version=1.0.0 \
+            email=support@lacework.com
+      RUN wget http://nginx.org/download/nginx-1.20.2.tar.gz
+      RUN tar -xzvf nginx-1.20.2.tar.gz
+
+      WORKDIR nginx-1.20.2
+      ...
+      ...
+      RUN make && make install
+    ```
+
+    #### References
+    * https://docs.docker.com/engine/reference/builder/#label
+    * https://docs.docker.com/engine/reference/builder/#maintainer-deprecated
+lwid: []
+provider: Docker
+ruleId: CKV_DOCKER_6
+severity: Low
+sid: ckv-docker-6
+title: "Ensure that LABEL maintainer is used instead of MAINTAINER (deprecated)"

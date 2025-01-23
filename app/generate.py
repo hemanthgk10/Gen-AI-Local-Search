@@ -44,8 +44,9 @@ class GenerativeAI:
             prompt = query
 
         payload = {"model": self.model_name, "prompt": prompt}
+        print(f"Payload: {payload}")
         response = requests.post(f"{self.api_url}/api/generate", json=payload)
-
+        
         if response.status_code == 200:
             # Collect all the chunks and combine them into a complete response
             full_response = ""

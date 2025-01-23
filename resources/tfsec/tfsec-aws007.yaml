@@ -1,0 +1,55 @@
+---
+autofix: true
+category: Security
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Opening up ports to connect out to the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that are explicitly required where possible."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws007.go"
+guidelines: |-
+    #### Description
+    Opening up ports to connect out to/from the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that are explicitly required where possible.
+
+    #### Rationale
+    Removing unfettered connectivity from remote console services, reduces a server's exposure to risk.
+
+    #### Remediation
+    Do not have `cidr_block` set to `0.0.0.0/0`. Instead have it configured with a specific subnet IP CIDR blocks.
+
+    If `source_security_group_id` is set, then you can set the `cidr_block`.
+
+    Terraform example:
+    ```
+    resource "aws_security_group_rule" "my-rule" {
+       type        = "egress"
+       protocol    = "tcp"
+    -  cidr_blocks = ["0.0.0.0/0"]
+    +  cidr_blocks = ["10.0.0.0/16"]
+       ...
+       ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule#cidr_blocks
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: cidr_blocks
+        resourceAttributeType: array
+        resourceAttributeValue: "<Provide specific cidir block>"
+        resourceType:
+          - aws_security_group_rule
+ruleId: AWS007
+severity: High
+sid: tfsec-aws007
+title: "An egress security group rule allows traffic to `/0`"

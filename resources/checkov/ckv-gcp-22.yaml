@@ -1,0 +1,78 @@
+category: Containers
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Container-Optimized OS is an operating system image for your Compute
+  Engine VMs that is optimized for running Docker containers. With Container-Optimized
+  OS, you can bring up your Docker containers on Google Cloud Platform quickly, efficiently,
+  and securely
+extra:
+  entity: google_container_node_pool
+  type: resource
+guidelines: |-
+  #### Description
+  Container-Optimized OS is an operating system image for your Compute Engine VMs that is optimized for running Docker containers. With Container-Optimized OS, you can bring up your Docker containers on Google Cloud Platform quickly, efficiently, and securely
+
+  #### Rationale
+  The Container-Optimized OS node image is based on a recent version of the Linux kernel and is optimized to enhance node security. It is backed by a team at Google that can quickly patch it for security and iterate on features. The Container-Optimized OS image provides better support, security, and stability than previous images. Container-Optimized OS requires Kubernetes version 1.4.0 or higher.
+
+  Enabling Container-Optimized OS provides the following benefits:
+    * Run Containers Out of the Box: Container-Optimized OS instances come preinstalled with the Docker runtime and cloud-init. With a Container-Optimized OSinstance, you can bring up your Docker container at the same time you create your VM, with no on-host setup required.
+    * Smaller attack surface: Container-Optimized OS has a smaller footprint, reducing your instance's potential attack surface.
+    * Locked-down by default: Container-Optimized OS instances include a locked-down firewall and other security settings by default.
+    * Automatic Updates: Container-Optimized OS instances are configured to automatically download weekly updates in the background; only a reboot is necessary to use the latest updates.
+
+  #### Remediation
+  Container-Optimized OS is the default option for a cluster node image. Set the `remove_default_node_pool` to `true` and also set the `image_type` to some `cos` optimized image.
+
+  Terraform example
+  ```
+  resource "google_container_node_pool" "primary_preemptible_nodes" {
+      name                     = "my-node-pool"
+      location                 = "us-central1"
+      cluster                  = google_container_cluster.primary.name
+      node_count               = 1
+  +   remove_default_node_pool = true
+
+      node_config {
+        preemptible  = true
+        machine_type = "e2-medium"
+  +     image_type   = "some-sample-cos-image"
+
+        oauth_scopes = [
+          "https://www.googleapis.com/auth/cloud-platform"
+        ]
+      }
+  }
+  ```
+
+  Using *Console*
+    1. Go to [Kubernetes GCP Console](https://console.cloud.google.com/kubernetes/list)
+    2. Select Kubernetes clusters for which Container-Optimized OS (cos) is not used.
+    3. Click on EDIT button and Set `Node image` to `Container-Optimized OS` under Node Pools section.
+
+  Using *Command Line*
+
+  To enable Automatic node upgrades for an existing cluster's node pool, run the following command:
+  ```
+  gcloud container clusters upgrade --image-type cos [CLUSTER_NAME] --zone [COMPUTE_ZONE] --node-pool [POOL_NAME]
+  ```
+
+  #### Impact
+  Upgrade operation is long-running and will block other operations on the cluster (including delete) until it has run to completion.
+
+
+  #### References
+  * https://cloud.google.com/kubernetes-engine/docs/concepts/node-images
+  * https://cloud.google.com/container-optimized-os/docs/
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_node_pool#node_config
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster
+lwid:
+  - GCP_K8S_1_9
+  - GCP_CIS_7_9
+provider: GCP
+ruleId: CKV_GCP_22
+severity: Low
+sid: ckv-gcp-22
+title: "Ensure Container-Optimized OS (cos) is used for Kubernetes Engine Clusters Node image"

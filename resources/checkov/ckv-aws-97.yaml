@@ -1,0 +1,80 @@
+---
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon Elastic File System (Amazon EFS) provides simple, scalable file storage for use with your Amazon ECS tasks. With Amazon EFS, storage capacity is elastic, growing and shrinking automatically as you add and remove files. Your applications can have the storage they need, when they need it. You can use Amazon EFS file systems with Amazon ECS to access file system data across your fleet of Amazon ECS tasks. That way, your tasks have access to the same persistent storage, no matter the infrastructure or container instance on which they land. When you reference your Amazon EFS file system and container mount point in your Amazon ECS task definition, Amazon ECS takes care of mounting the file system in your container."
+extra:
+  entity: aws_ecs_task_definition
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elastic File System (Amazon EFS) provides simple, scalable file storage for use with your Amazon ECS tasks. With Amazon EFS, storage capacity is elastic, growing and shrinking automatically as you add and remove files. Your applications can have the storage they need, when they need it.
+
+    You can use Amazon EFS file systems with Amazon ECS to access file system data across your fleet of Amazon ECS tasks. That way, your tasks have access to the same persistent storage, no matter the infrastructure or container instance on which they land. When you reference your Amazon EFS file system and container mount point in your Amazon ECS task definition, Amazon ECS takes care of mounting the file system in your container.
+
+    #### Rationale
+    Encrypting data in transit reduces the likelihood that it is unintentionally exposed and can nullify the impact of disclosure if the encryption remains unbroken.
+
+    #### Remediation
+    Enabling the option `transit_encryption` to `ENABLED` will encrypt data in transit between the Amazon ECS host and the Amazon EFS server. Transit encryption must be enabled if Amazon EFS IAM authorization is used.
+
+
+    Terraform example
+    ```
+    resource "aws_ecs_task_definition" "service" {
+      family                = "service"
+      container_definitions = file("task-definitions/service.json")
+
+      volume {
+        name = "service-storage"
+
+        efs_volume_configuration {
+          file_system_id          = aws_efs_file_system.fs.id
+          root_directory          = "/opt/data"
+    +     transit_encryption      = "ENABLED"
+          transit_encryption_port = 2999
+          authorization_config {
+            access_point_id = aws_efs_access_point.test.id
+            iam             = "ENABLED"
+          }
+        }
+      }
+      ...
+      ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::ECS::TaskDefinition",
+      "Properties" : {
+          "Cpu" : "512",
+          "Volumes" : [{
+            "name": "myEfsVolume",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "fs-1234",
+                "rootDirectory": "\path\to\my\data",
+    +           "transitEncryption": "ENABLED",
+                "transitEncryptionPort": 2999,
+                "authorizationConfig": {
+                    "accessPointId": "fsap-1234",
+                    "iam": "ENABLED"
+                }
+            }
+          }]
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_task_definition#transit_encryption
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecs-taskdefinition-efsvolumeconfiguration.html#cfn-ecs-taskdefinition-efsvolumeconfiguration-transitencryption
+    * https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_97
+severity: Medium
+sid: ckv-aws-97
+title: "Ensure Encryption in transit is enabled for EFS volumes in ECS Task definitions"

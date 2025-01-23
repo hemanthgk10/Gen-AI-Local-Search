@@ -1,0 +1,65 @@
+---
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: "Amazon DocumentDB (DocDB) is a managed service that makes it easy to run, operate and scale MongoDB compatible databases in the cloud. With Amazon DocumentDB, you can run the same application code and use the same drivers and tools that you use with MongoDB. DocDB provides variety of metrics that can help in monitoring the health and performance of your DocDB cluster. You can also log the execution time and details of operations that are performed on your cluster to cloudwatch logs. "
+extra:
+  entity: "AWS::DocDB::DBCluster"
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon DocumentDB (DocDB) is a managed service that makes it easy to run, operate and scale MongoDB compatible databases in the cloud. With Amazon DocumentDB, you can run the same application code and use the same drivers and tools that you use with MongoDB. DocDB provides variety of metrics that can help in monitoring the health and performance of your DocDB cluster. You can also log the execution time and details of operations that are performed on your cluster to cloudwatch logs.
+
+    #### Rationale
+    DocDB provides services to log the execution time and details of operations that are performed on your cluster to cloudwatch logs. To ensure the data is available for auditing and debugging purposes, make sure to have logging enabled.
+
+    #### Remediation
+    Set the `enabled_cloudwatch_logs_exports` to either `audit` or `profiler`.
+
+    Terraform example:
+
+    ```
+    resource "aws_docdb_cluster" "docdb" {
+        cluster_identifier              = "my-docdb-cluster"
+        engine                          = "docdb"
+    +   enabled_cloudwatch_logs_exports = [ "audit", "profiler" ]
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+
+    ```json
+    {
+      "Type" : "AWS::DocDB::DBCluster",
+      "Properties" : {
+          "DBClusterIdentifier" : "my-docdb-cluster",
+          "EngineVersion" : "docdb",
+    +     "EnableCloudwatchLogsExports" : [ "audit", "profiler" ]
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/documentdb/latest/developerguide/logging-and-monitoring.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/docdb_cluster#enabled_cloudwatch_logs_exports
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_85
+severity: Low
+sid: ckv-aws-85
+title: "Ensure DocumentDB Logging is enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: enabled_cloudwatch_logs_exports
+    resourceAttributeType: array
+    resourceAttributeValue: "audit,profiler"
+    resourceType: [ "aws_docdb_cluster" ]

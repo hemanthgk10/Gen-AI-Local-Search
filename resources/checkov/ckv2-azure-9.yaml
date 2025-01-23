@@ -1,0 +1,60 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: "Migrate BLOB based VHD's to Managed Disks on Virtual Machines to exploit the default features of this configuration. The features include * Default Disk Encryption * Resilience as Microsoft will managed the disk storage and move around if underlying hardware goes faulty * Reduction of costs over storage accounts"
+extra:
+  entity: azurerm_virtual_machine
+  type: resource
+guidelines: |-
+    #### Description
+    Migrate BLOB based VHD's to Managed Disks on Virtual Machines to exploit the default features of this configuration. The features include
+    * Default Disk Encryption
+    * Resilience as Microsoft will managed the disk storage and move around if underlying hardware goes faulty
+    * Reduction of costs over storage accounts
+
+    #### Rationale
+    Managed disks are by default encrypted on the underlying hardware so no additional encryption is required for basic protection, it is available if additional encryption is required. Managed disks are by design more resilient that storage accounts.
+
+    For ARM deployed Virtual Machines, Azure Adviser will at some point recommend moving VHD's to managed disks both from a security and cost management perspective.
+
+    #### Remediation
+    Make sure `storage_os_disk` has `managed_disk_type` instead of `vhd_uri`. Possible values for `managed_disk_type` are either `Standard_LRS`, `StandardSSD_LRS`, `Premium_LRS` or `UltraSSD_LRS`.
+
+    Terraform example
+    ```
+    resource "azurerm_virtual_machine" "main" {
+        name                  = "example-vm"
+        vm_size               = "Standard_DS1_v2"
+
+        storage_os_disk {
+          name              = "myosdisk1"
+          caching           = "ReadWrite"
+          create_option     = "FromImage"
+    -     vhd_uri           = "some-vdh-uri-value"
+    +     managed_disk_type = "Standard_LRS"
+        }
+    }
+    ```
+
+    #### Impact
+    There is no operational impact of migrating to managed disks other than the benefits mentioned above.
+
+    #### Note
+    * When converting to managed disks VMs will be powered off and back on.
+    * The `azurerm_virtual_machine` resource has been superseded by the `azurerm_linux_virtual_machine` and `azurerm_windows_virtual_machine` resources. The existing `azurerm_virtual_machine` resource will continue to be available throughout the 2.x releases however is in a feature-frozen state to maintain compatibility - new functionality will instead be added to the `azurerm_linux_virtual_machine` and `azurerm_windows_virtual_machine` resources.
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/virtual-machines/windows/convert-unmanaged-to-managed-disks
+    * https://docs.microsoft.com/en-us/security/benchmark/azure/security-controls-v2-governance-strategy#gs-1-define-asset-management-and-data-protection-strategy
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine#storage_os_disk
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine#managed_disk_type
+lwid:
+  - Azure_CIS_131_7_1
+provider: Azure
+ruleId: CKV2_AZURE_9
+severity: Low
+sid: ckv2-azure-9
+title: "Ensure Virtual Machines are utilizing Managed Disks"

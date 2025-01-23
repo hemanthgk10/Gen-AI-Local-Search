@@ -1,0 +1,72 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "You should configure your KMS keys to auto rotate to maintain security and defend against compromise."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws019.go"
+guidelines: |-
+    #### Description
+    Security best practices enforces key rotation at frequent intervals to keep the encrypted data secure.
+    When automatic key rotation for a customer managed key (CMK) is enabled, AWS KMS generates new cryptographic material for the CMK every year.
+    AWS KMS also saves the CMK's older cryptographic material in perpetuity so it can be used to decrypt data that it encrypted.
+    AWS KMS does not delete any rotated key material until you delete the CMK.
+
+    #### Rationale
+    Rotating keys ensures that impact of compromised keys is reduced.
+    Any new data created with the new keys can not be decrypted using the old keys but older data remains decryptable.
+    For this reason, cryptographic best practice discourages the extensive reuse of encryption keys.
+
+    #### Remediation
+    Set `aws_kms_key.enable_key_rotation` to true.
+
+    Terraform example:
+    ```
+    resource "aws_kms_key" "my_key" {
+       description             = "My KMS key for example"
+    +  enable_key_rotation      = true
+       ...
+       ...
+    }
+    ```
+
+    From *Console*:
+
+    1. Sign in to the [AWS IAM Console](https://console.aws.amazon.com/iam)
+    2. In the left navigation pane, choose Encryption Keys
+    3. Select a customer created master key (CMK)
+    4. Under the Key Policy section, move down to Key Rotation
+    5. Check the Rotate this key every year checkbox
+
+    From *Command Line*:
+
+    Run the following command to enable key rotation.
+    ```
+     aws kms enable-key-rotation --key-id <kms_key_id>
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key#enable_key_rotation
+    * https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: enable_key_rotation
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_kms_key
+ruleId: AWS019
+severity: Medium
+sid: tfsec-aws019
+title: "A KMS key is not configured to auto-rotate"

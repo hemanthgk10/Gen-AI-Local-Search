@@ -1,0 +1,83 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    Kubernetes uses a popular key-value pair datastore (ETCD) for persisting the data in the cluster.
+
+    ETCD is a strongly consistent, distributed key-value store that provides a reliable way to store data that needs to be accessed by a distributed system or cluster of machines.
+
+    Kubernetes API server is the entry point for storing/retrieving the data from ETCD in a cluster. Encrypting secrets stored in ETCD helps in preventing the leakage of any sensitive information when ETCD is compromised.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    Kubernetes uses a popular key-value pair datastore (ETCD) for persisting the data in the cluster. ETCD is a strongly consistent, distributed key-value store that provides a reliable way to store data that needs to be accessed by a distributed system or cluster of machines.
+
+    Kubernetes API server is the entry point for storing/retrieving the data from ETCD in a cluster. Encrypting secrets stored in ETCD helps in preventing the leakage of any sensitive information when ETCD is compromised.
+
+    #### Rationale
+    Where ETCD encryption is used, it is important to ensure that the appropriate set of encryption providers is used. Currently, the `aescbc`, kms and `secretbox` are likely to be appropriate options.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-apiserver
+    ```
+    Get the EncryptionConfig file set for `--encryption-provider-config` argument. Verify that `aescbc`, `kms` or `secretbox` is set as the encryption provider for all the desired resources.
+
+    #### Remediation
+    Follow the Kubernetes documentation and configure a EncryptionConfig file. In this file, choose `aescbc`, `kms` or `secretbox` as the encryption provider.
+
+    By default, no encryption provider is set. An example for encryption at rest configuration:
+    ```yaml
+      apiVersion: apiserver.config.k8s.io/v1
+      kind: EncryptionConfiguration
+      resources:
+        - resources:
+          - secrets
+          providers:
+          - identity: {}
+          - aesgcm:
+              keys:
+              - name: key1
+                secret: c2VjcmV0IGlzIHNlY3VyZQ==
+              - name: key2
+                secret: dGhpcyBpcyBwYXNzd29yZA==
+          - aescbc:
+              keys:
+              - name: key1
+                secret: c2VjcmV0IGlzIHNlY3VyZQ==
+              - name: key2
+                secret: dGhpcyBpcyBwYXNzd29yZA==
+          - secretbox:
+              keys:
+              - name: key1
+                secret: YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=
+    ```
+
+    #### CIS Controls:
+    **Version 6**
+      14.2 *Encrypt At Rest Sensitive Information* -- Sensitive information stored on systems shall be encrypted at rest and require a secondary authentication mechanism, not integrated into the operating system, in order to access the information.
+
+    **Version 7**
+      14.4 *Encrypt Sensitive Information at Rest* -- Encrypt all sensitive information at rest using a tool that requires a secondary authentication mechanism not integrated into the operating system, in order to access the information.
+
+    #### References
+    * https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
+    * https://acotten.com/post/kube17-security
+    * https://kubernetes.io/docs/admin/kube-apiserver/
+    * https://github.com/kubernetes/features/issues/92
+    * https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/#providers
+provider: Kubernetes
+ruleId: CKV_K8S_104
+severity: Critical
+sid: ckv-k8s-104
+title: "Ensure that encryption providers are appropriately configured"

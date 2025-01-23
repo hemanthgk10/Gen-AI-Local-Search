@@ -1,0 +1,45 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon GuardDuty is a continuous security monitoring service that analyzes and processes the following Data sources: VPC Flow Logs, AWS CloudTrail management event logs, CloudTrail S3 data event logs, and DNS logs. It uses threat intelligence feeds, such as lists of malicious IP addresses and domains, and machine learning to identify unexpected and potentially unauthorized and malicious activity within your AWS environment."
+extra:
+  entity: aws_guardduty_detector
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon GuardDuty is a continuous security monitoring service that analyzes and processes the following Data sources: VPC Flow Logs, AWS CloudTrail management event logs, CloudTrail S3 data event logs, and DNS logs. It uses threat intelligence feeds, such as lists of malicious IP addresses and domains, and machine learning to identify unexpected and potentially unauthorized and malicious activity within your AWS environment.
+
+    #### Rationale
+    Unlike AWS Organizations, GuardDuty is a Regional service. So it should be enabled for each region and it also means that GuardDuty delegated administrators, and their member accounts must be added in each desired Region for account management through AWS Organizations to be active in every Region.
+
+    #### Remediation
+    `aws_guardduty_organization_configuration` manages the GuardDuty Organization Configuration in the current AWS Region. Enabling `auto_enable` flag, allows S3 data event logs to be automatically enabled for new members of the organization.
+
+    Terraform example
+    ```
+    resource "aws_guardduty_detector" "MyDetector" {
+        enable = true
+        ...
+        ...
+    }
+
+    resource "aws_guardduty_organization_configuration" "example" {
+    +   auto_enable = true
+        detector_id = aws_guardduty_detector.example.id
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_detector#enable
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration
+    * https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_organizations.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_3
+severity: Low
+sid: ckv2-aws-3
+title: "Ensure GuardDuty is enabled to specific org/region"

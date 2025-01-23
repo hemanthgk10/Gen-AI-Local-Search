@@ -1,0 +1,68 @@
+category: Certs
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: "A client certificate is a base64-encoded public certificate used by clients to authenticate to the cluster endpoint."
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+  #### Description
+  A client certificate is a base64-encoded public certificate used by clients to authenticate to the cluster endpoint.
+
+  #### Rationale
+  If you disable client certificate generation to create a cluster without a client certificate. You will still be able to authenticate to the cluster with basic auth or IAM. But basic auth allows a user to authenticate to the cluster with a username and password which are stored in plain text without any encryption and might lead brute force attacks.
+
+  #### Remediation
+  By default, the Client certificate is enabled when you create a new cluster.
+
+  Terraform example
+  ```
+  resource "google_container_cluster" "primary" {
+      name     = "my-gke-cluster"
+      location = "us-central1"
+      remove_default_node_pool = true
+      initial_node_count       = 1
+
+      master_auth {
+        username = ""
+        password = ""
+
+        client_certificate_config {
+  -       issue_client_certificate = false
+  +       issue_client_certificate = true
+        }
+      }
+  }
+  ```
+
+  Using *Console*
+    1. Go to [Kubernetes GCP Console](https://console.cloud.google.com/kubernetes/list)
+    2. Click on `CREATE CLUSTER`
+    3. Choose required name/value for cluster fields
+    4. Click on `More`
+    5. Set `Client certificate` to `Enabled`
+    6. Click on `Create`
+
+  Using *Command Line*
+  To enable Network policy for an existing cluster, run the following command:
+  ```
+  gcloud container clusters create [CLUSTER_NAME] --zone [COMPUTE_ZONE] --issue-client-certificate
+  ```
+
+
+  #### Impact
+  Cluster create command will create a new cluster with Client certificate enabled, But already existing once are remains unchanged.
+
+  #### References
+  * https://cloud.google.com/sdk/gcloud/reference/container/clusters/create
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#network_policy
+lwid:
+  - GCP_CIS_7_12
+  - GCP_K8S_1_12
+provider: GCP
+ruleId: CKV_GCP_13
+severity: Medium
+sid: ckv-gcp-13
+title: "Ensure client certificate authentication to Kubernetes Engine Clusters is disabled"

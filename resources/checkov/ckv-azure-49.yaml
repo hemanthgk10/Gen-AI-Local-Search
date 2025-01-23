@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure Azure linux scale set does not use basic authentication(Use SSH Key Instead)"
+extra:
+  entity: azurerm_linux_virtual_machine_scale_set
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_49
+severity: Medium
+sid: ckv-azure-49
+title: "Ensure Azure linux scale set does not use basic authentication(Use SSH Key Instead)"

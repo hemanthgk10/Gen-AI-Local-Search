@@ -1,0 +1,67 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Docker
+compliance: []
+description: "Create a non-root user for the container in the Dockerfile for the container image."
+guidelines: |-
+    #### Description
+    Create a non-root user for the container in the Dockerfile for the container image.
+
+    #### Rationale
+    It is a good practice to run the container as a non-root user, if possible. Though user namespace mapping is now available, if a user is already defined in the container image, the container is run as that user by default and specific user namespace remapping is not required.
+
+    #### Remediation
+    Ensure that the Dockerfile for the container image contains below instruction:
+
+    ```
+    USER <username or ID>
+    ```
+
+    where `username or ID` refers to the user that could be found in the container base image. If there is no specific user created in the container base image, then add a `useradd` command to add the specific user before `USER` instruction.
+
+    For example, add the below lines in the Dockerfile to create a user in the container:
+
+    Dockerfile example:
+    ```
+      FROM node:12-alpine
+      RUN apk add --no-cache python2 g++ make
+      WORKDIR /app
+      COPY . .
+
+    + # Create a user group 'xyzgroup'
+    + RUN addgroup -S xyzgroup
+
+    + # Create a user 'appuser' under 'xyzgroup'
+    + RUN adduser -S -D -h /app/src appuser xyzgroup
+
+      # Chown all the files to the app user.
+    + RUN chown -R appuser:xyzgroup /app
+
+      # Switch to 'appuser'
+    + USER appuser
+
+      RUN yarn install --production
+      HEALTHCHECK --interval=5m --timeout=3s CMD curl -f http://localhost/ || exit 1
+      EXPOSE 3000
+      CMD ["node", "src/index.js"]
+    ```
+
+    Note: If there are users in the image that the containers do not need, consider deleting them. After deleting those users, commit the image and then generate new instances of containers for use.
+
+    #### Default Value
+    By default, the containers are run with `root` privileges and as user `root` inside the container.
+
+    #### References
+    * http://docs.docker.com/articles/security/
+    * https://docs.docker.com/engine/reference/builder/#user
+    * https://github.com/docker/docker/issues/2918
+    * https://github.com/docker/docker/pull/4572
+    * https://github.com/docker/docker/issues/7906
+    * https://www.altiscale.com/hadoop-blog/making-docker-work-yarn/
+lwid: []
+provider: Docker
+ruleId: CKV_DOCKER_3
+severity: Low
+sid: ckv-docker-3
+title: "Ensure that a user for the container has been created"

@@ -1,0 +1,66 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "You should ensure your Elasticsearch data is encrypted at rest to help prevent sensitive information from being read by unauthorised users."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws031.go"
+guidelines: |-
+    #### Description
+    Ensure that the `encrypt_at_rest` option in terraform for the `aws_elasticsearch_domain` is true. When enabled, this option uses Amazon's Key Management Service to transparently encrypt data written to disk by the the Amazon Elasticsearch service.
+
+    #### Rationale
+    If `encrypt_at_rest` is not enabled, Elasticsearch data is written to Amazon Elastic Block Store (EBS) volumes unencrypted. The unencrypted data could be readable by anyone who obtains access to the physical disk where your data is stored. Enabling encryption at rest to mitigate this issue is a common regulatory requirement.
+
+    #### Remediation
+    Set `encrypt_at_rest.enabled` to `true` and provide the `kms_key_id` for encryption.
+
+    Terraform example:
+
+    ```
+    data "aws_kms_alias" "es" {}
+
+    resource "aws_elasticsearch_domain" "es" {
+        domain_name           = "${var.es_domain_name}"
+        elasticsearch_version = "${var.es_version}"
+
+        # Encryption not enabled for all instance types
+    +   encrypt_at_rest {
+    +     enabled    = "true"
+    +     kms_key_id = data.aws_kms_alias.es.target_key_id
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticsearch_domain#encrypt_at_rest
+    * https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/encryption-at-rest.html
+lwid:
+  - LW_AWS_ELASTICSEARCH_3
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: encrypt_at_rest
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            encrypt_at_rest {
+              kms_key_id = "<Provide the ARN for KMS key>"
+              enabled = true
+            }
+        resourceType:
+          - aws_elasticsearch_domain
+ruleId: AWS031
+severity: High
+sid: tfsec-aws031
+title: "Elasticsearch domain isn't encrypted at rest"

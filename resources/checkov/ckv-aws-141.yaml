@@ -1,0 +1,75 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Redshift is a fully managed, petabyte-scale data warehouse service in the cloud. You can start with just a few hundred gigabytes of data and scale to a petabyte or more. This enables you to use your data to acquire new insights for your business and customers.
+
+    Amazon Redshift provides a setting, Allow Version Upgrade, to specify whether to automatically upgrade the Amazon Redshift engine in your cluster if a new version of the engine becomes available. This setting does not affect the database version upgrades, which are applied during the maintenance window that you specify for your cluster. Amazon Redshift engine upgrades are major version upgrades, and Amazon Redshift database upgrades are minor version upgrades.
+extra:
+  entity: aws_redshift_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Redshift is a fully managed, petabyte-scale data warehouse service in the cloud. You can start with just a few hundred gigabytes of data and scale to a petabyte or more. This enables you to use your data to acquire new insights for your business and customers.
+
+    Amazon Redshift provides a setting, Allow Version Upgrade, to specify whether to automatically upgrade the Amazon Redshift engine in your cluster if a new version of the engine becomes available. This setting does not affect the database version upgrades, which are applied during the maintenance window that you specify for your cluster. Amazon Redshift engine upgrades are major version upgrades, and Amazon Redshift database upgrades are minor version upgrades.
+
+    #### Rationale
+    With Allow Version Upgrade feature enabled, the Amazon Redshift engine upgrades will occur automatically so the data warehouse service engine can get the newest features, bug fixes or the latest security patches released.
+
+    #### Remediation
+    Set `allow_version_upgrade = true`, this will enable the major version upgrades during the maintenance window to the Amazon Redshift engine that is running on the cluster.
+
+    Terraform example
+    ```
+    resource "aws_redshift_cluster" "default" {
+        cluster_identifier    = "tf-redshift-cluster"
+        database_name         = "mydb"
+        master_username       = "foo"
+        master_password       = "Mustbe8characters"
+        node_type             = "dc1.large"
+        cluster_type          = "single-node"
+    +   allow_version_upgrade = true
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::Redshift::Cluster",
+      "Properties" : {
+    +     "AllowVersionUpgrade" : true,
+          "AutomatedSnapshotRetentionPeriod" : 10,
+          "AvailabilityZone" : "us-west-2a",
+          "ClusterIdentifier" : "tf-redshift-cluster",
+          "ClusterType" : "single-node",
+          "DBName" : "default",
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/redshift_cluster#allow_version_upgrade
+    * https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_141
+severity: Low
+sid: ckv-aws-141
+title: "Ensured that redshift cluster allowing version upgrade by default"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: allow_version_upgrade
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_redshift_cluster" ]

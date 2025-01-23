@@ -1,0 +1,52 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Queues should be encrypted with customer managed KMS keys and not default AWS managed keys, in order to allow granular control over access to specific queues"
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws015.go"
+guidelines: |-
+    #### Description
+    To protect the data in a queue's messages, you can enable server-side encryption (SSE) for a queue. Amazon SQS integrates with the AWS Key Management Service (AWS KMS) to manage customer master keys (CMKs) for server-side encryption (SSE). The CMK that you assign to your queue must have a key policy that includes permissions for all principals that are authorized to use the queue.
+
+    #### Rationale
+    Unencrypted SQS mean that data stored might be at risk of potential security attack. Hence it is important to make sure that no compromise has been done as far as the security of your sensitive or confidential data is concerned.
+
+    #### Remediation
+    Enable server-side encryption (SSE) for an Amazon SQS data, specify the CMK ID by setting the KmsMasterKeyId attribute
+
+    Terraform example:
+    ```
+    resource "aws_sqs_queue" "terraform_queue" {
+      name                              = "terraform-example-queue"
+    + kms_master_key_id                 = "alias/aws/sqs"
+      kms_data_key_reuse_period_seconds = 300
+      ...
+      ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue#kms_master_key_id
+    * https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-sse-existing-queue.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: kms_master_key_id
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide the ARN of the KMS key>"
+        resourceType:
+          - aws_sqs_queue
+ruleId: AWS015
+severity: Medium
+sid: tfsec-aws015
+title: "Unencrypted SQS queue"

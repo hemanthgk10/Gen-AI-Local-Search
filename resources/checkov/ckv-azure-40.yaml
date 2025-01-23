@@ -1,0 +1,60 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure that the expiration date is set on all keys
+extra:
+  entity: azurerm_key_vault_key
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure that all keys in Azure Key Vault have an expiration time set.
+
+  #### Rationale
+  Azure Key Vault enables users to store and use cryptographic keys within the Microsoft Azure environment. The `exp (expiration time)` attribute identifies the expiration time on or after which the key MUST NOT be used for a cryptographic operation. By default, keys never expire. It is thus recommended that keys be rotated in the key vault and set an explicit expiration time for all keys. This ensures that the keys cannot be used beyond their assigned lifetimes.
+
+  #### Remediation
+  By default, keys do not expire, so set the expiration date manually.
+
+  Terraform example
+  ```
+    resource "azurerm_key_vault_key" "example" {
+      name            = "secret-sauce"
+      key_vault_id    = data.azurerm_key_vault.existing.id
+
+  +   expiration_date = "2025-12-17T20:00:00Z"
+    }
+  ```
+
+  From *Azure Console*
+    1. Go to `Key vaults`
+    2. For each Key vault, click on `Keys`
+    3. Under the `Settings` section, Make sure `Enabled` is set to Yes
+    4. Set an appropriate `EXPIRATION DATE` on all keys.
+
+  From *Azure Command Line Interface 2.0*
+
+  Update the `EXPIRATION DATE` for the key using below command.
+
+  ```
+   az keyvault key set-attributes --name <keyName> --vault-name <vaultName> -- expires Y-m-d'T'H:M:S'Z'
+  ```
+
+  *Note:*
+    In order to access expiration time on all keys in Azure Key Vault using Microsoft API requires "List" Key permission. To provide required access follow below steps,
+      1. Go to `Key vaults`
+      2. For each Key vault, click on `Access Policy`.
+      3. Add access policy with `Key permission` as `List`
+
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/key-vault/key-vault-whatis
+  * https://docs.microsoft.com/en-us/rest/api/keyvault/about-keys--secrets-and-certificates#key-vault-keys
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-governance-strategy#gs-1-define-asset-management-and-data-protection-strategy
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_40
+severity: Medium
+sid: ckv-azure-40
+title: Ensure that the expiration date is set on all keys

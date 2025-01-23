@@ -1,0 +1,67 @@
+---
+autofix: true
+category: Storage
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - HIPAA
+description: |-
+    Amazon S3 has a simple web services interface that you can use to store and retrieve any amount of data, at any time, from anywhere on the web. It gives any developer access to the same highly scalable, reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.
+
+    Versioning in Amazon S3 is a means of keeping multiple variants of an object in the same bucket. You can use the S3 Versioning feature to preserve, retrieve, and restore every version of every object stored in your buckets. With versioning you can recover more easily from both unintended user actions and application failures. After versioning is enabled for a bucket, if Amazon S3 receives multiple write requests for the same object simultaneously, it stores all of those objects.
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws077.go"
+guidelines: |-
+    #### Description
+    Amazon S3 has a simple web services interface that you can use to store and retrieve any amount of data, at any time, from anywhere on the web. It gives any developer access to the same highly scalable, reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.
+
+    Versioning in Amazon S3 is a means of keeping multiple variants of an object in the same bucket. You can use the S3 Versioning feature to preserve, retrieve, and restore every version of every object stored in your buckets. With versioning you can recover more easily from both unintended user actions and application failures. After versioning is enabled for a bucket, if Amazon S3 receives multiple write requests for the same object simultaneously, it stores all of those objects.
+
+    #### Rationale
+    This policy identifies the S3 buckets which have Object Versioning disabled. S3 Object Versioning is an important capability in protecting your data within a bucket. Once you enable Object Versioning, you cannot remove it; you can suspend Object Versioning at any time on a bucket if you do not wish for it to persist. It is recommended to enable Object Versioning on S3.
+
+    #### Remediation
+    set `versioning.enabled` argument for `aws_s3_bucket` to true.
+
+    Terraform example:
+    ```
+    resource "aws_s3_bucket" "my_bucket" {
+        bucket = "my-tf-bucket"
+        acl    = "private"
+    +   versioning {
+    +     enabled = true
+    +   }
+        tags = {
+          Name        = "My bucket"
+          Environment = "Prod"
+        }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket#versioning
+    * https://docs.aws.amazon.com/AmazonS3/latest/user-guide/enable-versioning.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: versioning
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            versioning {
+               enabled = true
+            }
+        resourceType:
+          - aws_s3_bucket
+ruleId: AWS077
+severity: Low
+sid: tfsec-aws077
+title: "S3 Data should be versioned"

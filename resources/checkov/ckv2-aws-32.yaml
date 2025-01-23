@@ -1,0 +1,96 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon CloudFront is a content delivery network (CDN) that delivers static and dynamic web content using a global network of edge locations. CloudFront has the ability to easily modify and manage response headers
+
+    A response headers policy contains information about a set of HTTP response headers and their values. After you create a response headers policy, you can use its ID to attach it to one or more cache behaviors in a CloudFront distribution. When it’s attached to a `cache` behavior, CloudFront adds the headers in the policy to every response that it sends for requests that match the cache behavior.
+extra:
+  entity: aws_cloudfront_distribution
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon CloudFront is a content delivery network (CDN) that delivers static and dynamic web content using a global network of edge locations. CloudFront has the ability to easily modify and manage response headers
+
+    A response headers policy contains information about a set of HTTP response headers and their values. After you create a response headers policy, you can use its ID to attach it to one or more cache behaviors in a CloudFront distribution. When it’s attached to a `cache` behavior, CloudFront adds the headers in the policy to every response that it sends for requests that match the cache behavior.
+
+    #### Rationale
+    Response headers policies provides users with more control in defining header modifications performed by CloudFront.
+
+    #### Remediation
+    The example below creates a CloudFront response headers policy with strict policy headers.
+
+    Terraform example
+    ```
+    resource "aws_cloudfront_distribution" "s3_distribution" {
+          enabled             = true
+          is_ipv6_enabled     = true
+          comment             = "Some comment"
+          default_root_object = "index.html"
+          default_cache_behavior {
+              allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+              cached_methods   = ["GET", "HEAD"]
+              target_origin_id = aws_cloudfront_response_headers_policy.example.arn
+
+              viewer_protocol_policy = "allow-all"
+              min_ttl                = 0
+              default_ttl            = 3600
+              max_ttl                = 86400
+              ...
+              ...
+          }
+          ...
+          ...
+    }
+
+    resource "aws_cloudfront_response_headers_policy" "example" {
+          name = "example-policy"
+    +     security_headers_config {
+    +         content_security_policy {
+    +            override                = true
+    +            content_security_policy = "default-src 'none';"
+    +         }
+    +
+    +         content_type_options {
+    +             override   = true
+    +         }
+    +
+    +         frame_options {
+    +            override     = true
+    +            frame_option = "DENY"
+    +          }
+    +
+    +         referrer_policy {
+    +            override        = true
+    +            referrer_policy = "same-origin"
+    +         }
+    +
+    +         strict_transport_security {
+    +            override                   = true
+    +            include_subdomains         = true
+    +            preload                    = true
+    +            access_control_max_age_sec = 31536000
+    +         }
+    +
+    +         xss_protection {
+    +            override   = true
+    +            mode_block = true
+    +            protection = true
+    +          }
+    +     }
+          ...
+          ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_response_headers_policy
+    * https://docs.aws.amazon.com/waf/latest/developerguide/waf-incident-response.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_32
+severity: Medium
+sid: ckv2-aws-32
+title: "Ensure CloudFront distribution has a strict security headers policy attached"

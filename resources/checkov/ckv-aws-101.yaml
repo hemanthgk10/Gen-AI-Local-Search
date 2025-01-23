@@ -1,0 +1,102 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon Neptune is a fast, reliable, fully managed graph database service that makes it easy to build and run applications that work with highly connected datasets. Neptune DB cluster should be configured to publish audit log data to a log group in Amazon CloudWatch Logs. With CloudWatch Logs, you can perform real-time analysis of the log data, and use CloudWatch to create alarms and view metrics."
+extra:
+  entity: aws_neptune_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Neptune is a fast, reliable, fully managed graph database service that makes it easy to build and run applications that work with highly connected datasets.
+
+    Neptune DB cluster should be configured to publish audit log data to a log group in Amazon CloudWatch Logs. With CloudWatch Logs, you can perform real-time analysis of the log data, and use CloudWatch to create alarms and view metrics.
+
+    #### Rationale
+    Sending logs to CloudWatch Logs will facilitate real-time and historic activity of the events from all of the DB instances in a DB cluster to a log group using different log streams that can be used auditing or analysis purpose.
+
+    #### Remediation
+    Set the `enable_cloudwatch_logs_exports` to `audit` for enabling the logs to cloudwatch from Neptune DB cluster.
+
+    Terraform example
+    ```
+    resource "aws_neptune_cluster" "default" {
+        cluster_identifier                  = "my_db_cluster_id"
+        engine                              = "neptune"
+        backup_retention_period             = 5
+        preferred_backup_window             = "07:00-09:00"
+        skip_final_snapshot                 = true
+        iam_database_authentication_enabled = true
+        apply_immediately                   = true
+    +   enable_cloudwatch_logs_exports      = "audit"
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::Neptune::DBCluster",
+      "Properties" : {
+          "BackupRetentionPeriod" : 5,
+          "DBClusterIdentifier" : "my_db_cluster_id",
+    +     "EnableCloudwatchLogsExports" : [ "audit" ],
+          "PreferredBackupWindow" : "07:00-09:00",
+          ...
+          ...
+        }
+    }
+    ```
+
+    Using *Console*:
+
+    To publish Neptune logs to CloudWatch Logs from the console.
+
+    * Sign in to the [AWS Management Console](https://console.aws.amazon.com/neptune/home)
+    * In the navigation pane, choose `Databases`.
+    * Choose the Neptune DB cluster that you want to publish the log data for.
+    * For `Actions`, choose `Modify`.
+    * In the `Log exports` section, choose the logs that you want to start publishing to CloudWatch Logs.
+    * Choose `Continue`, and then choose `Modify DB Cluster` on the summary page.
+
+
+    Using the *CLI* to Publish Neptune Logs to CloudWatch Logs:
+
+    You can create a new DB cluster that publishes audit logs to CloudWatch Logs using the AWS CLI create-db-cluster command with the following parameters:
+
+    ```
+    aws neptune create-db-cluster --region us-east-1  \
+      --db-cluster-identifier my_db_cluster_id \
+      --engine neptune \
+      --enable-cloudwatch-logs-exports '["audit"]'
+    ```
+
+    You can configure an existing DB cluster to publish audit logs to CloudWatch Logs using the AWS CLI modify-db-cluster command with the following parameters:
+
+    ```
+    aws neptune modify-db-cluster --region us-east-1  \
+      --db-cluster-identifier my_db_cluster_id \
+      --cloudwatch-logs-export-configuration '{"EnableLogTypes":["audit"]}'
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/neptune/latest/userguide/cloudwatch-logs.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/neptune_cluster#enable_cloudwatch_logs_exports
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_101
+severity: Low
+sid: ckv-aws-101
+title: "Ensure Neptune logging is enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: enable_cloudwatch_logs_exports
+    resourceAttributeType: string
+    resourceAttributeValue: "audit"
+    resourceType: [ "aws_neptune_cluster" ]

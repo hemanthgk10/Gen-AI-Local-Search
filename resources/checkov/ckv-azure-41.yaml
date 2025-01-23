@@ -1,0 +1,52 @@
+category: Secrets
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure that the expiration date is set on all secrets
+extra:
+  entity: Microsoft.KeyVault/vaults/secrets
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure that all Secrets in the Azure Key Vault have an expiration time set.
+
+  #### Rationale
+  The Azure Key Vault enables users to store and keep secrets within the Microsoft Azure environment. Secrets in the Azure Key Vault are octet sequences with a maximum size of 25k bytes each. The exp (expiration time) attribute identifies the expiration time on or after which the secret MUST NOT be used. By default, secrets never expire. It is thus recommended to rotate secrets in the key vault and set an explicit expiration time for all secrets. This ensures that the secrets cannot be used beyond their assigned lifetimes.
+
+  #### Remediation
+
+  By default, secrets do not expire, so manually set the `expiration_date`.
+
+  Terraform example
+  ```
+    resource "azurerm_key_vault_secret" "example" {
+      name            = "secret-sauce"
+      key_vault_id    = data.azurerm_key_vault.existing.id
+  +   expiration_date = "2025-12-17T20:00:00Z"
+    }
+  ```
+
+  From *Azure Console*
+    1. Go to `Key vaults`
+    2. For each Key vault, click on `Secrets`.
+    3. Under the `Settings` section, Make sure `Enabled` is set to `Yes`
+    4. Set an appropriate `EXPIRATION DATE` on all secrets.
+
+  From *Azure Command Line Interface 2.0*
+
+  Use the below command to set EXPIRATION DATE on the all secrets.
+
+  ```
+   az keyvault secret set-attributes --name <secretName> --vault-name <vaultName> --expires Y-m-d'T'H:M:S'Z'
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret#expiration_date
+  * https://docs.microsoft.com/en-us/azure/key-vault/security-controls-policy
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_41
+severity: Medium
+sid: ckv-azure-41
+title: Ensure that the expiration date is set on all secrets

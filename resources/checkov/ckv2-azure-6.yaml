@@ -1,0 +1,65 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - HIPAA
+  - CIS
+description: "Disable access from Azure services to PostgreSQL Database Server."
+extra:
+  entity: azurerm_sql_server
+  type: resource
+guidelines: |-
+    #### Description
+    Disable access from Azure services to PostgreSQL Database Server.
+
+    #### Rationale
+    If access from Azure services is enabled, the server's firewall will accept connections from all Azure resources, including resources not in your subscription. This is usually not a desired configuration.
+    Instead, setup firewall rules to allow access from specific network ranges or VNET rules to allow access from specific virtual networks.
+
+    #### Remediation
+    Ensure that `start_ip_address` and `end_ip_address` is not set to `0.0.0.0` in `azurerm_postgresql_firewall_rule`.
+
+    Terraform example
+    ```
+    resource "azurerm_resource_group" "example" {
+        name     = "api-rg-pro"
+        location = "West Europe"
+    }
+
+    resource "azurerm_postgresql_server" "example" {
+        name                = "example-psqlserver"
+        location            = azurerm_resource_group.example.location
+        resource_group_name = azurerm_resource_group.example.name
+        ...
+        ...
+    }
+
+    resource "azurerm_postgresql_firewall_rule" "example" {
+        name                = "office"
+        resource_group_name = azurerm_resource_group.example.name
+        server_name         = azurerm_postgresql_server.example.name
+    -   start_ip_address    = "0.0.0.0"
+    -   end_ip_addresss     = "0.0.0.0"
+    +   start_ip_address    = "40.112.8.12"
+    +   end_ip_address      = "40.112.8.12"
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/postgresql/concepts-firewall-rules
+    * https://docs.microsoft.com/en-us/azure/postgresql/howto-manage-firewall-using-cli
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-network-security#ns-1-implement-security-for-internal-traffic
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-network-security#ns-4-protect-applications-and-services-from-external-network-attacks
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-network-security#ns-1-implement-security-for-internal-traffic
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/postgresql_firewall_rule#start_ip_address
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/postgresql_server
+lwid:
+  - Azure_CIS_131_4_3_8
+provider: Azure
+ruleId: CKV2_AZURE_6
+severity: Low
+sid: ckv2-azure-6
+title: "Ensure 'Allow access to Azure services' for PostgreSQL Database Server is disabled"

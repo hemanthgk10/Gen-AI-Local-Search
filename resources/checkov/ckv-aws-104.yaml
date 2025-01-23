@@ -1,0 +1,75 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon DocumentDB (DocDB) is a managed service that makes it easy to run, operate and scale MongoDB compatible databases in the cloud. With Amazon DocumentDB, you can run the same application code and use the same drivers and tools that you use with MongoDB. Sending the the DocDB logs to CloudWatch can be helpful to analyze, monitor, and archive your Amazon DocumentDB profiling data."
+extra:
+  entity: aws_docdb_cluster_parameter_group
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon DocumentDB (DocDB) is a managed service that makes it easy to run, operate and scale MongoDB compatible databases in the cloud. With Amazon DocumentDB, you can run the same application code and use the same drivers and tools that you use with MongoDB. Sending the the DocDB logs to CloudWatch can be helpful to analyze, monitor, and archive your Amazon DocumentDB profiling data.
+
+    #### Rationale
+    Sending logs to CloudWatch Logs will facilitate real-time and historic activity of the events from all of the DB instances in a DB cluster to a log group using different log streams that can be used auditing, profiling and analysis purposes.
+
+    #### Remediation
+    Set the `audit_logs` parameter to `enabled`.
+
+    Terraform example
+    ```
+    resource "aws_docdb_cluster_parameter_group" "example" {
+        family      = "docdb3.6"
+        name        = "example"
+        description = "docdb cluster parameter group"
+        parameter {
+    +      name  = "audit_logs"
+    +      value = "enabled"
+        }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::DocDB::DBClusterParameterGroup",
+      "Properties" : {
+          "Description" : "docdb cluster parameter group",
+          "Family" : "docdb3.6",
+          "Name" : "example",
+          "Parameters" : [
+    +         "audit_logs": "enabled",
+              "tls": "enabled",
+          ],
+
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/docdb_cluster_parameter_group#parameter
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_104
+severity: Low
+sid: ckv-aws-104
+title: "Ensure DocDB has audit logs enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: parameter
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      parameter {
+         name  = "audit_logs"
+         value = "enabled"
+      }
+    resourceType: [ "aws_docdb_cluster_parameter_group" ]

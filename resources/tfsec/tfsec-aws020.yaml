@@ -1,0 +1,69 @@
+---
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Plain HTTP is unencrypted and human-readable. This means that if a malicious actor was to eavesdrop on your connection, they would be able to see all of your data flowing back and forth. You should use HTTPS, which is HTTP over an encrypted (TLS) connection, meaning eavesdroppers cannot read your traffic."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws020.go"
+guidelines: |-
+    #### Description
+    Ensure that the communication between Amazon CloudFront CDN distribution and its viewers is encrypted using HTTPS in order to secure the delivery of application content. To encryption the data in transit, configure the web distribution viewer protocol policy to redirect HTTP requests to HTTPS requests or force the viewers to use only the HTTPS protocol to access content available in the CloudFront distribution cache.
+
+    #### Rationale
+    Allowing a HTTP request to the content in CloudFront distribution cache can cause a security breach. The data should be encrypted even in transit to avoid any spoofing attack.
+
+    #### Remediation
+
+    Ensure that `viewer_protocol_policy` is set to `https-only` or `redirect-to-https`.
+
+    Terraform example:
+    ```
+    resource "aws_cloudfront_distribution" "s3_distribution" {
+        origin {
+          domain_name = aws_s3_bucket.b.bucket_regional_domain_name
+          origin_id   = local.s3_origin_id
+
+          s3_origin_config {
+            origin_access_identity = "origin-access-identity/cloudfront/ABCDEFG1234567"
+          }
+        }
+        enabled      = true
+        default_cache_behavior {
+    +       viewer_protocol_policy = "https-only"
+            ...
+            ...
+        }
+        ordered_cache_behavior {
+    +       viewer_protocol_policy = "redirect-to-https"
+            ...
+            ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_distribution#viewer_protocol_policy
+    * https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-viewers-to-cloudfront.html
+lwid: []
+provider: AWS
+ruleId: AWS020
+severity: Critical
+sid: tfsec-aws020
+title: "CloudFront distribution allows unencrypted (HTTP) communications"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: default_cache_behavior.viewer_protocol_policy
+    resourceAttributeType: blockAttribute
+    resourceAttributeValue: "https-only"
+    resourceType: [ "aws_cloudfront_distribution" ]
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: ordered_cache_behavior.viewer_protocol_policy
+    resourceAttributeType: blockAttribute
+    resourceAttributeValue: "redirect-to-https"
+    resourceType: [ "aws_cloudfront_distribution" ]

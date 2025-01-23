@@ -1,0 +1,84 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure PostgreSQL database 'log_min_messages' flag is set to a valid
+  value
+extra:
+  entity: google_sql_database_instance
+  type: resource
+guidelines: |-
+  #### Description
+  The `log_min_error_statement` flag defines the minimum message severity level that is considered as an error statement. Messages for error statements are logged with the SQL statement. Valid values include `DEBUG5, DEBUG4, DEBUG3, DEBUG2, DEBUG1, INFO, NOTICE, WARNING, ERROR, LOG, FATAL`, and `PANIC`. Each severity level includes the subsequent levels mentioned above.
+
+  Note: To effectively turn off logging failing statements, set this parameter to PANIC.
+
+  ERROR is considered the best practice setting. Changes should only be made in accordance with the organization's logging policy.
+
+  #### Rationale
+  Auditing helps in troubleshooting operational problems and also permits forensic analysis. If `log_min_error_statement` is not set to the correct value, messages may not be classified as error messages appropriately. Considering general log messages as error messages would make it difficult to find actual errors, while considering only stricter severity levels as error messages may skip actual errors to log their SQL statements. The `log_min_error_statement` flag should be set in accordance with the organization's logging policy. This recommendation is applicable to PostgreSQL database instances.
+
+  #### Remediation
+  By default `log_min_error_statement` is `ERROR`.
+
+  Terraform example
+  ```
+  resource "google_sql_database_instance" "master" {
+      name             = "master-instance"
+      database_version = "POSTGRES_11"
+      region           = "us-central1"
+
+      settings {
+        tier = "db-f1-micro"
+        database_flags {
+  +         name  = "log_min_messages"
+  +         value = "ERROR"
+  -         value = "SOME_RANDOM_VALUE"
+        }
+      }
+      ...
+      ...
+  }
+  ```
+
+  Using *Console*
+  1. Go to the [Cloud SQL Instances page](https://console.cloud.google.com/sql/instances)
+  2. Select the PostgreSQL instance for which you want to enable the database flag.
+  3. Click `Edit`.
+  4. Scroll down to the `Flags` section.
+  5. To set a flag that has not been set on the instance before, click `Add` item, choose the flag `log_min_error_statement` from the drop-down menu and set appropriate value.
+  6. Click `Save` to save the changes.
+  7. Confirm the changes under `Flags` on the Overview page.
+
+  Using *CLI*
+  1. List all Cloud SQL database Instances using the following command
+  ```
+  gcloud sql instances list
+  ```
+  2. Configure the `log_min_error_statement` database flag for every Cloud SQL PosgreSQL database instance using the below command.
+  ```
+  gcloud sql instances patch INSTANCE_NAME --database-flags log_min_error_statement=<DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|INFO|NOTICE|WARNI NG|ERROR|LOG|FATAL|PANIC>
+
+  Note: This command will overwrite all database flags previously set. To keep those and add new ones, include the values for all flags to be set on the instance; any flag not specifically included is set to its default value. For flags that do not take a value, specify the flag name followed by an equals sign ("=").
+  ```
+
+  #### References
+  * https://cloud.google.com/sql/docs/postgres/flags
+  * https://www.postgresql.org/docs/9.6/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-WHEN
+
+  #### Notes
+  ```
+  WARNING: This patch modifies database flag values, which may require your instance to be restarted. Check the list of supported flags - https://cloud.google.com/sql/docs/postgres/flags - to see if your instance will be restarted when this patch is submitted.
+
+  Note: Some database flag settings can affect instance availability or stability and remove the instance from the Cloud SQL SLA. For information about these flags, see Operational Guidelines.
+
+  Note: Configuring the above flag does not require restarting the Cloud SQL instance.
+  ```
+lwid:
+  - GCP_CIS12_6_2_13
+provider: GCP
+ruleId: CKV_GCP_55
+severity: Low
+sid: ckv-gcp-55
+title: Google sql database log_min_messages flag check

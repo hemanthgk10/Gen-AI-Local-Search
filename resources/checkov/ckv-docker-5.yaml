@@ -1,0 +1,58 @@
+---
+category: Security
+checkTool: checkov
+checkType: Docker
+compliance: []
+description: "Do not use update instructions such as `apt-get update` alone or in a single line in the Dockerfile."
+guidelines: |-
+    #### Description
+    Do not use update instructions such as `apt-get update` alone or in a single line in the Dockerfile.
+
+    #### Rationale
+    Adding the update instructions in a single line on the Dockerfile will cache the update layer. Thus, when you build any image later using the same instruction, previously cached update layer will be used. This could potentially deny any fresh updates to go in the later builds.
+
+    #### Remediation
+    Use update instructions along with install instructions (or any other) and version pinning for packages while installing them. This would bust the cache and force to extract the required versions.
+
+    Alternatively, you could use `--no-cache` flag during docker build process to avoid using cached layers.
+
+    Dockerfile example:
+    ```
+      FROM ubuntu:18.04
+    - RUN apt-get update
+    - RUN apt-get -y install build-essential libpcre3 \
+          libpcre3-dev zlib1g zlib1g-dev libssl-dev wget
+
+    + RUN apt-get update && apt-get -y install \
+          build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev wget
+
+      RUN wget http://nginx.org/download/nginx-1.20.2.tar.gz
+
+      RUN tar -xzvf nginx-1.20.2.tar.gz
+
+      WORKDIR nginx-1.20.2
+
+      RUN ./configure \
+          --sbin-path=/usr/bin/nginx \
+          --conf-path=/etc/nginx/nginx.conf \
+          --error-log-path=/var/log/nginx/error.log \
+          --http-log-path=/var/log/nginx/access.log \
+          --with-pcre \
+          --pid-path=/var/run/nginx.pid \
+          --with-http_ssl_module
+
+      RUN make && make install
+    ```
+
+    #### Default Value
+    By default, docker does not enforce any restrictions on using update instructions.
+
+    #### References
+    * https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#/apt-get
+    * https://github.com/docker/docker/issues/3313
+lwid: []
+provider: Docker
+ruleId: CKV_DOCKER_5
+severity: Low
+sid: ckv-docker-5
+title: "Ensure update instructions are not used alone in the Dockerfile"

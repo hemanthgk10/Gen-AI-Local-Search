@@ -1,0 +1,74 @@
+---
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that AWS S3 bucket has MFA delete enabled. By enabling it, you will have additional protection from accidental or intentional deletion of a file."
+extra:
+  entity: aws_s3_bucket
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure that AWS S3 bucket has MFA delete enabled. By enabling it, you will have additional protection from accidental or intentional deletion of a file.
+
+    #### Rationale
+    Accidental deletion of a file/bucket from S3 without any protection can risk the loss of information. So by enabling the MFA delete on the S3 bucket, provides some additional security.
+
+    #### Remediation
+    Enable `versioning.mfa_delete` to `true`. Enabling this, changes the versioning state of your bucket. To enable this, you must use the AWS root account.
+
+    Terraform example:
+    ```
+    resource "aws_s3_bucket" "bucket" {
+       bucket = "example-bucket"
+    +  versioning {
+    +    enabled    = true
+    +    mfa_delete = true
+    +  }
+       ...
+       ...
+    }
+    ```
+
+    CloudFormation example:
+    ```
+    {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+          "BucketName" : "example-bucket",
+          "ObjectLockEnabled" : true,
+    +     "VersioningConfiguration" : {
+    +        "Status" : "Enabled",
+    +        "MfaDelete": "Enabled"
+    +     },
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMFADelete.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket#mfa_delete
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket-versioningconfig.html#cfn-s3-bucket-versioningconfig-status
+lwid:
+  - LW_S3_12
+provider: AWS
+ruleId: CKV_AWS_52
+severity: Medium
+sid: ckv-aws-52
+title: "Ensure S3 bucket has MFA delete enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: versioning
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      versioning {
+         enabled    = true
+         mfa_delete = true
+      }
+    resourceType: [ "aws_s3_bucket" ]

@@ -1,0 +1,50 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    EC2 Image Builder simplifies the building, testing, and deployment of Virtual Machine and container images for use on AWS or on-premises.
+
+    Image Builder significantly reduces the effort of keeping images up-to-date and secure by providing a simple graphical interface, built-in automation, and AWS-provided security settings. With Image Builder, there are no manual steps for updating an image nor do you have to build your own automation pipeline.
+
+    You can integrate EC2 Image Builder with AWS KMS and provide encrypted AMIs.
+extra:
+  entity: aws_imagebuilder_component
+  type: resource
+guidelines: |-
+    #### Description
+    EC2 Image Builder simplifies the building, testing, and deployment of Virtual Machine and container images for use on AWS or on-premises.
+
+    Image Builder significantly reduces the effort of keeping images up-to-date and secure by providing a simple graphical interface, built-in automation, and AWS-provided security settings. With Image Builder, there are no manual steps for updating an image nor do you have to build your own automation pipeline.
+
+    You can integrate EC2 Image Builder with AWS KMS and provide encrypted AMIs.
+
+    #### Rationale
+    Encrypting helps you achieve security compliance by encrypting both EBS data and boot volumes using KMS managed keys. You can create encrypted AMIs from both - unencrypted and encrypted AMIs with either the same or a different key.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_imagebuilder_component`.
+
+    Terraform example
+    ```
+    resource "aws_imagebuilder_component" "example" {
+        name       = "example"
+        platform   = "Linux"
+        uri        = "s3://${aws_s3_bucket_object.example.bucket}/${aws_s3_bucket_object.example.key}"
+        version    = "1.0.0"
+    +   kms_key_id = ${aws_kms_key.example.arn}
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/imagebuilder_component#kms_key_id
+    * https://aws.amazon.com/about-aws/whats-new/2020/07/ec2-image-builder-produce-distribute-encrypted-amis/
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_180
+severity: High
+sid: ckv-aws-180
+title: "Ensure Image Builder component is encrypted by KMS using a customer managed Key (CMK)"

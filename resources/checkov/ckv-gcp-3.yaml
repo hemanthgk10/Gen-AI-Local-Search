@@ -1,0 +1,72 @@
+category: Compute
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+- HIPAA
+description: Ensure Google compute firewall ingress does not allow unrestricted rdp
+  access
+extra:
+  entity: google_compute_firewall
+  type: resource
+guidelines: |-
+  #### Description
+  GCP `Firewall Rules` are specific to a `VPC Network`. Each rule either `allows` or `denies` traffic when its conditions are met. Its conditions allow you to specify the type of traffic, such as ports and protocols, and the source or destination of the traffic, including IP addresses, subnets, and instances. Firewall rules are defined at the VPC network level, and are specific to the network in which they are defined. The rules themselves cannot be shared among networks. Firewall rules only support IPv4 traffic. When specifying a source for an ingress rule or a destination for an egress rule by address, you can only use an IPv4 address or `IPv4 block in CIDR` notation. Generic `(0.0.0.0/0)` incoming traffic from internet to VPC or VM instance using RDP on `Port 3389` can be avoided.
+
+  #### Rationale
+  GCP Firewall Rules within a VPC Network. These rules apply to outgoing (egress) traffic from instances and incoming (ingress) traffic to instances in the network. Egress and ingress traffic are controlled even if the traffic stays within the network (for example, instance-to-instance communication). For an instance to have outgoing Internet access, the network must have a valid Internet gateway route or custom route whose destination IP is specified. This route simply defines the path to the Internet, to avoid the most general `(0.0.0.0/0)` destination IP Range specified from Internet through RDP with default `Port 3389`. We need to restrict generic access from Internet to specific IP Range.
+
+  #### Remediation
+  Do not allow RDP connect by disabling port `3389`.
+
+  Terraform example
+  ```
+  resource "google_compute_firewall" "default" {
+      name       = "test-firewall"
+      network    = google_compute_network.default.name
+
+  +   direction  = "INGRESS"
+      allow {
+        protocol = "tcp"
+  -     ports    = ["3389", "80", "8080", "1000-2000"]
+  +     ports    = ["80", "8080", "1000-2000"]
+      }
+
+      ...
+      ...
+  }
+  ```
+
+  From *Console*
+    1. Go to `VPC Network`
+    2. Go to the `Firewall Rules`
+    3. Click the `Firewall Rule` you want to modify
+    4. Click `Edit`
+    5. Modify `Source IP ranges` to specific IP
+    6. Make sure to not allowing port 3389
+    7. Click `Save`
+
+  Via *CLI gcloud*
+
+  Update RDP Firewall rule with new `SOURCE_RANGE` from below command:
+  ```
+  gcloud compute firewall-rules update FirewallName --allow=[PROTOCOL[:PORT[-PORT]],...] --source-ranges=[CIDR_RANGE,...]
+  ```
+
+  #### Impact
+  All RDP connections from outside of the network to the concerned VPC(s) will be blocked. There could be a business need where ssh access is required from outside of the network to access resources associated with the VPC. In that case, specific source IP(s) should be mentioned in firewall rules to white-list access to RDP port for the concerned VPC(s).
+
+  #### References
+  * https://cloud.google.com/vpc/docs/firewalls#blockedtraffic
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall#source_ranges
+
+  #### Notes
+  Currently GCP VPC only supports IPV4 however, Google is already working on adding IPV6 support for VPC. In that case along with source IP range `0.0.0.0`, rule should be checked for IPv6 equivalent `::0` as well.
+lwid:
+  - GCP_CIS_3_7
+  - GCP_CIS12_3_7
+provider: GCP
+ruleId: CKV_GCP_3
+severity: Critical
+sid: ckv-gcp-3
+title: Google compute firewall with unrestricted rdp access check

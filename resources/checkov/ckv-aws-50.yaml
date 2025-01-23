@@ -1,0 +1,78 @@
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: X-ray tracing is enabled for Lambda
+extra:
+  entity: aws_lambda_function
+  type: resource
+guidelines: |-
+  #### Description
+  Enabling x-ray tracing for lambda helps in sending traces from lambdas to x-ray automatically. If the upstream service, such as Amazon API Gateway, or an application hosted on Amazon EC2 that is instrumented with the X-Ray SDK, samples incoming requests adds a tracing header that tells Lambda to send traces or not.
+
+  #### Rationale
+  AWS x-ray tracing helps in visualizing the bottlenecks, components and failed requests of your application. On enabling x-ray for Lambda functions helps in sending trace data automatically to X-Ray. X-Ray processes the data to generate a service map and searchable trace summaries.
+
+  #### Remediation
+  Set the `tracing_config.mode` to either `Active` or `PassThrough`.
+  * If PassThrough, Lambda will only trace the request from an upstream service if it contains a tracing header with "sampled=1".
+  * If Active, Lambda will respect any tracing header it receives from an upstream service. If no tracing header is received, Lambda will call X-Ray for a tracing decision.
+
+  Terraform example:
+  ```
+  resource "aws_lambda_function" "test_lambda" {
+      filename      = "lambda_function_payload.zip"
+      function_name = "lambda_example_function"
+      role          = aws_iam_role.iam_for_lambda.arn
+      handler       = "exports.test"
+      source_code_hash = filebase64sha256("lambda_function_payload.zip")
+  +   tracing_config {
+  +      mode = "Active"
+  +   }
+      ...
+      ...
+  }
+  ```
+
+  CloudFormation example:
+  ```
+  {
+    "Type" : "AWS::Lambda::Function",
+    "Properties" : {
+        "Description" : "Example lambda function",
+        "FunctionName" : "lambda_example_function",
+        "MemorySize" : 1024,
+        "PackageType" : "Image",
+  +     "TracingConfig" : {
+  +       "Mode" : "Active"
+  +     },
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://docs.aws.amazon.com/lambda/latest/dg/services-xray.html
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function#mode
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-lambda-function-tracingconfig.html#cfn-lambda-function-tracingconfig-mode
+lwid:
+  - LW_AWS_SERVERLESS_4
+provider: AWS
+ruleId: CKV_AWS_50
+severity: Low
+sid: ckv-aws-50
+title: X-ray tracing is enabled for Lambda
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: tracing_config
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      tracing_config {
+         mode = "Active"
+      }
+    resourceType: [ "aws_lambda_function" ]

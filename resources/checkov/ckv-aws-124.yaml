@@ -1,0 +1,55 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure all your AWS CloudFormation stacks are using AWS SNS service in order to receive notifications when an event occurs. Monitoring stack events such as create - which triggers the provisioning process based on a defined CloudFormation template, update – which updates the stack configuration or delete – which terminates the stack by removing its collection of AWS resources, will enable you to respond fast to any unauthorized action that could alter your AWS environment."
+extra:
+  entity: aws_cloudformation_stack
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure all your AWS CloudFormation stacks are using AWS SNS service in order to receive notifications when an event occurs. Monitoring stack events such as create - which triggers the provisioning process based on a defined CloudFormation template, update – which updates the stack configuration or delete – which terminates the stack by removing its collection of AWS resources, will enable you to respond fast to any unauthorized action that could alter your AWS environment.
+
+    #### Rationale
+    With SNS integration you can increase the visibility of your AWS CloudFormation stack activity, beneficial for security and auditing purposes.
+
+    #### Remediation
+    Set the `notification_arns` flag to a list of SNS topic ARNs to publish stack related events.
+
+    Terraform example
+    ```
+    resource "aws_cloudformation_stack" "network" {
+        name = "networking-stack"
+
+        parameters = {
+          VPCCidr = "10.0.0.0/16"
+        }
+
+    +   notification_arns = ["arn:aws:sns:us-east-1:123456789012:mystack-mytopic"]
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+        "Type" : "AWS::CloudFormation::Stack",
+        "Properties" : {
+    +       "NotificationARNs" : [ "arn:aws:sns:us-east-1:123456789012:mystack-mytopic" ],
+            "Parameters" : { "VPCCidr" : "10.0.0.0/16"},
+            ...
+            ...
+          }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudformation_stack#notification_arns
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_124
+severity: Low
+sid: ckv-aws-124
+title: "Ensure that CloudFormation stacks are sending event notifications to an SNS topic"

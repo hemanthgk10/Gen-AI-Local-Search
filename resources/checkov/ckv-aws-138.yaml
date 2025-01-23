@@ -1,0 +1,80 @@
+---
+category: "Load Balancers"
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    A load balancer accepts incoming traffic from clients and routes requests to its registered targets (such as EC2 instances) in one or more Availability Zones. The load balancer also monitors the health of its registered targets and ensures that it routes traffic only to healthy targets. When the load balancer detects an unhealthy target, it stops routing traffic to that target. It then resumes routing traffic to that target when it detects that the target is healthy again.
+
+    We recommend enabling multiple Availability Zones for all load balancers. With an Application Load Balancer however, it is a requirement that you enable at least two or more Availability Zones. This configuration helps ensure that the load balancer can continue to route traffic. If one Availability Zone becomes unavailable or has no healthy targets, the load balancer can route traffic to the healthy targets in another Availability Zone.
+
+    When cross-zone load balancing is enabled, each load balancer node distributes traffic across the registered targets in all enabled Availability Zones. When cross-zone load balancing is disabled, each load balancer node distributes traffic only across the registered targets in its Availability Zone.
+extra:
+  entity: aws_elb
+  type: resource
+guidelines: |-
+    #### Description
+    A load balancer accepts incoming traffic from clients and routes requests to its registered targets (such as EC2 instances) in one or more Availability Zones. The load balancer also monitors the health of its registered targets and ensures that it routes traffic only to healthy targets. When the load balancer detects an unhealthy target, it stops routing traffic to that target. It then resumes routing traffic to that target when it detects that the target is healthy again.
+
+    We recommend enabling multiple Availability Zones for all load balancers. With an Application Load Balancer however, it is a requirement that you enable at least two or more Availability Zones. This configuration helps ensure that the load balancer can continue to route traffic. If one Availability Zone becomes unavailable or has no healthy targets, the load balancer can route traffic to the healthy targets in another Availability Zone.
+
+    When cross-zone load balancing is enabled, each load balancer node distributes traffic across the registered targets in all enabled Availability Zones. When cross-zone load balancing is disabled, each load balancer node distributes traffic only across the registered targets in its Availability Zone.
+
+    #### Rationale
+    Enabling Cross-Zone Load Balancing makes it easier to deploy and manage applications that run across multiple subnets in different Availability Zones. This would also guarantee better fault tolerance and more consistent traffic flow. If one of the availability zones registered with the ELB fails (as result of network outage or power loss), the load balancer with the Cross-Zone Load Balancing activated would act as a traffic guard, stopping any request being sent to the unhealthy zone and routing it to the other zone(s).
+
+    #### Remediation
+    Set `cross_zone_load_balancing` to `true` for cross-zone load balancing. Default value is `true`.
+
+    Terraform example
+    ```
+    resource "aws_elb" "bar" {
+        name               = "foobar-terraform-elb"
+        availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+
+        instances                   = [aws_instance.foo.id]
+    -   cross_zone_load_balancing   = false
+    +   cross_zone_load_balancing   = true
+        idle_timeout                = 400
+        connection_draining         = true
+        connection_draining_timeout = 400
+
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+          "AvailabilityZones" : [ "us-west-2a", "us-west-2b", "us-west-2c" ],
+    +     "CrossZone" : true,
+          "LoadBalancerName" : "foobar-terraform-elb",
+          ...
+          ...
+
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elb#cross_zone_load_balancing
+    * https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_138
+severity: Medium
+sid: ckv-aws-138
+title: "Ensure that ELB is cross-zone-load-balancing enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: cross_zone_load_balancing
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_elb" ]

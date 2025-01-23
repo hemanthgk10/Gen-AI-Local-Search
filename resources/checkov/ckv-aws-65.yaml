@@ -1,0 +1,72 @@
+category: Containers
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: Ensure container insights are enabled on ECS cluster. Enabling container
+  insignts on the ECS cluster provides network and storage metrics, tasks and service
+  levels of the cluster.
+extra:
+  entity: AWS::ECS::Cluster
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure container insights are enabled on ECS cluster. Enabling container insignts on the ECS cluster provides network and storage metrics, tasks and service levels of the cluster.
+
+  #### Rationale
+  Enabling container insignts on the ECS cluster provides network and storage metrics, tasks and service levels of the cluster.
+
+  #### Remediation
+  In the `setting` argument of `aws_ecs_cluster`, set the `enabled` flag to `true` for `containerInsights`.
+
+  Terraform example:
+  ```
+  resource "aws_ecs_cluster" "foo" {
+      name = "white-hart"
+  +   setting {
+  +     name    = "containerInsights"
+  +     enabled = true
+  +   }
+      ...
+      ...
+  }
+  ```
+
+  CloudFormation example:
+  ```json
+  {
+    "Type" : "AWS::ECS::Cluster",
+    "Properties" : {
+         "ClusterName" : "white-hart",
+  +      "ClusterSettings" : [ {
+  +         "Name" : "containerInsights",
+  +         "Value" : "enabled"
+  +      }],
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_cluster#name
+  * https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/deploy-container-insights-ECS-cluster.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_65
+severity: Low
+sid: ckv-aws-65
+title: Ensure container insights are enabled on ECS cluster
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: setting
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      setting {
+        name = "containerInsights"
+        enabled = true
+      }
+    resourceType: [ "aws_ecs_cluster" ]

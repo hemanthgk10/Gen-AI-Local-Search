@@ -1,0 +1,65 @@
+category: Gateway
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+- HIPAA
+description: |-
+  AWS API gateway acts as an entry point for applications to access data, business logic or functionality of your application backend. It handles the all the API calls to your backend application including traffic management, CORS, authorization and access control, throttling, monitoring, and API version management. There are two types of logs for API gateway: execution logs and access logs.
+  * Execution logs process creates log groups and log streams, and reports the log streams of any caller's requests and responses to cloudwatch logs.
+  * Access logs provides information on who accessed your API and how it was accessed etc.
+extra:
+  entity: AWS::ApiGateway::Stage
+  type: resource
+guidelines: |-
+  #### Description
+  AWS API gateway acts as an entry point for applications to access data, business logic or functionality of your application backend. It handles the all the API calls to your backend application including traffic management, CORS, authorization and access control, throttling, monitoring, and API version management. There are two types of logs for API gateway: execution logs and access logs.
+
+  * Execution logs process creates log groups and log streams, and reports the log streams of any caller's requests and responses to cloudwatch logs.
+
+  * Access logs provides information on who accessed your API and how it was accessed etc.
+
+  #### Rationale
+  Enabling the AWS API Gateway access logging provides information for auditing purpose in future to know who accessed the API and how did they access it etc.
+
+  #### Remediation
+  Set the `access_log_settings` section in `aws_api_gateway_stage`. Specify the destination cloudwatch arn and format of the log.
+
+  Terraform example:
+  ```
+  resource "aws_api_gateway_stage" "example" {
+      api_id     = aws_api_gateway_rest_api.test.id
+  +   access_log_settings  {
+  +      destination_arn   = "arn:aws:iam::187416307283:log-group:API-Gateway-Execution-Logs/abd"
+  +      format            = "$context.identity.sourceIp $context.identity.caller"
+  +   }
+      ...
+      ...
+  }
+  ```
+
+  CloudFormation example:
+  ```json
+  {
+    "Type" : "AWS::ApiGateway::Stage",
+    "Properties" : {
+        "RestApiId" : "aws_api_gateway_rest_api.test.id",
+  +     "AccessLogSetting" : {
+  +        "DestinationArn" : "arn:aws:iam::187416307283:log-group:API-Gateway-Execution-Logs/abd",
+  +        "Format" : ""$context.identity.sourceIp $context.identity.caller""
+  +     },
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_stage#access_log_settings
+  * https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html
+  * https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#apigateway-cloudwatch-log-formats
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_76
+severity: Low
+sid: ckv-aws-76
+title: Ensure API Gateway has Access Logging enabled

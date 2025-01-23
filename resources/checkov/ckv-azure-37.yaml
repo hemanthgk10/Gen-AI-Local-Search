@@ -1,0 +1,61 @@
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure activity log retention is set for 365 days or greater.
+extra:
+  entity: microsoft.insights/logprofiles
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure activity log retention is set for 365 days or greater.
+
+  #### Rationale
+  A log profile controls how the activity log is exported and retained. Since the average time to detect a breach is 210 days, the activity log should be retained for 365 days or more in
+  order to have time to respond to any incidents.
+
+  #### Remediation
+  Set the `retention_policy` to 365.
+
+  Terraform example
+  ```
+    data "azurerm_monitor_log_profile" "example" {
+      name             = "test-logprofile"
+  +   retention_policy = 365
+    }
+  ```
+
+  *Azure Console*
+    1. Go to Activity log
+    2. Select `Export`
+    3. Set `Retention (days)`` is set to `365` or `0`
+    4. Select `Save`
+
+  *Azure Command Line Interface 2.0*
+
+  Use the below command to set the `Activity log Retention` (days) to `365 or greater`
+
+  ```
+  az monitor log-profiles update --name <logProfileName> --set retentionPolicy.days=<number of days> retentionPolicy.enabled=true
+  ```
+  Use the below command to store logs for forever (indefinitely).
+
+  ```
+  az monitor log-profiles update --name <logProfileName> --set retentionPolicy.days=0 retentionPolicy.enabled=false
+  ```
+
+  *Note:*
+     * If CLI command returns error by expecting location not set to null, append location=global in the command line. When log profile is set using azure portal, by
+       default location is set to null and causes error when tried to update log profile using CLI.
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/monitoring-and-diagnostics/monitoring-archive-activity-log
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/monitor_log_profile#retention_policy
+lwid:
+  - Azure_CIS_5_2
+provider: Azure
+ruleId: CKV_AZURE_37
+severity: Low
+sid: ckv-azure-37
+title: Ensure that Activity Log Retention is set 365 days or greater

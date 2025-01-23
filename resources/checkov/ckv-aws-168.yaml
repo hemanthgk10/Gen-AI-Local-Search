@@ -1,0 +1,62 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon Simple Queue Service (Amazon SQS) offers a secure, durable, and available hosted queue that lets you integrate and decouple distributed software systems and components.\n\n\
+    There are two ways to give your users permissions to your Amazon SQS resources: using the Amazon SQS policy system and using the IAM policy system. "
+extra:
+  entity: aws_sqs_queue_policy
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Simple Queue Service (Amazon SQS) offers a secure, durable, and available hosted queue that lets you integrate and decouple distributed software systems and components.
+
+    There are two ways to give your users permissions to your Amazon SQS resources: using the Amazon SQS policy system and using the IAM policy system.
+
+    #### Rationale
+    AWS SQS queue can contain sensitive information, so it should be restricted from public access / access to everyone.
+
+    #### Remediation
+    Do not set the `Principal` in the access policy to `*`. This will enable access to everyone.
+
+    Terraform example
+    ```
+    resource "aws_sqs_queue_policy" "test" {
+        queue_url = aws_sqs_queue.q.id
+        policy = <<POLICY
+        {
+          "Version": "2012-10-17",
+          "Id": "sqspolicy",
+          "Statement": [
+            {
+              "Sid": "First",
+              "Effect": "Allow",
+    -         "Principal": "*",
+    +             "Principal": {
+    +             "AWS": [
+    +                "arn:aws:iam::123456789012:test-user"
+    +             ]},
+              "Action": "sqs:SendMessage",
+              "Resource": "${aws_sqs_queue.q.arn}",
+              "Condition": {
+                "ArnEquals": {
+                  "aws:SourceArn": "${aws_sns_topic.example.arn}"
+                }
+              }
+            }
+          ]
+        }
+        POLICY
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue_policy
+    * https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-basic-examples-of-sqs-policies.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_168
+severity: High
+sid: ckv-aws-168
+title: "Ensure SQS queue policy is not public by only allowing specific services or principals to access it"

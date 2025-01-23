@@ -1,0 +1,66 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure Network Policy is enabled on Kubernetes Engine Clusters
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+  #### Description
+  A network policy is a specification of how groups of pods are allowed to communicate with each other and other network endpoints. NetworkPolicy resources use labels to select pods and define rules which specify what traffic is allowed to the selected pods. The Kubernetes Network Policy API allows the cluster administrator to specify what pods are allowed to communicate with each other.
+
+  #### Rationale
+  By default, pods are non-isolated; they accept traffic from any source. Pods become isolated by having a NetworkPolicy that selects them. Once there is any NetworkPolicy in a namespace selecting a particular pod, that pod will reject any connections that are not allowed by any NetworkPolicy. (Other pods in the namespace that are not selected by any NetworkPolicy will continue to accept all traffic.)
+
+  #### Remediation
+  By default, Network Policy is disabled when you create a new cluster. So set the `network_policy.enabled` to `true`.
+
+  Terraform example
+  ```
+  resource "google_container_cluster" "primary" {
+      name     = "my-gke-cluster"
+      location = "us-central1"
+
+  +   network_policy {
+  +      enabled = true
+  +      ...
+  +      ...
+  +   }
+      ...
+      ...
+  }
+  ```
+
+  Using *Console*:
+    1. Go to [Kubernetes GCP Console](https://console.cloud.google.com/kubernetes/list)
+    2. Select Kubernetes clusters for which Network policy is disabled.
+    3. Click on `EDIT` button and Set `Network policy for master` and `Network policy for nodes` to `Enabled` under Cluster section.
+
+  Using *Command Line*
+  To enable Network policy for an existing cluster, run the following command
+
+  ```
+  gcloud container clusters update [CLUSTER_NAME] --zone [COMPUTE_ZONE] --enable-network-policy
+  ```
+
+  #### Impact
+  Enabling/Disabling Network Policy causes a rolling update of all cluster nodes, similar to performing a cluster upgrade. This operation is long-running and will block other operations on the cluster (including delete) until it has run to completion.
+
+  #### References
+  * https://kubernetes.io/docs/concepts/services-networking/network-policies/#the-networkpolicy-resource
+  * https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#networkpolicy-v1-networking
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#network_policy
+  * https://kubernetes.io/docs/concepts/services-networking/networkpolicies/
+
+  #### Notes
+  Google Kubernetes Engine has partnered with Tigera to provide Project Calico to enforce network policies within your cluster. So all above remediation works well only with the same.
+lwid:
+  - GCP_CIS_7_11
+  - GCP_K8S_1_11
+provider: GCP
+ruleId: CKV_GCP_12
+severity: Medium
+sid: ckv-gcp-12
+title: Ensure Network Policy is enabled on Kubernetes Engine Clusters

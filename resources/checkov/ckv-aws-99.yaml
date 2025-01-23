@@ -1,0 +1,94 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "AWS Glue is a fully managed ETL (extract, transform, and load) service that makes it simple and cost-effective to categorize your data, clean it, enrich it, and move it reliably between various data stores and data streams. A security configuration is a set of security properties that can be used by AWS Glue. You can use a security configuration to encrypt data at rest. "
+extra:
+  entity: aws_glue_security_configuration
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Glue is a fully managed ETL (extract, transform, and load) service that makes it simple and cost-effective to categorize your data, clean it, enrich it, and move it reliably between various data stores and data streams. A security configuration is a set of security properties that can be used by AWS Glue. You can use a security configuration to encrypt data at rest.
+
+    The following scenarios show some of the ways that you can use a security configuration.
+
+    * Attach a security configuration to an AWS Glue crawler to write encrypted Amazon CloudWatch Logs.
+    * Attach a security configuration to an extract, transform, and load (ETL) job to write encrypted Amazon Simple Storage Service (Amazon S3) targets and encrypted CloudWatch Logs.
+    * Attach a security configuration to an ETL job to write its jobs bookmarks as encrypted Amazon S3 data.
+    * Attach a security configuration to a development endpoint to write encrypted Amazon S3 targets.
+
+    #### Rationale
+    Encrypting data reduces the likelihood that it is unintentionally exposed and can nullify the impact of disclosure if the encryption remains unbroken.
+
+    #### Remediation
+    Make sure that `kms_key_arn` is specified and encryption modes for `cloudwatch_encryption`, `job_bookmarks_encryption` and `s3_encryption` are not set to `DISABLED`.
+
+
+    Terraform example
+    ```
+    resource "aws_glue_security_configuration" "example" {
+        name = "example"
+
+        encryption_configuration {
+            cloudwatch_encryption {
+    -          cloudwatch_encryption_mode = "DISABLED"
+    +          cloudwatch_encryption_mode = "SSE-KMS"
+    +          kms_key_arn                = data.aws_kms_key.example.arn
+            }
+
+            job_bookmarks_encryption {
+    -          job_bookmarks_encryption_mode = "DISABLED"
+    +          job_bookmarks_encryption_mode = "CSE-KMS"
+    +          kms_key_arn                   = data.aws_kms_key.example.arn
+            }
+
+            s3_encryption {
+    -          s3_encryption_mode = "DISABLED"
+    +          kms_key_arn        = data.aws_kms_key.example.arn
+    +          s3_encryption_mode = "SSE-KMS"
+            }
+        }
+
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+        "Type" : "AWS::Glue::SecurityConfiguration",
+        "Properties" : {
+            "EncryptionConfiguration" : {
+                "CloudWatchEncryption" : {
+    +              "CloudWatchEncryptionMode" : "SSE-KMS",
+    +              "KmsKeyArn" : "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+                },
+                "JobBookmarksEncryption" : {
+    +              "JobBookmarksEncryptionMode" : "CSE-KMS",
+    +              "KmsKeyArn" : "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+                },
+                "S3Encryptions" : {
+    +              "S3EncryptionMode" : "SSE-KMS",
+    +              "KmsKeyArn" : "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+                }
+            },
+            "Name" : "example"
+            ...
+            ...
+          }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/glue_security_configuration#s3_encryption
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/glue_security_configuration#cloudwatch_encryption_mode
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/glue_security_configuration#job_bookmarks_encryption
+    * https://docs.aws.amazon.com/glue/latest/dg/console-security-configurations.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_99
+severity: Low
+sid: ckv-aws-99
+title: "Ensure Glue Security Configuration Encryption is enabled"

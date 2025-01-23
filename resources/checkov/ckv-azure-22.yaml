@@ -1,0 +1,50 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Enables emailing security alerts to the subscription owner or other designated
+  security contact.
+extra:
+  entity: Microsoft.Security/securityContacts
+  type: resource
+guidelines: |-
+  #### Description
+  Enables emailing security alerts to the subscription owner or other designated security contact.
+
+  #### Rationale
+  Enabling security alert emails ensures that security alert emails are received from Microsoft. This ensures that the right people are aware of any potential security issues and are able to mitigate the risk.
+
+  #### Remediation
+  Terraform example
+  ```
+  resource "azurerm_security_center_contact" "example" {
+      email = "contact@example.com"
+      phone = "+1-555-555-5555"
+
+  +   alert_notifications = true
+  +   alerts_to_admins    = true
+  }
+  ```
+
+  From *Azure Console*
+    1. Go to `Security Center`
+    2. Click on `Pricing & settings`
+    3. Click on the appropriate Management Group, Subscription, or Workspace
+    4. Click on `Email notifications`
+    5. Under 'Notification types', check the check box next to Notify about alerts with the following severity (or higher): and select High from the drop down menu
+    6. Click `Save`
+
+  By default, Send email notification for high severity alerts is not set.
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/security-center/security-center-provide-security-contact-details
+  * https://docs.microsoft.com/en-us/rest/api/securitycenter/securitycontacts/list
+  * https://docs.microsoft.com/en-us/rest/api/securitycenter/securitycontacts/update
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-governance-strategy#gs-3-define-security-posture-management-strategy
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_22
+severity: Medium
+sid: ckv-azure-22
+title: Ensure that 'Send email notification for high severity alerts' is set to 'On'

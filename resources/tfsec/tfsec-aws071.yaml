@@ -1,0 +1,68 @@
+---
+autofix: true
+category: Logging
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Amazon CloudFront is a web service that speeds up distribution of your static and dynamic web content, such as .html, .css, .js, and image files, to your users. When we create a web application, we specify one or more CloudFront distributions to delivery the data, videos, applications and APIs to customers globally with low latency, high transfer speeds, all within a developer-friendly environment. CloudFront delivers your content through a worldwide network of data centers called edge locations. When a request is received, CloudFront delivers it to the nearest edge location to provide low latency. It is useful for audting and debugging information, who requested the content, from where he requested and how long it took to respond. So ensure that logging is enabled on CloudFront."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws071.go"
+guidelines: |-
+    #### Description
+    Amazon CloudFront is a web service that speeds up distribution of your static and dynamic web content, such as .html, .css, .js, and image files, to your users. When we create a web application, we specify one or more CloudFront distributions to delivery the data, videos, applications and APIs to customers globally with low latency, high transfer speeds, all within a developer-friendly environment. CloudFront delivers your content through a worldwide network of data centers called edge locations. When a request is received, CloudFront delivers it to the nearest edge location to provide low latency. It is useful for audting and debugging information, who requested the content, from where he requested and how long it took to respond. So ensure that logging is enabled on CloudFront.
+
+    #### Rationale
+    CloudFront provides real-time logs which can give information about user requests, latency and location of request. This information is useful to monitor and analyze content delivery performance.
+
+    #### Remediation
+    Set the `logging_config` block with the S3 bucket name to store the logs.
+
+    Terraform example:
+    ```
+    resource "aws_cloudfront_distribution" "s3_distribution" {
+        origin {
+          domain_name = aws_s3_bucket.b.bucket_regional_domain_name
+          origin_id   = local.s3_origin_id
+          s3_origin_config {
+            origin_access_identity = "origin-access-identity/cloudfront/ABCDEFG1234567"
+          }
+        }
+        enabled             = true
+        is_ipv6_enabled     = true
+    +   logging_config {
+    +     include_cookies = false
+    +     bucket          = "mylogs.s3.amazonaws.com"
+    +     prefix          = "access"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_distribution#logging_config
+    * https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/AccessLogs.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: logging_config
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            logging_config {
+               include_cookies = false
+               prefix          = "access"
+               bucket          = "<Provide the bucket name to store the logs>"
+            }
+        resourceType:
+          - aws_cloudfront_distribution
+ruleId: AWS071
+severity: Low
+sid: tfsec-aws071
+title: "Cloudfront distribution should have Access Logging configured"

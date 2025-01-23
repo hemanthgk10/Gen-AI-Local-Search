@@ -1,0 +1,65 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: "Enable Vulnerability Assessment (VA) service scans for critical SQL servers and corresponding SQL databases."
+extra:
+  entity: azurerm_sql_server
+  type: resource
+guidelines: |-
+    #### Description
+    Enable Vulnerability Assessment (VA) service scans for critical SQL servers and corresponding SQL databases.
+
+    #### Rationale
+    Enabling Azure Defender for SQL server does not enables Vulnerability Assessment capability for individual SQL databases unless storage account is set to store the scanning data and reports.
+
+    The Vulnerability Assessment service scans databases for known security vulnerabilities and highlight deviations from best practices, such as misconfigurations, excessive permissions, and unprotected sensitive data. Results of the scan include actionable steps to resolve each issue and provide customized remediation scripts where applicable. Additionally an assessment report can be customized by setting an acceptable baseline for permission configurations, feature configurations, and database settings.
+
+    #### Impact
+    Enabling the `Azure Defender for SQL` features will incur additional costs for each SQL server.
+
+    #### Remediation
+    By default Azure Defender for SQL is not enabled for a SQL server. Enabling Azure Defender for SQL does not enable VA scanning by setting Storage Account automatically. Make sure to have a security server alert policy in `enabled` state for the stroage account of the SQL server.
+
+    Terraform example
+    ```
+    resource "azurerm_storage_account" "example" {
+        name                     = "storageaccountname"
+        account_kind             = "StorageV2"
+        account_tier             = "Standard"
+        account_replication_type = "GRS"
+        ...
+        ...
+    }
+
+    resource "azurerm_mssql_server_security_alert_policy" "example" {
+        resource_group_name        = azurerm_resource_group.example.name
+        server_name                = azurerm_mysql_server.example.name
+    +   state                      = "Enabled"
+        storage_endpoint           = azurerm_storage_account.example.primary_blob_endpoint
+        storage_account_access_key = azurerm_storage_account.example.primary_access_key
+        disabled_alerts = [
+          "Sql_Injection",
+          "Data_Exfiltration"
+        ]
+        retention_days = 20
+    }
+    ```
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/sql-database/sql-vulnerability-assessment
+    * https://docs.microsoft.com/en-us/rest/api/sql/servervulnerabilityassessments/listbyserver
+    * https://docs.microsoft.com/en-in/powershell/module/Az.Sql/Update-AzSqlServerVulnerabilityAssessmentSetting?view=azps-2.6.0
+    * https://docs.microsoft.com/en-in/powershell/module/Az.Sql/Get-AzSqlServerVulnerabilityAssessmentSetting?view=azps-2.6.0
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-posture-vulnerability-management#pv-6-perform-software-vulnerability-assessments
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_security_alert_policy
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server
+lwid:
+  - Azure_CIS_131_4_2_2
+provider: Azure
+ruleId: CKV2_AZURE_2
+severity: Low
+sid: ckv2-azure-2
+title: "Ensure that Vulnerability Assessment (VA) is enabled on a SQL server by setting a Storage Account"

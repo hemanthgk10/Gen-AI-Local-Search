@@ -1,0 +1,46 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon EFS provides a simple, serverless, set-and-forget elastic file system. With Amazon EFS, you can create a file system, mount the file system on an Amazon EC2 instance, and then read and write data to and from your file system.
+
+    Amazon EFS supports two forms of encryption for file systems, encryption of data in transit and encryption at rest. You can enable encryption of data at rest when creating an Amazon EFS file system. You can enable encryption of data in transit when you mount the file system.
+extra:
+  entity: aws_efs_file_system
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon EFS provides a simple, serverless, set-and-forget elastic file system. With Amazon EFS, you can create a file system, mount the file system on an Amazon EC2 instance, and then read and write data to and from your file system.
+
+    Amazon EFS supports two forms of encryption for file systems, encryption of data in transit and encryption at rest. You can enable encryption of data at rest when creating an Amazon EFS file system. You can enable encryption of data in transit when you mount the file system.
+
+    #### Rationale
+    Encryption helps you protect your stored data against unauthorized access and other security risks.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_efs_file_system`.
+
+    Terraform example
+    ```
+    resource "aws_efs_file_system" "foo_with_lifecyle_policy" {
+        creation_token = "my-product"
+        lifecycle_policy {
+          transition_to_ia = "AFTER_30_DAYS"
+        }
+    +   kms_key_id         = ${aws_kms_key.example.arn}
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/efs_file_system#kms_key_id
+    * https://docs.aws.amazon.com/efs/latest/ug/encryption.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_184
+severity: High
+sid: ckv-aws-184
+title: "Ensure Elastic File System (EFS) is encrypted by KMS using a customer managed Key (CMK)"

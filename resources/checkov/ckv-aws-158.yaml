@@ -1,0 +1,61 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon CloudWatch Logs helps to monitor, store, and access your log files from Amazon Elastic Compute Cloud (Amazon EC2) instances, AWS CloudTrail, Route 53, and other sources. It is an highly scalable, centralized log storage for all of your systems, applications, and AWS services that you use. A log group is a group of log streams that share the same retention, monitoring, and access control settings. You can define log groups and specify which streams to put into each group.
+
+    Log group data should always be encrypted in CloudWatch Logs using the Amazon KMS. Encryption using AWS KMS is enabled at the log group level, by associating a key with a log group, either when you create the log group or after it exists.
+extra:
+  entity: aws_cloudwatch_log_group
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon CloudWatch Logs helps to monitor, store, and access your log files from Amazon Elastic Compute Cloud (Amazon EC2) instances, AWS CloudTrail, Route 53, and other sources. It is an highly scalable, centralized log storage for all of your systems, applications, and AWS services that you use. A log group is a group of log streams that share the same retention, monitoring, and access control settings. You can define log groups and specify which streams to put into each group.
+
+    Log group data should always be encrypted in CloudWatch Logs using the Amazon KMS. Encryption using AWS KMS is enabled at the log group level, by associating a key with a log group, either when you create the log group or after it exists.
+
+    #### Rationale
+    Encrypting the CloudWatch logs prevents in unauthorized access to information through logs.
+
+    #### Remediation
+    Specify the `kms_key_id` to encrypt the logs in the CloudWatch Log group.
+
+    Terraform example
+    ```
+    resource "aws_cloudwatch_log_group" "MyGroup" {
+        name = "MyGroup"
+        tags = {
+          Environment = "production"
+          Application = "service-xyz"
+        }
+    +   kms_key_id = "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c"
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::Logs::LogGroup",
+      "Properties" : {
+          "LogGroupName : "MyGroup",
+    +     "KmsKeyId" : "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c",
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group#kms_key_id
+    * https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/encrypt-log-data-kms.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-loggroup.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_158
+severity: High
+sid: ckv-aws-158
+title: "Ensure that CloudWatch Log Group is encrypted by KMS"

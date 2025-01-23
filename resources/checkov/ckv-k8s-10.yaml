@@ -1,0 +1,51 @@
+category: Compute
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: CPU requests should be set on each container to specify the amount of
+  CPU it requires for execution on a node. This is used by the scheduler to find a
+  node with an appropriate fit for your container.
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  CPU requests should be set on each container to specify the amount of CPU it requires for execution on a node. This is used by the scheduler to find a node with an appropriate fit for your container.
+
+  #### Rationale
+  CPU request represents a minimum amount of CPU that it requires to run, but if there is no requests specified for CPU, it may burst to use as much CPU as is available on the node. This can be a problem for
+  other containers running on the same node as might faile with resource starvation.
+
+  #### Remediation
+  Set the `requests.cpu` for both `containers` and `initContainers`.
+
+  Example of CPU requests for a Pod:
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  spec:
+    containers:
+    - image: nginx
+      name: nginx
+      resources:
+  +    requests:
+  +       cpu: 100m
+      ...
+      ...
+    initContainers:
+    - image: nginx-preconfig
+      name: configeditor
+      resources:
+  +     requests:
+  +       cpu: 100m
+      ...
+      ...
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+provider: Kubernetes
+ruleId: CKV_K8S_10
+severity: Medium
+sid: ckv-k8s-10
+title: CPU requests should be set

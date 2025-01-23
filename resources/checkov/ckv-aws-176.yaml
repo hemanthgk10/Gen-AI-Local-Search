@@ -1,0 +1,52 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS WAF is a web application firewall that helps protect your web applications or APIs against common web exploits and bots that may affect availability, compromise security, or consume excessive resources.
+
+    AWS WAF gives you control over how traffic reaches your applications by enabling you to create security rules. To get detailed information on how the request is being handled by the rules, we need logging to be enabled.
+extra:
+  entity: aws_waf_web_acl
+  type: resource
+guidelines: |-
+    #### Description
+    AWS WAF is a web application firewall that helps protect your web applications or APIs against common web exploits and bots that may affect availability, compromise security, or consume excessive resources.
+
+    AWS WAF gives you control over how traffic reaches your applications by enabling you to create security rules. To get detailed information on how the request is being handled by the rules, we need logging to be enabled.
+
+    #### Rationale
+    Logging can help to get detailed information about traffic that is being analyzed by your web ACL. Logged information includes the time that AWS WAF received a web request from your AWS resource, detailed information about the request, and details about the rules that the request matched.
+
+    #### Remediation
+    Make sure that `logging_configuration` is set for AWS WAF.
+
+    Terraform example
+    ```
+    resource "aws_waf_web_acl" "waf_acl" {
+         name        = "tfWebACL"
+         metric_name = "tfWebACL"
+    +    logging_configuration {
+    +        log_destination = "${aws_kinesis_firehose_delivery_stream.example.arn}"
+    +        redacted_fields {
+    +          field_to_match {
+    +            type = "URI"
+    +        }
+    +        ...
+    +        ...
+    +    }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/babylonhealth/aws-babylon/latest/docs/resources/waf_web_acl#logging_configuration-configuration-block
+    * https://docs.aws.amazon.com/waf/latest/developerguide/logging.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_176
+severity: Low
+sid: ckv-aws-176
+title: "Ensure Logging is enabled for WAF  Web Access Control Lists"

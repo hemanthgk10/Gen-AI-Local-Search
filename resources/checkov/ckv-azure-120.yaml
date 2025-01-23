@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Application Gateway enables WAF"
+extra:
+  entity: azurerm_application_gateway
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_120
+severity: High
+sid: ckv-azure-120
+title: "Ensure that Application Gateway enables WAF"

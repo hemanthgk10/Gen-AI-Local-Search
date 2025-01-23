@@ -1,0 +1,75 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "Encryption should be enabled for an RDS Aurora cluster. When enabling encryption by setting the kms_key_id, the storage_encrypted must also be set to true."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws051.go"
+guidelines: |-
+    #### Description
+    Ensure that RDS database instances are encrypted to fulfill compliance requirements for data-at-rest encryption. The RDS data encryption and decryption is handled transparently and don’t require any additional action from you or your application, you just need to select the Master Key which is going to encrypt the instance.
+
+    To enable data encryption for an existing RDS instance you need to re-create it (back-up and restore) with encryption flag enabled.
+
+    #### Rationale
+    Native RDS encryption helps protect your cloud applications and fulfils compliance requirements for data-at-rest encryption.
+
+    #### Remediation
+    Set `storage_encrypted` flag as true. When `storage_encrypted` is set, then we should also provide `kms_key_id`.
+
+    Terraform example
+    ```
+    resource "aws_rds_cluster" "example" {
+        name              = "mydb"
+    +   kms_key_id        = "arn:aws:kms:us-west-2:111122223333:key/xyz"
+    +   storage_encrypted = true
+        ...
+        ...
+    }
+    ```
+
+    From *Console*:
+
+    1. Login to the [AWS RDS console](https://console.aws.amazon.com/rds/)
+    2. Navigate to `RDS Instances`
+    3. Select the RDS instance that you want to examine
+    4. Click `Instance Actions` button from the dashboard top menu and select `See Details`
+    5. Under `Encryption Details` section, search for the `Encryption Enabled` status
+    6. Set the `status` to `YES`
+
+    #### References
+    * https://aws.amazon.com/rds/features/security/
+    * https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Encryption.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster#storage_encrypted
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster#kms_key_id
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: storage_encrypted
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_rds_cluster
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: kms_key_id
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide the ARN of the KMS key>"
+        resourceType:
+          - aws_rds_cluster
+ruleId: AWS051
+severity: High
+sid: tfsec-aws051
+title: "There is no encryption specified or encryption is disabled on the RDS Cluster"

@@ -1,0 +1,38 @@
+---
+category: Networking
+checkTool: checkov
+checkType: Docker
+compliance: []
+description: "Dockerfile for a container image defines the ports to be opened by default on a container instance. The list of ports may or may not be relevant to the application you are running within the container. Exposing port 22 on the container might allow attackers to get access to the entire network."
+guidelines: |-
+    #### Description
+    Dockerfile for a container image defines the ports to be opened by default on a container instance. The list of ports may or may not be relevant to the application you are running
+    within the container. Avoid exposing port 22 on the container. Exposing port 22 on the container might allow attackers to get access to the entire network.
+
+    #### Rationale
+    A container can be run just with the ports defined in the Dockerfile for its image or can be arbitrarily passed run time parameters to open a list of ports. Additionally, Overtime, Dockerfile may undergo various changes and the list of exposed ports may or may not be relevant to the application you are running within the container. Opening unneeded ports increase the attack surface of the container and the containerized application. As a recommended practice, do not open unneeded ports.
+
+    #### Remediation
+    Do not allow port 22 to be exposed in the docker file.
+
+    Dockerfile example:
+    ```
+      FROM node:12-alpine
+      RUN apk add --no-cache python2 g++ make
+      WORKDIR /app
+      COPY . .
+      RUN yarn install --production
+    - EXPOSE 3000 22
+    + EXPOSE 3000
+      CMD ["node", "src/index.js"]
+    ```
+
+    #### References
+    * http://docs.docker.com/articles/networking/#binding-ports
+    * https://docs.docker.com/engine/reference/builder/#expose
+lwid: []
+provider: Docker
+ruleId: CKV_DOCKER_1
+severity: Medium
+sid: ckv-docker-1
+title: "Ensure port 22 is not exposed"

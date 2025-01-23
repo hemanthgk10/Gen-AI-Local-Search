@@ -1,0 +1,14 @@
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that key vault enables soft delete"
+extra:
+  entity: azurerm_key_vault
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_111
+severity: Medium
+sid: ckv-azure-111
+title: "Ensure that key vault enables soft delete"

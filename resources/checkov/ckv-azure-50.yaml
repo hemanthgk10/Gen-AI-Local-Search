@@ -1,0 +1,16 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure Virtual Machine Extensions are not Installed"
+extra:
+  entity: azurerm_linux_virtual_machine
+  type: resource
+lwid: 
+  - Azure_CIS_131_7_4
+  - Azure_CIS_7_4
+provider: Azure
+ruleId: CKV_AZURE_50
+severity: Low
+sid: ckv-azure-50
+title: "Ensure Virtual Machine Extensions are not Installed"

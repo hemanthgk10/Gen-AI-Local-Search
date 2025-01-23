@@ -1,0 +1,65 @@
+---
+autofix: true
+category: IAM
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "You should disable Attribute-Based Access Control (ABAC), and instead use Role-Based Access Control (RBAC) in GKE. RBAC has significant security advantages and is now stable in Kubernetes, so it’s time to disable ABAC."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/gcp005.go"
+guidelines: |-
+    #### Description
+    In Kubernetes, authorizers interact by granting a permission if any authorizer grants the permission. The legacy authorizer in Kubernetes Engine grants broad, statically defined permissions. To ensure that RBAC limits permissions correctly, you must disable the legacy authorizer. RBAC has significant security advantages, can help you ensure that users only have access to cluster resources within their own namespace and is now stable in Kubernetes.
+
+    #### Rationale
+    Enable Legacy Authorization for in-cluster permissions that support existing clusters or workflows. Disable legacy authorization for full RBAC support for in-cluster permissions. In Kubernetes, RBAC is used to grant permissions to resources at the cluster and namespace level. RBAC allows you to define roles with rules containing a set of permissions.
+
+    #### Remediation
+    Kubernetes Engine clusters running Kubernetes version 1.8 and later disable the legacy authorization system by default, and thus role-based access control permissions take effect with no special action required.
+
+    Terraform example
+
+    ```
+    resource "google_container_cluster" "primary" {
+        name               = "marcellus-wallace"
+        location           = "us-central1-a"
+        initial_node_count = 3
+    +   enable_legacy_abac = false
+        ...
+        ...
+    }
+    ```
+
+    Using *Console*
+      1. Go to [Kubernetes GCP Console](https://console.cloud.google.com/kubernetes/list)
+      2. From the list of clusters, make sure for each cluster 'Legacy Authorization' is set to Disabled under Cluster section.
+
+    #### Impact
+    Once the cluster has the legacy authorizer disabled, you must grant your user the ability to create authorization roles to ensure that your role-based access control permissions take effect.
+
+    #### References
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/role-based-access-control?hl=en_US
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-container-cluster
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#enable_legacy_abac
+
+    #### Notes
+    On clusters running Kubernetes 1.6 or 1.7, Kubernetes service accounts have full permissions on the Kubernetes API by default. To ensure that your role-based access control permissions take effect for a Kubernetes service account, you must create or update your cluster with the option --no-enable-legacy-authorization. This requirement is removed for clusters running Kubernetes version 1.8 or higher.
+lwid: []
+provider: GCP
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: enable_legacy_abac
+        resourceAttributeType: boolean
+        resourceAttributeValue: "false"
+        resourceType:
+          - google_container_cluster
+ruleId: GCP005
+severity: Medium
+sid: tfsec-gcp005
+title: "Legacy ABAC permissions are enabled"

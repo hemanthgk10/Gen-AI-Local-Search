@@ -1,0 +1,68 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS Lambda is a serverless, event-driven compute service that lets you run code for virtually any type of application or backend service without provisioning or managing servers.
+
+    By default, when you create or update Lambda functions that use environment variables, those variables are encrypted using AWS KMS. When your Lambda function is invoked, those values are decrypted and made available to the Lambda code. You have the option to use the default KMS key for Lambda or specify a specific CMK of your choice.
+extra:
+  entity: aws_lambda_function
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Lambda is a serverless, event-driven compute service that lets you run code for virtually any type of application or backend service without provisioning or managing servers.
+
+    By default, when you create or update Lambda functions that use environment variables, those variables are encrypted using AWS KMS. When your Lambda function is invoked, those values are decrypted and made available to the Lambda code. You have the option to use the default KMS key for Lambda or specify a specific CMK of your choice.
+
+    #### Rationale
+    Encrypting the environment variables allows us to pass secrets or sensitive information at runtime without having to worry about exposure.
+
+    #### Remediation
+    Specify the `kms_key_arn` to encrypt the lambda environment variables.
+
+    Terraform example
+    ```
+    resource "aws_lambda_function" "test_lambda" {
+        function_name = "lambda_function_name"
+        runtime       = "nodejs8.10"
+
+    +   kms_key_arn   = "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c"
+        environment {
+          variables = {
+            api_key = "super_secret"
+          }
+        }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+          "Runtime": "nodejs8.10",
+    +     "KmsKeyArn": "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c",
+          Environment: {
+            "variables": {
+                "databaseName": "lambdadb"
+            }
+          }
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function#kms_key_arn
+    * https://docs.aws.amazon.com/whitepapers/latest/kms-best-practices/encrypting-lambda-environment-variables.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_173
+severity: High
+sid: ckv-aws-173
+title: "Check encryption settings for Lambda environmental variable"

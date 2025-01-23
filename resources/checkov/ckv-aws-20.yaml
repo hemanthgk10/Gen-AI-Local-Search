@@ -1,0 +1,102 @@
+---
+autofix: true
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+  - HIPAA
+description: "Ensure S3 buckets has either ACL private or have other options with restricted policy to avoid excessive read permissions to everyone."
+extra:
+  entity: "AWS::S3::Bucket"
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure S3 buckets has either ACL private or have other options with restricted policy to avoid excessive read permissions to everyone.
+
+    #### Rationale
+    Ensure that your AWS S3 buckets content cannot be publicly listed in order to protect against unauthorized access. An S3 bucket that grants READ (LIST) access to everyone can allow anonymous users to list the objects within the bucket. Malicious users can exploit the information acquired through the listing process to find objects with misconfigured ACL permissions and access these compromised objects.
+
+    #### Remediation
+    set `acl` argument for `aws_s3_bucket` is either set to private or other options with a restricted policy to give access to required users only.
+
+    Terraform example
+    ```
+    resource "aws_s3_bucket" "my_bucket" {
+        bucket = "my-tf-bucket"
+    -   acl    = "public-read"
+    +   acl    = "private"
+
+        tags = {
+          Name        = "My bucket"
+          Environment = "Prod"
+        }
+        ...
+        ...
+    }
+
+    OR
+
+    Add an `aws_s3_bucket_acl` block for the S3 bucket.
+
+    resource "aws_s3_bucket" "my_bucket" {
+        bucket = "my-tf-bucket"
+        tags = {
+          Name        = "My bucket"
+          Environment = "Prod"
+        }
+        ...
+        ...
+    }
+
+    + resource "aws_s3_bucket_acl" "my_bucket_acl" {
+    +   bucket = aws_s3_bucket.my_bucket.id
+    +   acl    = "private"
+    + }
+    ```
+
+    Cloudformation example
+    ```json
+    {
+        "Type": "AWS::S3::Bucket",
+        "Properties": {
+    +       "AccessControl": "Private",
+            ...
+            ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket#acl
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: CloudFormation
+    steps:
+      -
+        actions: modify
+        resource:
+          - resource
+        resourceAttribute: AccessControl
+        resourceAttributeType: string
+        resourceAttributeValue: Private
+        resourceType:
+          - "AWS::S3::Bucket"
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: acl
+        resourceAttributeType: string
+        resourceAttributeValue: private
+        resourceType:
+          - aws_s3_bucket
+ruleId: CKV_AWS_20
+severity: Medium
+sid: ckv-aws-20
+title: "S3 Bucket has an ACL defined which allows public READ access"

@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure Front Door WAF prevents message lookup in Log4j2. See CVE-2021-44228 aka log4jshell"
+extra:
+  entity: azurerm_frontdoor_firewall_policy
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_133
+severity: Critical
+sid: ckv-azure-133
+title: "Ensure Front Door WAF prevents message lookup in Log4j2. See CVE-2021-44228 aka log4jshell"

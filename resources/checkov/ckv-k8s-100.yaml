@@ -1,0 +1,121 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The Kubernetes API is the front end of the Kubernetes control plane and is how users interact with their Kubernetes cluster. The API (application programming interface) server determines if a request is valid and then processes it. These Kubernetes API server validates and configures data for the api objects which include pods, services, replicationcontrollers, and others.
+
+    As the API servers are the main entry point for every thing, it is recommended to setup a TLS connection for any communication to the API servers.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The Kubernetes API is the front end of the Kubernetes control plane and is how users interact with their Kubernetes cluster. The API (application programming interface) server determines if a request is valid and then processes it. These Kubernetes API server validates and configures data for the api objects which include pods, services, replicationcontrollers, and others.
+
+    As the API servers are the main entry point for every thing, it is recommended to setup a TLS connection for any communication to the API servers.
+
+    #### Rationale
+    API server communication contains sensitive parameters that should remain encrypted in transit. Configure the API server to serve only HTTPS traffic.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-apiserver
+    ```
+    Verify that the `--tls-cert-file` and `--tls-private-key-file` arguments exist and they are set as appropriate.
+
+    #### Remediation
+    Follow the Kubernetes documentation and set up the TLS connection on the apiserver. Then, edit the API server pod specification file `/etc/kubernetes/manifests/kube-apiserver.yaml` on the master node and set the TLS certificate and private key file parameters.
+
+    ```
+        --tls-cert-file=<path/to/tls-certificate-file>
+        --tls-private-key-file=<path/to/tls-key-file>
+    ```
+
+    By default, `--tls-cert-file` and `--tls-private-key-file` arguments are not set.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          scheduler.alpha.kubernetes.io/critical-pod: ""
+        labels:
+          component: kube-apiserver
+          tier: control-plane
+        name: kube-apiserver
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - kube-apiserver
+          - --admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,ResourceQuota
+          - --etcd-servers=http://127.0.0.1:2379
+          - --authorization-mode=Node,RBAC
+          - --admission-control-config-file=admission-config.yaml
+          - --enable-admission-plugins=NodeRestriction,NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota
+          - --secure-port=6443
+          - --audit-log-path=/var/log/apiserver/audit.log
+          - --audit-log-maxage=30
+          - --audit-log-maxbackup=10
+          - --audit-log-maxsize=100
+          - --request-timeout=60
+          - --service-account-lookup=true
+          - --service-account-key-file=/etc/kubernetes/pki/sa.pub
+          - --etcd-certfile=/etc/etcd/pki/etcd.crt
+          - --etcd-keyfile=/etc/etcd/pki/etcd.key
+    +     - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+    +     - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+          ...
+          ...
+
+          image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.0
+          livenessProbe:
+            failureThreshold: 8
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: 6443
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+          name: kube-apiserver
+          resources:
+            requests:
+              cpu: 250m
+          volumeMounts:
+          - mountPath: /etc/kubernetes/pki
+            name: k8s-certs
+            readOnly: true
+          ...
+          ...
+    ```
+
+    #### Impact
+    TLS and client certificate authentication must be configured for your Kubernetes cluster deployment.
+
+    #### CIS Controls:
+    **Version 6**
+      14.2 *Encrypt All Sensitive Information Over Less-trusted Networks* -- All communication of sensitive information over less-trusted networks should be encrypted. Whenever information flows over a network with a lower trust level, the information should be encrypted.
+
+    **Version 7**
+      14.4 *Encrypt All Sensitive Information in Transit* -- Encrypt all sensitive information in transit.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-apiserver/
+    * http://rootsquash.com/2016/05/10/securing-the-kubernetes-api/
+    * https://github.com/kelseyhightower/docker-kubernetes-tls-guide
+    * https://kubernetes.io/docs/setup/best-practices/certificates/
+provider: Kubernetes
+ruleId: CKV_K8S_100
+severity: Medium
+sid: ckv-k8s-100
+title: "Ensure that the --tls-cert-file and --tls-private-key-file arguments are set as appropriate"

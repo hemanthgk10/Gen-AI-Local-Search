@@ -1,0 +1,68 @@
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: Ensure no roles that enable to impersonate and manage all service accounts
+  are used at a folder level
+extra:
+  entity: google_folder_iam_binding
+  type: resource
+guidelines: |-
+  #### Description
+  It is recommended not to assign dangerous roles which can impersonate and manage service accounts, to a user at folder level.
+
+  #### Rationale
+  Some IAM roles contain permissions that enable a user with the role to impersonate or manage service accounts in a GCP project through IAM inheritance from a higher resource.
+
+  The following roles enable identities to impersonate all service account identities within a project if the identity is granted the role at the project, folder, or organization level. The following list includes our current recommendations for dangerous roles, however, it is not exhaustive as permissions and roles change frequently.
+
+  Primitive Roles:
+
+    * roles/owner
+    * roles/editor
+
+  Predefined Roles:
+    * roles/iam.securityAdmin
+    * roles/iam.serviceAccountAdmin
+    * roles/iam.serviceAccountKeyAdmin
+    * roles/iam.serviceAccountUser
+    * roles/iam.serviceAccountTokenCreator
+    * roles/iam.workloadIdentityUser
+    * roles/dataproc.editor
+    * roles/dataproc.admin
+    * roles/dataflow.developer
+    * roles/resourcemanager.folderAdmin
+    * roles/resourcemanager.folderIamAdmin
+    * roles/resourcemanager.projectIamAdmin
+    * roles/resourcemanager.organizationAdmin
+    * roles/cloudasset.viewer
+    * roles/cloudasset.owner
+
+  Service Agent Roles: Service agent roles should not be used for any identities other than the Google managed service account they are associated with.
+    * roles/serverless.serviceAgent
+    * roles/dataproc.serviceAgent
+
+  #### Remediation
+  Remove any roles listed above.
+
+  Terraform example
+  ```
+  resource "google_project_iam_binding" "example" {
+     project  = "your-project-id"
+  -  role     = "roles/iam.securityAdmin"
+     members  = "user:jane@example.com"
+
+     ...
+     ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_project_iam#google_project_iam_binding
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_project_iam#google_project_iam_member
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_44
+severity: Medium
+sid: ckv-gcp-44
+title: "Ensure no roles that enable to impersonate and manage all service accounts are used at a folder level"

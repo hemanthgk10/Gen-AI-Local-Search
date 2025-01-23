@@ -1,0 +1,76 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Elastic Load Balancing automatically distributes your incoming traffic across multiple targets, such as EC2 instances, containers, and IP addresses, in one or more Availability Zones. It monitors the health of its registered targets, and routes traffic only to the healthy targets. Elastic Load Balancing scales your load balancer as your incoming traffic changes over time. It can automatically scale to the vast majority of workloads.
+
+    Elastic Load Balancing supports the following load balancers: `Application Load Balancers`, `Network Load Balancers`, `Gateway Load Balancers`, and `Classic Load Balancers`.
+
+    A Network Load Balancer functions at the fourth layer of the Open Systems Interconnection (OSI) model. It can handle millions of requests per second. After the load balancer receives a connection request, it selects a target from the target group for the default rule. It attempts to open a TCP connection to the selected target on the port specified in the listener configuration.
+
+    Network Load Balancer can now distribute requests regardless of Availability Zone with the support of cross-zone load balancing. This feature allows Network Load Balancer to route incoming requests to applications that are deployed across multiple Availability Zones.
+extra:
+  entity: aws_alb
+  type: resource
+guidelines: |-
+    #### Description
+    Elastic Load Balancing automatically distributes your incoming traffic across multiple targets, such as EC2 instances, containers, and IP addresses, in one or more Availability Zones. It monitors the health of its registered targets, and routes traffic only to the healthy targets. Elastic Load Balancing scales your load balancer as your incoming traffic changes over time. It can automatically scale to the vast majority of workloads.
+
+    Elastic Load Balancing supports the following load balancers: `Application Load Balancers`, `Network Load Balancers`, `Gateway Load Balancers`, and `Classic Load Balancers`.
+
+    A Network Load Balancer functions at the fourth layer of the Open Systems Interconnection (OSI) model. It can handle millions of requests per second. After the load balancer receives a connection request, it selects a target from the target group for the default rule. It attempts to open a TCP connection to the selected target on the port specified in the listener configuration.
+
+    Network Load Balancer can now distribute requests regardless of Availability Zone with the support of cross-zone load balancing. This feature allows Network Load Balancer to route incoming requests to applications that are deployed across multiple Availability Zones.
+
+    #### Rationale
+    If you enable cross-zone load balancing, you no longer have to worry that clients caching DNS information will result in requests being distributed unevenly. With this launch, requests are distributed equally to your targets regardless of the Availability Zone in which they are located.
+
+    Enabling Cross-Zone Load Balancing makes it easier to deploy and manage applications that run across multiple subnets in different Availability Zones. This would also guarantee better fault tolerance and more consistent traffic flow. If one of the availability zones registered with the ELB fails (as result of network outage or power loss), the load balancer with the Cross-Zone Load Balancing activated would act as a traffic guard, stopping any request being sent to the unhealthy zone and routing it to the other zone(s).
+
+    #### Remediation
+    If `enable_cross_zone_load_balancing=true`, cross-zone load balancing of the load balancer will be enabled.
+
+    `Note:` This is only a network load balancer (NLB) feature and available only when `load_balancer_type=network`.
+
+    Terraform example
+    ```
+    resource "aws_lb" "example" {
+        name               = "example"
+        load_balancer_type = "network"
+
+        subnet_mapping {
+          subnet_id            = aws_subnet.example1.id
+          private_ipv4_address = "10.0.1.15"
+        }
+
+        subnet_mapping {
+          subnet_id            = aws_subnet.example2.id
+          private_ipv4_address = "10.0.2.15"
+        }
+    +   enable_cross_zone_load_balancing = true
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb#enable_cross_zone_load_balancing
+    * https://aws.amazon.com/about-aws/whats-new/2018/02/network-load-balancer-now-supports-cross-zone-load-balancing/
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_152
+severity: Medium
+sid: ckv-aws-152
+title: "Ensure that Load Balancer (Network/Gateway) has cross-zone load balancing enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: enable_cross_zone_load_balancing
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_lb" ]

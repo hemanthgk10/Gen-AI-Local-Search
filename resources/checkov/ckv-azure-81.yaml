@@ -1,0 +1,15 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that 'PHP version' is the latest, if used to run the web app"
+extra:
+  entity: azurerm_app_service
+  type: resource
+lwid:
+  - Azure_CIS_131_9_6
+provider: Azure
+ruleId: CKV_AZURE_81
+severity: Low
+sid: ckv-azure-81
+title: "Ensure that 'PHP version' is the latest, if used to run the web app"

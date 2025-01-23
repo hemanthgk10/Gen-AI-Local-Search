@@ -1,0 +1,15 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure FTP deployments are disabled"
+extra:
+  entity: azurerm_app_service
+  type: resource
+lwid:
+  - Azure_CIS_131_9_10
+provider: Azure
+ruleId: CKV_AZURE_78
+severity: Medium
+sid: ckv-azure-78
+title: "Ensure FTP deployments are disabled"

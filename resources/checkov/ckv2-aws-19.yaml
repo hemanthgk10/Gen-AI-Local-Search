@@ -1,0 +1,50 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "An Elastic IP address is a static IPv4 address designed for dynamic cloud computing. An Elastic IP address is allocated to your AWS account, and is yours until you release it. By using an Elastic IP address, you can mask the failure of an instance or software by rapidly remapping the address to another instance in your account. Alternatively, you can specify the Elastic IP address in a DNS record for your domain, so that your domain points to your instance."
+extra:
+  entity: aws_eip
+  type: resource
+guidelines: |-
+    #### Description
+    An Elastic IP address is a static IPv4 address designed for dynamic cloud computing. An Elastic IP address is allocated to your AWS account, and is yours until you release it. By using an Elastic IP address, you can mask the failure of an instance or software by rapidly remapping the address to another instance in your account. Alternatively, you can specify the Elastic IP address in a DNS record for your domain, so that your domain points to your instance.
+
+    #### Rationale
+    An Elastic IP address incur charges if it is not associated with an EC2 instance. So it is recommended to make sure that all the EIPs are associated with an EC2 instance.
+
+    #### Remediation
+    Make sure that `aws_eip_association` is available for the all the `aws_eip` of a VPC.
+
+    Terraform example
+    ```
+    resource "aws_eip" "lb" {
+        instance = aws_instance.web.id
+        vpc      = true
+    }
+
+    resource "aws_instance" "web" {
+        ami               = "ami-21f78e11"
+        availability_zone = "us-west-2a"
+        instance_type     = "t2.micro"
+        ...
+        ...
+    }
+
+    + resource "aws_eip_association" "eip_assoc" {
+    +    instance_id   = aws_instance.web.id
+    +    allocation_id = aws_eip.example.id
+    + }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip_association
+    * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html
+    * https://aws.amazon.com/premiumsupport/knowledge-center/elastic-ip-charges/
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_19
+severity: Low
+sid: ckv2-aws-19
+title: "Ensure that all EIP addresses allocated to a VPC are attached to EC2 instances"

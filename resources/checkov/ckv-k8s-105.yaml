@@ -1,0 +1,121 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The Kubernetes API is the front end of the Kubernetes control plane and is how users interact with their Kubernetes cluster. The API (application programming interface) server determines if a request is valid and then processes it. These Kubernetes API server validates and configures data for the api objects which include pods, services, replicationcontrollers, and others.
+
+    As the API servers are the main entry point for every thing, it is recommended to setup a TLS connection for any communication to the API servers. In SSL and TLS, cipher suites define how secure communication takes place. Ensure that the API server is configured to only use strong cryptographic ciphers.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The Kubernetes API is the front end of the Kubernetes control plane and is how users interact with their Kubernetes cluster. The API (application programming interface) server determines if a request is valid and then processes it. These Kubernetes API server validates and configures data for the api objects which include pods, services, replicationcontrollers, and others.
+
+    As the API servers are the main entry point for every thing, it is recommended to setup a TLS connection for any communication to the API servers. In SSL and TLS, cipher suites define how secure communication takes place. Ensure that the API server is configured to only use strong cryptographic ciphers.
+
+    #### Rationale
+    TLS ciphers have had a number of known vulnerabilities and weaknesses, which can reduce the protection provided by them. By default Kubernetes supports a number of TLS ciphersuites including some that have security concerns, weakening the protection provided.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-apiserver
+    ```
+    Verify that the `--tls-cipher-suites` argument is set as outlined in the remediation procedure below.
+
+    #### Remediation
+    Edit the API server pod specification file `/etc/kubernetes/manifests/kube-apiserver.yaml` on the master node and set the below parameter.
+    ```
+        --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM _SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM _SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM _SHA384
+    ```
+
+    By default the Kubernetes API server supports a wide range of TLS ciphers.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          scheduler.alpha.kubernetes.io/critical-pod: ""
+        labels:
+          component: kube-apiserver
+          tier: control-plane
+        name: kube-apiserver
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - kube-apiserver
+          - --admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,ResourceQuota
+          - --etcd-servers=http://127.0.0.1:2379
+          - --authorization-mode=Node,RBAC
+          - --admission-control-config-file=admission-config.yaml
+          - --enable-admission-plugins=NodeRestriction,NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota
+          - --secure-port=6443
+          - --audit-log-path=/var/log/apiserver/audit.log
+          - --audit-log-maxage=30
+          - --audit-log-maxbackup=10
+          - --audit-log-maxsize=100
+          - --request-timeout=60
+          - --service-account-lookup=true
+          - --service-account-key-file=/etc/kubernetes/pki/sa.pub
+          - --etcd-certfile=/etc/etcd/pki/etcd.crt
+          - --etcd-keyfile=/etc/etcd/pki/etcd.key
+          - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+          - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+    +     - --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM _SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM _SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM _SHA384
+          ...
+          ...
+
+          image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.0
+          livenessProbe:
+            failureThreshold: 8
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: 6443
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+          name: kube-apiserver
+          resources:
+            requests:
+              cpu: 250m
+          volumeMounts:
+          - mountPath: /etc/kubernetes/pki
+            name: k8s-certs
+            readOnly: true
+          ...
+          ...
+    ```
+
+    #### Impact
+    API server clients that cannot support modern cryptographic ciphers will not be able to make connections to the API server.
+
+    #### Notes
+    The list chosen above should be fine for modern clients. It's essentially the list from the Mozilla `Modern cipher` option with the ciphersuites supporting CBC mode removed, as CBC has traditionally had a lot of issues.
+
+    #### CIS Controls:
+    **Version 6**
+      3.4 *Use Only Secure Channels For Remote System Administration* -- Perform all remote administration of servers, workstation, network devices, and similar equipment over secure channels. Protocols such as telnet, VNC, RDP, or others that do not actively support strong encryption should only be used if they are performed over a secondary encryption channel, such as SSL, TLS or IPSEC.
+
+    **Version 7**
+      4.5 *Use Multifactor Authentication For All Administrative Access* -- Use multi-factor authentication and encrypted channels for all administrative account access.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-apiserver/
+    * https://github.com/ssllabs/research/wiki/SSL-and-TLS-Deployment-Best-Practices#23-use-secure-cipher-suites
+provider: Kubernetes
+ruleId: CKV_K8S_105
+severity: Critical
+sid: ckv-k8s-105
+title: "Ensure that the API Server only makes use of Strong Cryptographic Ciphers"

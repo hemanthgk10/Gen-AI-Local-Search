@@ -1,0 +1,58 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure 'Enforce SSL connection' is set to 'ENABLED' for PostgreSQL Database
+  Server
+extra:
+  entity: Microsoft.DBforPostgreSQL/servers
+  type: resource
+guidelines: |-
+  #### Description
+  Enable `SSL connection` on `PostgreSQL` Servers.
+
+  #### Rationale
+  `SSL connectivity` helps to provide a new layer of security, by connecting database server to client applications using Secure Sockets Layer (SSL). Enforcing SSL connections between database server and client applications helps protect against "man in the middle" attacks by encrypting the data stream between the server and application.
+
+  #### Remediation
+  Set the `ssl_enforcement_enabled` to `true`.
+
+  Terraform example
+  ```
+  resource "azurerm_mysql_server" "example" {
+        name                              = "example-mysqlserver"
+        location                          = azurerm_resource_group.example.location
+        resource_group_name               = azurerm_resource_group.example.name
+  +     ssl_enforcement_enabled           = true
+        ssl_minimal_tls_version_enforced  = "TLS1_2"
+        ...
+        ...
+  }
+  ```
+
+  *From Azure Console*
+      1. Login to [Azure Portal](https://portal.azure.com)
+      2. Go to Azure Database for `PostgreSQL server`
+      3. For each database, click on `Connection security`
+      4. In `SSL` settings.
+      5. Click on `ENABLED` to Enforce SSL connection
+
+  *From Azure Command Line Interface 2.0*
+  Use the below command to `enforce ssl connection` for `PostgreSQL` Database.
+
+  ```
+   az postgres server update --resource-group <resourceGroupName> --name <serverName> --ssl-enforcement Enabled
+  ```
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/postgresql/concepts-ssl-connection-security
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-data-protection#dp-4-encrypt-sensitive-information-in-transit
+lwid:
+  - Azure_CIS_131_4_3_1
+provider: Azure
+ruleId: CKV_AZURE_29
+severity: High
+sid: ckv-azure-29
+title: Ensure 'Enforce SSL connection' is set to 'ENABLED' for PostgreSQL Database
+  Server

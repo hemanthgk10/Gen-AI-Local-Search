@@ -1,0 +1,72 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure that IP forwarding is not enabled on Instances
+extra:
+  entity: google_compute_instance
+  type: resource
+guidelines: |-
+  #### Description
+  Compute Engine instance cannot forward a packet unless the source IP address of the packet matches the IP address of the instance. Similarly, GCP won't deliver a packet whose destination IP address is different than the IP address of the instance receiving the packet. However, both capabilities are required if you want to use instances to help route packets.
+
+  Forwarding of data packets should be disabled to prevent data loss or information disclosure.
+
+  #### Rationale
+  Compute Engine instance cannot forward a packet unless the source IP address of the packet matches the IP address of the instance. Similarly, GCP won't deliver a packet whose destination IP address is different than the IP address of the instance receiving the packet. However, both capabilities are required if you want to use instances to help route packets. To enable this source and destination IP check, disable the canIpForward field, which allows an instance to send and receive packets with non-matching destination or source IPs.
+
+  #### Remediation
+  By default `can_ip_forward` is set to `false`.
+
+  Terraform example
+  ```
+  resource "google_compute_instance" "default" {
+      name            = "test"
+      machine_type    = "e2-medium"
+      zone            = "us-central1-a"
+  +   can_ip_forward  = true
+  }
+  ```
+
+  Using *Console*
+
+  1. Go to the `Compute Engine`.
+  2. Go to VM Instances.
+  3. Select the `VM Instance`.
+  4. Click `Delete` button.
+
+  Using *CLI*
+  ```
+  gcloud compute instances delete <VM_Name>
+  ```
+  As you can only set the `canIpForward` field at instance creation time. After an instance is created, the field becomes read-only. Therefore delete the VM instance where `canIpForward` is set to `true`.
+
+  And create a new VM Instance with `IP forwarding` is set to `Off`.
+
+  1. Go to Compute Engine.
+  2. Click the `Create instance` button.
+  3. Click Management, disk, networking, SSH keys.
+  4. Click `Networking`.
+  5. Click on the specific `Network interfaces`.
+  6. Ensure `IP forwarding` is set to `off`.
+  7. Specify any other instance parameters you desire.
+  8. Click `Create`.
+
+  #### Impact
+  Deleting instance(s) acting as routers/packet forwarders may break the network connectivity.
+
+  #### References
+  * https://cloud.google.com/compute/docs/networking#canipforward
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#can_ip_forward
+
+  #### Notes
+  You can only set the `canIpForward` field at instance creation time. After an instance is created, the field becomes read-only.
+lwid:
+  - GCP_CIS_4_5
+  - GCP_CIS12_4_6
+provider: GCP
+ruleId: CKV_GCP_36
+severity: Medium
+sid: ckv-gcp-36
+title: Ensure that IP forwarding is not enabled on Instances

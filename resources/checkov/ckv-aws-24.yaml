@@ -1,0 +1,92 @@
+category: Network
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+- CIS
+- HIPAA
+description: Security groups provide stateful filtering of ingress/egress network
+  traffic to AWS resources. It is recommended that no security group allows unrestricted
+  ingress access to port 22.
+extra:
+  entity: AWS::EC2::SecurityGroupIngress
+  type: resource
+guidelines: |-
+  #### Description
+  Security groups provide stateful filtering of ingress/egress network traffic to AWS resources. It is recommended that no security group allows unrestricted ingress access to port 22. For updating an existing environment, care should be taken to ensure that administrators currently relying on an existing ingress from 0.0.0.0/0 have access to ports 22 and/or 3389 through another security group.
+
+  #### Rationale
+  Removing unfettered connectivity to remote console services, such as SSH, reduces a server's exposure to risk.
+
+  #### Remediation
+  A Port value of `ALL` or a port range such as `0-1024` are inclusive of port 22 .
+
+  Manual Remediation:
+  1. Login to the [AWS Management Console](https://console.aws.amazon.com/vpc/home).
+  2. In the left pane, click `Security Groups`
+  3. For each security group, perform the following:
+  4. Select the security group
+  5. Click the `Inbound Rules` tab
+  6. Identify the ingress rule that allows ingress from `0.0.0.0/0` to port 22
+  7. Click the `x` in the `Remove` column
+  8. Click `Save`
+
+  Terraform example:
+  ```
+  resource "aws_security_group" "my-ingress" {
+    name = "teamA-ingress"
+    vpc_id = "vpc-12asf23e2"
+    ingress {
+        cidr_blocks = [
+  -         "0.0.0.0/0"
+  +         "192.168.10.0/24" // to a small range or known range
+        ]
+        from_port = 22
+        to_port = 22
+        protocol = "tcp"
+    }
+  }
+  ```
+
+  CloudFormation example:
+  ```
+  {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+          "GroupDescription" : "Security group to provide ingress for team A",
+          "GroupName" : "teamA-ingress",
+          "SecurityGroupIngress" : [ {
+  -         "CidrIp" : "0.0.0.0/0",
+  +         "CidrIp" : "192.168.10.0/24" // to a small range or known range
+            "Description" : "Ingress rule to port 22 from anywhere",
+            "FromPort" : "ALL",
+            "IpProtocol" : "tcp",
+            "ToPort" : 22
+          } ],
+          "VpcId" : "vpc-12asf23e2"
+        }
+  }
+  ```
+
+  From *CLI*:
+  Run the below command to remove the ingress rule for port 22.
+  ```
+  aws ec2 revoke-security-group-ingress --group-id <group-id-value> --protocol <protocol> --port 22 --cidr 0.0.0.0/0
+  ```
+
+  #### Impact
+  If you are updating an existing environment, ensure that administrators who currently rely on ingress from 0.0.0.0/0 have access to ports 22 and 3389 through another security group.
+
+  #### Note
+  A Port value of `ALL` or a port range such as `0-1024` are inclusive of port `22`, `3389`, and other remote server administration ports.
+
+  #### References
+  * https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#AddRemoveRules
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group-ingress.html
+  * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-security-groups.html#deleting-security-group-rule
+lwid:
+  - AWS_CIS_4_1
+provider: AWS
+ruleId: CKV_AWS_24
+severity: Critical
+sid: ckv-aws-24
+title: Ensure no security groups allow ingress from 0.0.0.0:0 to port 22

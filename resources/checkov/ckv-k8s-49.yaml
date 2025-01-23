@@ -1,0 +1,74 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    Kubernetes Roles and ClusterRoles provide access to resources based on sets of objects and actions that can be taken on those objects. It is possible to set either of these to be the wildcard `*` which matches all items.
+
+    Use of wildcards is not optimal from a security perspective as it may allow for inadvertent access to be granted when new resources are added to the Kubernetes API either as CRDs or in later versions of the product.
+extra:
+  entity: ClusterRole
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    Kubernetes Roles and ClusterRoles provide access to resources based on sets of objects and actions that can be taken on those objects. It is possible to set either of these to be the wildcard `*` which matches all items.
+
+    Use of wildcards is not optimal from a security perspective as it may allow for inadvertent access to be granted when new resources are added to the Kubernetes API either as CRDs or in later versions of the product.
+
+    #### Rationale
+    The principle of least privilege recommends that users are provided only the access required for their role and nothing more. The use of wildcard rights grants is likely to provide excessive rights to the Kubernetes API.
+
+    #### Audit
+    Retrieve the roles defined across each namespaces in the cluster and review for wildcards.
+    ```
+     kubectl get roles --all-namespaces -o yaml
+    ```
+
+    Retrieve the cluster roles defined in the cluster and review for wildcards.
+    ```
+    kubectl get clusterroles -o yaml
+    ```
+
+    #### Remediation
+    Where possible replace any use of wildcards in clusterroles and roles with specific objects or actions. Operators should review their workloads for proper role usage.
+
+    Role Example:
+    ```yaml
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        namespace: default
+        name: pod-reader
+      rules:
+      - apiGroups: [""] # "" indicates the core API group
+    -   resources: ["*"]
+    +   resources: ["pods"]
+        verbs: ["get", "watch", "list"]
+    ```
+
+    ClusterRole Example:
+    ```yaml
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        # "namespace" omitted since ClusterRoles are not namespaced
+        name: secret-reader
+      rules:
+      - apiGroups: [""]
+    -   resources: ["*"]
+    +   resources: ["secrets"]
+        verbs: ["get", "watch", "list"]
+    ```
+
+    #### References
+    * https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+provider: Kubernetes
+ruleId: CKV_K8S_49
+severity: High
+sid: ckv-k8s-49
+title: "Minimize wildcard use in Roles and ClusterRoles"

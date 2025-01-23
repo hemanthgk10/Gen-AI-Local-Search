@@ -1,0 +1,15 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that 'Security contact emails' is set"
+extra:
+  entity: azurerm_security_center_contact
+  type: resource
+lwid:
+  - Azure_CIS_2_16
+provider: Azure
+ruleId: CKV_AZURE_131
+severity: Low
+sid: ckv-azure-131
+title: "Ensure that 'Security contact emails' is set"

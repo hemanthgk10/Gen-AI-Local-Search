@@ -1,0 +1,47 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: "VPC Flow Logs is a feature that enables you to capture information about the IP traffic going to and from network interfaces in your VPC. After you've created a flow log, you can view and retrieve its data in Amazon CloudWatch Logs. It is recommended that VPC Flow Logs be enabled for packet `Rejects` for VPCs."
+extra:
+  entity: aws_vpc
+  type: resource
+guidelines: |-
+    #### Description
+    VPC Flow Logs is a feature that enables you to capture information about the IP traffic going to and from network interfaces in your VPC. After you've created a flow log, you can view and retrieve its data in Amazon CloudWatch Logs. It is recommended that VPC Flow Logs be enabled for packet `Rejects` for VPCs.
+
+    #### Rationale
+    VPC Flow Logs provide visibility into network traffic that traverses the VPC and can be used to detect anomalous traffic or insight during security workflows.
+
+    #### Remediation
+    Enable Flow Log to capture IP traffic for a VPC. Logs are sent to a CloudWatch Log Group or a S3 Bucket.
+
+    Terraform example
+    ```
+    resource "aws_vpc" "example" {
+        cidr_block = "10.0.0.0/16"
+        ...
+        ...
+    }
+
+    resource "aws_flow_log" "example" {
+        iam_role_arn    = aws_iam_role.example.arn
+        log_destination = aws_cloudwatch_log_group.example.arn
+        traffic_type    = "ALL"
+    +   vpc_id          = aws_vpc.example.id
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/flow_log#vpc_id
+    * https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_11
+severity: Low
+sid: ckv2-aws-11
+title: "Ensure VPC flow logging is enabled in all VPCs"

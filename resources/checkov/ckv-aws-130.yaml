@@ -1,0 +1,96 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Virtual Private Cloud (Amazon VPC) enables you to launch AWS resources into a virtual network that you've defined. It is logically isolated from other virtual networks in the AWS Cloud. You can launch your AWS resources, such as Amazon EC2 instances, into your VPC.
+
+    When you create a VPC, you must specify a range of IPv4 addresses for the VPC in the form of a Classless Inter-Domain Routing (CIDR) block; for example, 10.0.0.0/16. This is the primary CIDR block for your VPC.
+
+    A VPC spans all of the Availability Zones in the Region. After creating a VPC, you can add one or more subnets in each Availability Zone. You can optionally add subnets in a Local Zone, which is an AWS infrastructure deployment that places compute, storage, database, and other select services closer to your end users.
+
+    Each subnet must reside entirely within one Availability Zone and cannot span zones. When creating a subnet, if the `map_public_ip_on_launch` flag is set to false it creates a private subnet not accessible from public internet.
+extra:
+  entity: aws_subnet
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Virtual Private Cloud (Amazon VPC) enables you to launch AWS resources into a virtual network that you've defined. It is logically isolated from other virtual networks in the AWS Cloud. You can launch your AWS resources, such as Amazon EC2 instances, into your VPC.
+
+    When you create a VPC, you must specify a range of IPv4 addresses for the VPC in the form of a Classless Inter-Domain Routing (CIDR) block; for example, 10.0.0.0/16. This is the primary CIDR block for your VPC.
+
+    A VPC spans all of the Availability Zones in the Region. After creating a VPC, you can add one or more subnets in each Availability Zone. You can optionally add subnets in a Local Zone, which is an AWS infrastructure deployment that places compute, storage, database, and other select services closer to your end users.
+
+    Each subnet must reside entirely within one Availability Zone and cannot span zones. When creating a subnet, if the `map_public_ip_on_launch` flag is set to false it creates a private subnet not accessible from public internet.
+
+    #### Rationale
+    Assigning the Public IP to the subnet automatically (on launch) can accidentally expose the instances within this subnet to internet.
+
+    #### Remediation
+    Specifing the flag `map_public_ip_on_launch=true` indicates that instances launched into the subnet should be assigned a public IP address. This should be set to `false`.
+
+    Terraform example
+    ```
+    resource "aws_subnet" "main" {
+        vpc_id     = aws_vpc.main.id
+        cidr_block = "10.0.1.0/24"
+
+        tags = {
+          Name = "Main"
+        }
+    -   map_public_ip_on_launch = true
+    +   map_public_ip_on_launch = false
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "VpcId": "vpc-123234",
+          "CidrBlock": "10.0.1.0/24",
+    -     "MapPublicIpOnLaunch": true,
+    +     "MapPublicIpOnLaunch": false,
+          ...
+          ...
+        }
+    }
+    ```
+
+    Using *Console*:
+    1. Sign into the [AWS console](https://console.aws.amazon.com/).
+    2. In the console, select the specific region from region drop down on the top right corner, for which the alert is generated.
+    3. Navigate to the `VPC` service.
+    4. In the navigation pane, click on `Subnets`.
+    5. Select the identified Subnet and choose the option `Modify auto-assign IP settings` under the Subnet `Actions`.
+    6. Disable the `Auto-Assign IP` option and `save` it.
+
+    Using *Command Line*:
+    Run the below command
+    ```
+     aws ec2 modify-subnet-attribute --subnet-id subnet-123212 --region us-west-2  --no-map-public-ip-on-launch
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet#map_public_ip_on_launch
+    * https://docs.aws.amazon.com/vpc/latest/userguide/vpc-ip-addressing.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_130
+severity: High
+sid: ckv-aws-130
+title: "Ensure VPC subnets do not assign public IP by default"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: map_public_ip_on_launch
+    resourceAttributeType: boolean
+    resourceAttributeValue: "false"
+    resourceType: [ "aws_subnet" ]

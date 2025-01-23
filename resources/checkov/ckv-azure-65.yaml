@@ -1,0 +1,14 @@
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that App service enables detailed error messages"
+extra:
+  entity: azurerm_app_service
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_65
+severity: Low
+sid: ckv-azure-65
+title: "Ensure that App service enables detailed error messages"

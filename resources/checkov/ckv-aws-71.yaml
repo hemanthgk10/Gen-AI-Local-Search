@@ -1,0 +1,85 @@
+---
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "AWS Redshift is a managed AWS service in the cloud that can store peta bytes of data in it's data warehouse solutions. Redshift offers fast query performance using the same SQL-based tools and business intelligence applications. Monitoring data from all of the parts of AWS Solutions so that you can more easily debug a multi-point failure if one occurs."
+extra:
+  entity: aws_redshift_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Redshift is a managed AWS service in the cloud that can store peta bytes of data in it's data warehouse solutions. Redshift offers fast query performance using the same SQL-based tools and business intelligence applications. Monitoring data from all of the parts of AWS Solutions so that you can more easily debug a multi-point failure if one occurs.
+
+    #### Rationale
+    Amazon Redshift logs information about connections and user activities in your database. These logs help you to monitor the database for security and troubleshooting purposes. These logs can be often helpful for security auditing.
+
+    #### Remediation
+    Set the `logging` block for `aws_redshift_cluster` and provide the AWS S3 bucket name and prefix to store the logs.
+
+    Terraform example:
+    ```
+    resource "aws_redshift_cluster" "default" {
+        cluster_identifier = "tf-redshift-cluster"
+        database_name      = "example-db"
+        master_username    = "foo"
+        master_password    = "Mustbe8characters"
+        node_type          = "dc1.large"
+        cluster_type       = "single-node"
+    +   logging  {
+    +      enabled       = true
+    +      bucket_name   = "example-log-bucket"
+    +      s3_key_prefix = "redshift-example"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```
+    {
+      "Type" : "AWS::Redshift::Cluster",
+      "Properties" : {
+          "AllowVersionUpgrade" : true,
+          "Classic" : true,
+          "ClusterType" : "single-node",
+          "ClusterVersion" : String,
+          "DBName" : "example-db",
+          "DeferMaintenance" : true,
+    +      "LoggingProperties" : {
+    +         "BucketName" : "example-log-bucket",
+    +         "S3KeyPrefix" : "redshift-example"
+    +      }
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/redshift_cluster#logging
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-redshift-cluster.html#cfn-redshift-cluster-loggingproperties
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_71
+severity: Low
+sid: ckv-aws-71
+title: "Ensure Redshift Cluster logging is enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: logging
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      logging {
+        enabled       = true
+        bucket_name   = "<Provide bucketname to store the logs>"
+        s3_key_prefix = "<Provide prefix for AWS S3 bucket specified above>"
+      }
+    resourceType: [ "aws_redshift_cluster" ]

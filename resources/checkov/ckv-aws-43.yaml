@@ -1,0 +1,87 @@
+category: Streams
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: Ensure that your Amazon Kinesis streams are encrypted. When you send
+  data from your data producers to your data stream, Kinesis Data Streams encrypts
+  your data using an AWS Key Management Service (AWS KMS) key before storing the data
+  at rest. When your Kinesis Data Firehose delivery stream reads the data from your
+  data stream, Kinesis Data Streams first decrypts the data and then sends it to Kinesis
+  Data Firehose. Kinesis Data Firehose buffers the data in memory based on the buffering
+  hints that you specify. It then delivers it to your destinations without storing
+  the unencrypted data at rest.
+extra:
+  entity: AWS::Kinesis::Stream
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure that your Amazon Kinesis streams are encrypted. When you send data from your data producers to your data stream, Kinesis Data Streams encrypts your data using an AWS Key Management Service (AWS KMS) key before storing the data at rest. When your Kinesis Data Firehose delivery stream reads the data from your data stream, Kinesis Data Streams first decrypts the data and then sends it to Kinesis Data Firehose. Kinesis Data Firehose buffers the data in memory based on the buffering hints that you specify. It then delivers it to your destinations without storing the unencrypted data at rest.
+
+  #### Rationale
+  Ensure that your Amazon Kinesis streams are encrypted in order to meet security and compliance requirements. Encrypting the data keeps it protected from unathorized access.
+
+  #### Remediation
+  Set the `encryption_type` argument to "KMS" in `aws_kinesis_stream`. You also need specify `kms_key_id` to encrypt the data.
+
+  Terraform example:
+  ```
+  resource "aws_kinesis_stream" "test_stream" {
+      name             = "terraform-kinesis-test"
+      shard_count      = 1
+      retention_period = 48
+
+      shard_level_metrics = [
+        "IncomingBytes",
+        "OutgoingBytes",
+      ]
+  +  encryption_type  = "KMS"
+  +  kms_key_id       = "arn:aws:kms:us-west-2:111122223333:key/example"
+     ...
+     ...
+  }
+  ```
+
+  CloudFormation example:
+  ```json
+  {
+    "Type" : "AWS::Kinesis::Stream",
+    "Properties" : {
+        "Name" : "terraform-kinesis-test",
+        "RetentionPeriodHours" : 48,
+        "ShardCount" : 1,
+  +     "StreamEncryption" : {
+  +       "EncryptionType" : "KMS",
+  +       "KeyId" : "arn:aws:kms:us-west-2:111122223333:key/example"
+  +     },
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kinesis_stream
+  * https://docs.aws.amazon.com/firehose/latest/dev/encryption.html
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-kinesis-stream-streamencryption.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_43
+severity: Medium
+sid: ckv-aws-43
+title: Ensure Kinesis Stream is securely encrypted
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: encryption_type
+    resourceAttributeType: string
+    resourceAttributeValue: "KMS"
+    resourceType: [ "aws_kinesis_stream" ]
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: kms_key_id
+    resourceAttributeType: string
+    resourceAttributeValue: "<Provide the ARN of the default SSL server certificate>"
+    resourceType: [ "aws_kinesis_stream" ]

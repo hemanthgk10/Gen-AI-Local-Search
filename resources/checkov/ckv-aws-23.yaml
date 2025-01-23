@@ -1,0 +1,102 @@
+category: VPC
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: Ensure every security groups rule has a description
+extra:
+  entity: AWS::EC2::SecurityGroupEgress
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure every security groups rule has a description. As the number of security groups grow to keep resources isolated causes huge confusion on the purpose of the security group. Having a some description of it elimates any operational errors.
+
+  #### Rationale
+  Ensure that all the rules defined for your Amazon security groups have a description to help understand the use of that specific group. Adding descriptive text for security group rules will allow you to store locally useful information such as wiki links to the complete description of the group or store basic information it locally without any external links.
+
+  #### Remediation
+  Add `description` argument to `aws_security_group`, `aws_security_group_rule`, `aws_db_security_group`, `aws_elasticache_security_group` & `aws_redshift_security_group`.
+
+  Terraform example
+  ```
+  resource "aws_security_group" "allow_tls" {
+      name        = "allow_tls"
+  +   description = "Allow TLS inbound traffic"
+      vpc_id      = aws_vpc.main.id
+
+      ingress {
+  +     description = "TLS from VPC"
+        from_port   = 443
+        to_port     = 443
+        protocol    = "tcp"
+        cidr_blocks = [aws_vpc.main.cidr_block]
+      }
+
+      egress {
+  +     description = "Allow egress from ANY where"
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+      }
+      ...
+      ...
+  }
+  ```
+
+  Cloudformation example
+
+  ```json
+  {
+     "Type" : "AWS::EC2::SecurityGroup",
+     "Properties" : {
+  +     "GroupDescription" : "Allow TLS inbound traffic",
+        "VpcId" : {"Ref" : "myVPC"},
+        "SecurityGroupIngress" : [{
+  +        "Description": "TLS from VPC",
+           "IpProtocol" : "tcp",
+           "FromPort" : 80,
+           "ToPort" : 80,
+           "CidrIp" : "0.0.0.0/0"
+        }],
+        "SecurityGroupEgress" : [{
+  +        "Description" : "Allow egress from ANY where",
+           "IpProtocol" : "tcp",
+           "FromPort" : 80,
+           "ToPort" : 80,
+           "CidrIp" : "0.0.0.0/0"
+        }]
+        ...
+        ...
+     }
+     ...
+     ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group#description
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_23
+severity: Low
+sid: ckv-aws-23
+title: Ensure every security groups rule has a description
+autofix: false
+remediation:
+- checkType: CloudFormation
+  steps:
+  - actions: modify
+    resource: [ "resource" ]
+    resourceAttribute: GroupDescription
+    resourceAttributeType: string
+    resourceAttributeValue: "<Provide a valid description for a security group>"
+    resourceType: [ "AWS::EC2::SecurityGroup" ]
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: description
+    resourceAttributeType: string
+    resourceAttributeValue: "<Provide a valid description that makes it clear the usage of this security group>"
+    resourceType: [ "aws_security_group" ]

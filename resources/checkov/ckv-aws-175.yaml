@@ -1,0 +1,52 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS WAF is a web application firewall that helps protect your web applications or APIs against common web exploits and bots that may affect availability, compromise security, or consume excessive resources.
+
+    AWS WAF gives you control over how traffic reaches your applications by enabling you to create security rules that control bot traffic and block common attack patterns, such as SQL injection or cross-site scripting.
+extra:
+  entity: aws_waf_web_acl
+  type: resource
+guidelines: |-
+    #### Description
+    AWS WAF is a web application firewall that helps protect your web applications or APIs against common web exploits and bots that may affect availability, compromise security, or consume excessive resources.
+
+    AWS WAF gives you control over how traffic reaches your applications by enabling you to create security rules that control bot traffic and block common attack patterns, such as SQL injection or cross-site scripting.
+
+    #### Rationale
+    AWS WAF Rules define how to inspect web requests and what to do when a web request matches the inspection criteria. It can prevent an attacker's embeded malicious scripts from exploiting a web application
+
+    #### Remediation
+    Make sure that `aws_waf_web_acl` has at least a rule configured.
+
+    Terraform example
+    ```
+    resource "aws_waf_web_acl" "waf_acl" {
+        name        = "tfWebACL"
+        metric_name = "tfWebACL"
+    +   rules {
+    +      action {
+    +        type = "BLOCK"
+    +      }
+    +
+    +      priority = 1
+    +      rule_id  = "${aws_waf_rule.wafrule.id}"
+    +      type     = "REGULAR"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/babylonhealth/aws-babylon/latest/docs/resources/waf_web_acl#rules
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-cloudfront-distribution-viewercertificate.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_175
+severity: Critical
+sid: ckv-aws-175
+title: "Ensure WAF has associated rules"

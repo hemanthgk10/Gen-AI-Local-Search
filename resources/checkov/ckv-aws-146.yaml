@@ -1,0 +1,85 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud. It provides cost-efficient, resizable capacity for an industry-standard relational database and manages common database administration tasks.
+
+    RDS snapshots can be unencrypted or they can be encrypted at rest. Today, best practice is to use encryption-at-rest on your RDS instances and clusters, and to encrypt your RDS snapshots.
+
+    When you create an RDS snapshot from an RDS instance or cluster, the resulting snapshot will be encrypted if the source instance or cluster is encrypted. But if the source is not encrypted, then your RDS snapshot is not encrypted. When you create an RDS snapshot, you are not given the option to encrypt it.
+extra:
+  entity: aws_db_cluster_snapshot
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud. It provides cost-efficient, resizable capacity for an industry-standard relational database and manages common database administration tasks.
+
+    RDS snapshots can be unencrypted or they can be encrypted at rest. Today, best practice is to use encryption-at-rest on your RDS instances and clusters, and to encrypt your RDS snapshots.
+
+    When you create an RDS snapshot from an RDS instance or cluster, the resulting snapshot will be encrypted if the source instance or cluster is encrypted. But if the source is not encrypted, then your RDS snapshot is not encrypted.
+
+    #### Rationale
+    Customers can protect the data in RDS snapshot as well using encryption. If the `storage_encryption` is not turned on for snapshots, in the event of a data breach, malicious users can gain access to the data from snapshots as well.
+
+    #### Remediation
+    set `storage_encrypted` to true for `aws_db_cluster_snapshot` and provide kms key id for encrypting the content.
+
+    Terraform example
+    ```
+    data "aws_db_cluster_snapshot" "development_final_snapshot" {
+        db_cluster_identifier = "development_cluster"
+        most_recent           = true
+    +   storage_encrypted     = true
+    +   kms_key_id            = "arn:aws:kms:us-west-2:111122223333:key/xyz"
+        ...
+        ...
+    }
+
+    resource "aws_rds_cluster" "aurora" {
+        cluster_identifier   = "development_cluster"
+        snapshot_identifier  = data.aws_db_cluster_snapshot.development_final_snapshot.id
+        db_subnet_group_name = "my_db_subnet_group"
+
+        lifecycle {
+          ignore_changes = [snapshot_identifier]
+        }
+        ...
+        ...
+    }
+    ```
+
+    Using *Console*:
+    1. Open the [Amazon RDS console](https://console.aws.amazon.com/rds), and then choose `Snapshots` from the navigation pane.
+    2. Select the snapshot that you want to encrypt.
+    3. Under `Snapshot Actions`, choose Copy `Snapshot`.
+    4. Choose your `Destination` Region, and then enter your `New DB Snapshot Identifier`.
+    5. Change `Enable Encryption` to `Yes`.
+    6. Select your `Master Key` from the list, and then choose `Copy Snapshot`.
+    7. After the snapshot status is available, the `Encrypted` field will be `True` to indicate that the snapshot is encrypted.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/db_cluster_snapshot#storage_encrypted
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_146
+severity: Medium
+sid: ckv-aws-146
+title: "Ensure that RDS database cluster snapshot is encrypted"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: storage_encrypted
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_db_cluster_snapshot" ]
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: kms_key_id
+    resourceAttributeType: string
+    resourceAttributeValue: "<Please provide the KMS key arn here>"
+    resourceType: [ "aws_db_cluster_snapshot" ]

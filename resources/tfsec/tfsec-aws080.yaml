@@ -1,0 +1,109 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "AWS CodeBuild is a managed service that compiles your source code, runs unit tests and produces artifacts that are ready to deploy. It provides prepackaged build environments for popular programming languages and build tools eliminating the need for manual provision or scaling your build servers. We should ensure that there is no sensitive information available in the CodeBuild data."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws080.go"
+guidelines: |-
+    #### Description
+    AWS CodeBuild is a managed service that compiles your source code, runs unit tests and produces artifacts that are ready to deploy. It provides prepackaged build environments for popular programming languages and build tools eliminating the need for manual provision or scaling your build servers. We should ensure that there is no sensitive information available in the CodeBuild data, so all artifacts produced by your CodeBuild project pipeline should always be encrypted
+
+    #### Rationale
+    In order to meet compliance and security requirements it is always encouraged to encrypt the CodeBuild project. Any sensitive information that is not encrypted and not secured might be picked up for inclusion in diagnostic logs.
+
+    Following information should always be hidden in CodeBuild logs:
+
+    * AWS access keys
+    * Strings specified using AWS Secrets Manager
+    * Strings specified using the Parameter Store
+
+    #### Remediation
+    Set the `encryption_key` which is a KMS_key to encrypt the data and also make sure that `encryption_disabled` is false in `s3_logs`, `artifacts` and `secondary_artifacts`.
+
+    Terraform example:
+    ```
+    resource "aws_codebuild_project" "example" {
+        name           = "test-project"
+        description    = "test_codebuild_project"
+        build_timeout  = "5"
+        service_role   = aws_iam_role.example.arn
+    +   encryption_key = "alias/aws/codebuild-key"
+        artifacts {
+          type                = "TEST_ARTIFACTS"
+    -     encryption_disabled = "true"
+    +     encryption_disabled = "false"
+          ...
+          ...
+        }
+        s3_logs {
+          status   = "ENABLED"
+          location = "${aws_s3_bucket.example.id}/build-log"
+    -     encryption_disabled = "true"
+    +     encryption_disabled = "false"
+          ...
+          ...
+        }
+        secondary_artifacts {
+    -     encryption_disabled = "true"
+    +     encryption_disabled = "false"
+          ...
+          ...
+        }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codebuild_project
+    * https://docs.aws.amazon.com/codebuild/latest/userguide/data-protection.html
+    * https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: encryption_key
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide the ARN of KMS encryption key>"
+        resourceType:
+          - aws_codebuild_project
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: artifacts.encryption_disabled
+        resourceAttributeType: blockAttribute
+        resourceAttributeValue: "false"
+        resourceType:
+          - aws_codebuild_project
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: s3_logs.encryption_disabled
+        resourceAttributeType: blockAttribute
+        resourceAttributeValue: "false"
+        resourceType:
+          - aws_codebuild_project
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: secondary_artifacts.encryption_disabled
+        resourceAttributeType: blockAttribute
+        resourceAttributeValue: "false"
+        resourceType:
+          - aws_codebuild_project
+ruleId: AWS080
+severity: Medium
+sid: tfsec-aws080
+title: "CodeBuild Project artifacts encryption should not be disabled"

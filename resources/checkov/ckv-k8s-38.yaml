@@ -1,0 +1,57 @@
+category: IAM
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+- CIS
+description: |-
+  The default service account should not be used to ensure that rights granted to applications can be more easily audited and reviewed. By default the `default` ServiceAccount allows for its service account token to be mounted in pods in its namespace.
+  So, ensure that Service Account Tokens are only mounted where necessary.
+extra:
+  entity: CronJob
+guidelines: |-
+  #### Description
+  The default service account should not be used to ensure that rights granted to applications can be more easily audited and reviewed. By default the `default` ServiceAccount allows for its service account token to be mounted in pods in its namespace.
+
+  So, ensure that Service Account Tokens are only mounted where necessary.
+
+  #### Rationale
+  Kubernetes provides a default service account which is used by cluster workloads where no specific service account is assigned to the pod.
+  Where access to the Kubernetes API from a pod is required, a specific service account should be created for that pod, and rights granted to that service account.
+  The default service account should be configured such that it does not provide a service account token and does not have any explicit rights assignments.
+
+  #### Remediation
+  By default the `default` ServiceAccount allows for its service account token to be mounted in pods in its namespace. Instead, create explicit service accounts wherever a Kubernetes workload requires specific access to the Kubernetes API server.
+
+  Modify the configuration of each default service account to include this value to prevent kubernetes from auto mounting the serviceAccount token.
+
+  ```yaml
+  automountServiceAccountToken: false
+  ```
+
+  For example,
+
+  ```yaml
+  apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: build-robot
+  automountServiceAccountToken: false
+
+  ---
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: my-pod
+  spec:
+    serviceAccountName: build-robot
+    automountServiceAccountToken: false
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  * https://github.com/kubernetes/kubernetes/issues/57601
+provider: Kubernetes
+ruleId: CKV_K8S_38
+severity: Low
+sid: ckv-k8s-38
+title: Ensure that Service Account Tokens are only mounted where necessary

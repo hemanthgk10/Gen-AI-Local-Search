@@ -1,0 +1,43 @@
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: Ensure the Tiller Deployment (Helm V2) is not accessible from within
+  the cluster
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  Helm is a package manager for kubernetes. Tiller is a component of helm that resides in kubernetes cluster and interacts with Kubernetes API server to install, upgrade, remove kubernetes objects.
+
+  Tiller has lot of access permission as it needs to operate on Kubernetes objects for all the operations.
+
+  #### Rationale
+  Tiller has lot of access permission as it needs to operate on Kubernetes objects for all the operations. And it can be security risk with such excess permissions.
+
+  #### Remediation
+  * Use Helm 3 instead of Helm 2. Migration from Helm 2 to 3 can be done by following
+    https://helm.sh/docs/topics/v2_v3_migration/
+
+  Example of Tiller (Helm V2) pod which has `--listen` option set to `localhost` or `127.0.0.1`.
+  ```yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: tiller2
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: hello
+        image: ghcr.io/helm/tiller:v2.0.0-beta.1
+        command: ["tiller"]
+  +     args: ["--listen localhost"]
+  ```
+
+  #### References
+  * https://helm.sh/
+provider: Kubernetes
+ruleId: CKV_K8S_45
+severity: Medium
+sid: ckv-k8s-45
+title: Ensure the Tiller Deployment (Helm V2) is not accessible from within the cluster

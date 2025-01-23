@@ -1,0 +1,55 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Shielded GKE nodes protects clusters against boot- or kernel-level malware or rootkits which persist beyond infected OS.
+
+    Shielded GKE nodes run firmware which is signed and verified using Google's Certificate Authority, ensuring that the nodes' firmware is unmodified and establishing the root of trust for Secure Boot. GKE node identity is strongly protected via virtual Trusted Platform Module (vTPM) and verified remotely by the master node before the node joins the cluster. Lastly, GKE node integrity (i.e., boot sequence and kernel) is measured and can be monitored and verified remotely.
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Shielded GKE nodes protects clusters against boot- or kernel-level malware or rootkits which persist beyond infected OS.
+
+    Shielded GKE nodes run firmware which is signed and verified using Google's Certificate Authority, ensuring that the nodes' firmware is unmodified and establishing the root of trust for Secure Boot. GKE node identity is strongly protected via virtual Trusted Platform Module (vTPM) and verified remotely by the master node before the node joins the cluster. Lastly, GKE node integrity (i.e., boot sequence and kernel) is measured and can be monitored and verified remotely.
+
+    #### Rationale
+    Shielded GKE Nodes provides verifiable integrity via secure boot, virtual trusted platform module (vTPM)-enabled measured boot, and integrity monitoring.
+
+    #### Remediation
+    Set the `enable_shielded_nodes` to `true`.
+
+    Terraform example
+    ```
+    resource "google_container_cluster" "example_bucket" {
+        name                  = "marcellus-wallace"
+        location              = "us-central1-a"
+        initial_node_count    = 3
+    +   enable_shielded_nodes = true
+        ...
+        ...
+    }
+    ```
+
+    #### Impact
+    After you enable Shielded GKE Nodes in a cluster, any nodes created in a Node pool without Shielded GKE Nodes enabled, or created outside of any Node pool, aren't able to join the cluster.
+
+    Shielded GKE Nodes can only be used with Container-Optimized OS (COS), COS with containerd, and Ubuntu node images.
+
+    #### Default Value
+    Currently, Shielded GKE Nodes are not enabled by default.
+
+    If Shielded GKE Nodes are enabled, Integrity Monitoring (through Stackdriver) is enabled by default and Secure Boot is disabled by default.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#enable_shielded_nodes
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/shielded-gke-nodes
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_71
+severity: Medium
+sid: ckv-gcp-71
+title: "Ensure Shielded GKE Nodes are Enabled"

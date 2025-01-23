@@ -1,0 +1,140 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Privilege escalation, is a type of network intrusion that takes advantage of mis-configuration in the IAM policies to grant the attacker elevated access to the AWS resources."
+extra:
+  entity: aws_iam_policy_document
+  type: resource
+guidelines: |-
+    #### Description
+    AWS IAM policies are JSON-formatted objects that specify actions and resources on which those actions can be taken. The policy is then attached to a resource, such as a user account, EC2 instance, or internal AWS function, allowing that resource to make API calls to execute actions within the account.
+
+    Privilege escalation, is a type of network intrusion that takes advantage of mis-configuration in the IAM policies to grant the attacker elevated access to the AWS resources.
+
+    Categories of privilege escalation are:
+
+    * IAM Permissions on other Users
+    * Permissions on Policies
+    * Updating an AssumeRole Policy
+    * `iam:PassRole:*`
+    * Privilege Escalation using AWS Services
+
+    `IAM Permissions on Other Users`
+    *Creating a new user access key for a different user:* An attacker with the iam:CreateAccessKey permission on other users can create an access key ID and secret access key belonging to another user in the AWS environment, if they don’t already have two sets associated with them (which best practice says they shouldn’t).
+
+    *Creating a new login profile for an IAM user:* An attacker with the iam:CreateLoginProfile permission on other users can create a password to use to login to the AWS console on any user that does not already have a login profile setup.
+
+    *Updating an existing login profile for an IAM user:* An attacker with the iam:UpdateLoginProfile permission on other users can change the password used to login to the AWS console on any user that already has a login profile setup.
+
+    *Adding a user to an Admin group:* An attacker with the iam:AddUserToGroup permission can use it to add themselves to an existing IAM Group in the AWS account.
+
+    `Permissions on Policies`
+    *Creating a new policy version to define custom permissions:* An attacker with the iam:CreatePolicyVersion permission can create a new version of an IAM policy that they have access to. This allows them to define their own custom permissions.
+
+    *Setting the default policy version to an existing version:* An attacker with the iam:SetDefaultPolicyVersion permission may be able to escalate privileges through existing policy versions that are not currently in use.
+
+    *Attaching a higher-privileged policy to a user that they have access to:* An attacker with the iam:AttachUserPolicy permission can escalate privileges by attaching a policy to a user that they have access to, adding the permissions of that policy to the attacker.
+
+    *Attaching a higher-privileged policy to a group that they have access to:* An attacker with the iam:AttachGroupPolicy permission can escalate privileges by attaching a policy to a group that they are a part of, adding the permissions of that policy to the attacker.
+
+    *Attaching a higher-privileged policy to a role that they have access to:* An attacker with the iam:AttachRolePolicy permission can escalate privileges by attaching a policy to a role that they have access to, adding the permissions of that policy to the attacker.
+
+    *Creating/updating an inline policy for a user:* An attacker with the iam:PutUserPolicy permission can escalate privileges by creating or updating an inline policy for a user that they have access to, adding the permissions of that policy to the attacker.
+
+    *Creating/updating an inline policy for a group:* An attacker with the iam:PutGroupPolicy permission can escalate privileges by creating or updating an inline policy for a group that they are a part of, adding the permissions of that policy to the attacker.
+
+    *Creating/updating an inline policy for a role:* An attacker with the iam:PutRolePolicy permission can escalate privileges by creating or updating an inline policy for a role that they have access to, adding the permissions of that policy to the attacker.
+
+    `Updating an AssumeRole Policy`
+    *Updating the AssumeRolePolicyDocument of a role:* An attacker with the iam:UpdateAssumeRolePolicy and sts:AssumeRole permissions would be able to change the assume role policy document of any existing role to allow them to assume that role.
+
+    `iam:PassRole`
+    *Creating an EC2 instance with an existing instance profile:* An attacker with the iam:PassRole and ec2:RunInstances permissions can create a new EC2 instance that they will have operating system access to and pass an existing EC2 instance profile/service role to it.
+
+    *Passing a new role to a Lambda function, then invoking it:* A user with the iam:PassRole, lambda:CreateFunction, and lambda:InvokeFunction permissions can escalate privileges by passing an existing IAM role to a new Lambda function that includes code to import the relevant AWS library to their programming language of choice, then using it perform actions of their choice.
+
+    *Passing a role to a new Lambda function, then triggering it with DynamoDB:* A user with the iam:PassRole, lambda:CreateFunction, and lambda:CreateEventSourceMapping (and possibly dynamodb:PutItem and dynamodb:CreateTable) permissions, but without the lambda:InvokeFunction permission, can escalate privileges by passing an existing IAM role to a new Lambda function that includes code to import the relevant AWS library to their programming language of choice, then using it perform actions of their choice.
+
+    *Passing a role to a new Lambda function, then triggering it with DynamoDB:* A user with the iam:PassRole, lambda:CreateFunction, and lambda:CreateEventSourceMapping (and possibly dynamodb:PutItem and dynamodb:CreateTable) permissions, but without the lambda:InvokeFunction permission, can escalate privileges by passing an existing IAM role to a new Lambda function that includes code to import the relevant AWS library to their programming language of choice, then using it perform actions of their choice.
+
+    *Updating the code of an existing privileged Lambda function:* An attacker with the lambda:UpdateFunctionCode permission could update the code in an existing Lambda function with an IAM role attached so that it would import the relevant AWS library in that programming language and use it to perform actions on behalf of that role.
+
+    *Passing a role to a Glue Development Endpoint:* An attacker with the iam:PassRole and glue:CreateDevEndpoint permissions could create a new AWS Glue development endpoint and pass an existing service role to it.
+
+    *Passing a role to CloudFormation:* An attacker with the iam:PassRole and cloudformation:CreateStack permissions would be able to escalate privileges by creating a CloudFormation template that will perform actions and create resources using the permissions of the role that was passed when creating a CloudFormation stack.
+
+    *Passing a role to Data Pipeline:* An attacker with the iam:PassRole, datapipeline:CreatePipeline, and datapipeline:PutPipelineDefinition permissions would be able to escalate privileges by creating a pipeline and updating it to run an arbitrary AWS CLI command or create other resources, either once or on an interval with the permissions of the role that was passed in.
+
+    `Privilege Escalation using AWS Services`
+    *Updating an existing Glue Dev Endpoint:* An attacker with the glue:UpdateDevEndpoint permission would be able to update the associated SSH public key of an existing Glue development endpoint, to then SSH into it and have access to the permissions the attached role has access to.
+
+    #### Rationale
+    Ensure that IAM policies doesn't contain actions that allow privilege escalation as it can grant access to AWS resources that can lead to a security attack and expose sensitive information.
+
+    #### Remediation
+    Avoid actions in the IAM policy, that can allow privilege escalation to AWS resources.
+
+    Terraform example:
+    ```
+    data "aws_iam_policy_document" "example" {
+        statement {
+           sid = "1"
+           actions = [
+             "s3:ListAllMyBuckets",
+             "s3:GetBucketLocation",
+    -        "iam:PassRole:*",
+           ]
+
+        }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```
+    {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyDocument" : {
+          "Version": "2020-10-17",
+          "Statement": [
+              {
+                  "Sid": "AllowAllUsersToListAccounts",
+                  "Effect": "Allow",
+                  "Action": [
+    -                 "iam:PassRole:*",
+                      "s3:ListAllMyBuckets",
+                      "s3:GetBucketLocation"
+                   ],
+                  ...
+                  ...
+              }
+          ]
+        },
+        "PolicyName" : "s3-default-bucket-policy",
+        ...
+        ...
+      }
+    }
+    ```
+
+    Manual Steps:
+    1. Navigate to [Identity and Access Management][iam-console]
+    2. In the left navigation, select `Policies`.
+    3. Select the Policy and edit the document to define only the explicit permissions necessary for the role.
+    4. Repeat for each policy, remove the actions that can allow privilege escalation.
+
+    #### References
+    * https://cloudsplaining.readthedocs.io/en/latest/glossary/privilege-escalation/
+    * https://blog.cloudsploit.com/privilege-escalation-in-amazon-web-services-cb4837365958
+
+    [iam-console]: https://console.aws.amazon.com/iam/
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_110
+severity: Critical
+sid: ckv-aws-110
+title: "Ensure IAM policies does not allow privilege escalation"

@@ -1,0 +1,53 @@
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+- CIS
+description: Minimize the admission of containers with capabilities assigned
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  Do not generally permit init containers with capabilities assigned beyond the default set.
+
+  #### Rationale
+  Containers run with a default set of capabilities as assigned by the Container Runtime. Capabilities outside this set can be added to containers which could expose them to risks of container breakout attacks.
+
+  #### Remediation
+  Ensure that `securityContext.capabilities` is configured to drop all the `capabilities` for both `containers` and `initContainers`.
+
+  Example of Pod
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: flask-cap
+    namespace: default
+  spec:
+    containers:
+    - image: mateobur/flask
+      name: flask-cap
+  +   securityContext:
+  +     capabilities:
+  +       drop:
+  +       - ALL
+      ...
+      ...
+    initContainers:
+    - image: init-container
+      name: configeditor
+  +   securityContext:
+  +     capabilities:
+  +       drop:
+  +       - ALL
+      ...
+      ...
+
+  #### References
+  * https://www.nccgroup.trust/uk/our-research/abusing-privileged-and-unprivileged-linux-containers/
+provider: Kubernetes
+ruleId: CKV_K8S_37
+severity: Medium
+sid: ckv-k8s-37
+title: Minimize the admission of containers with capabilities assigned

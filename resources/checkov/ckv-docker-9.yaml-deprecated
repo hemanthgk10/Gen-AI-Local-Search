@@ -1,0 +1,49 @@
+---
+category: Networking
+checkTool: checkov
+checkType: Docker
+compliance: []
+description: "Ensure that APT isn't used"
+guidelines: |-
+    #### Description
+    The `MAINTAINER` instruction sets the author field of the generated images. But the `LABEL` instruction is much more flexible version of this.
+
+    #### Rationale
+    `LABEL` is a key-value pair instead of a single value field like `MAINTAINER`.  An image can have more than one `LABEL`, which helps to assign more metadata to the container image.
+
+    #### Remediation
+    Use `LABEL` instruction rather than `MAINTAINER` in the dockerfile.
+
+    Dockerfile example:
+    ```
+      FROM ubuntu:18.04
+    - RUN apt update && apt -y install build-essential wget
+    + RUN apt-get update && apt-get -y install wget
+
+      RUN wget http://nginx.org/download/nginx-1.20.2.tar.gz
+
+      RUN tar -xzvf nginx-1.20.2.tar.gz
+
+      WORKDIR nginx-1.20.2
+
+      RUN ./configure \
+          --sbin-path=/usr/bin/nginx \
+          --conf-path=/etc/nginx/nginx.conf \
+          --error-log-path=/var/log/nginx/error.log \
+          --http-log-path=/var/log/nginx/access.log \
+          --with-pcre \
+          --pid-path=/var/run/nginx.pid \
+          --with-http_ssl_module
+
+      RUN make && make install
+    ```
+
+    #### References
+    * https://docs.docker.com/engine/reference/builder/#label
+    * https://docs.docker.com/engine/reference/builder/#maintainer-deprecated
+lwid: []
+provider: Docker
+ruleId: CKV_DOCKER_9
+severity: Medium
+sid: ckv-docker-9
+title: "Ensure that APT isn't used"

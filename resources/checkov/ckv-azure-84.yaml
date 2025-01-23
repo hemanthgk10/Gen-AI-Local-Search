@@ -1,0 +1,17 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "Ensure that Azure Defender is set to On for Storage"
+extra:
+  entity: azurerm_security_center_subscription_pricing
+  type: resource
+lwid:
+  - Azure_CIS_131_2_5
+provider: Azure
+ruleId: CKV_AZURE_84
+severity: Low
+sid: ckv-azure-84
+title: "Ensure that Azure Defender is set to On for Storage"

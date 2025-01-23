@@ -1,0 +1,85 @@
+---
+autofix: true
+category: "Load Balancers"
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "Application/Network Load Balancing (ALB/NLB) automatically distributes your incoming traffic across multiple targets, such as EC2 instances, containers, and IP addresses. It monitors the health of its registered targets, and routes traffic only to the healthy ones. Access logs of ELB provides detailed information about the requests sent, time requet was sent, latencies, client's IP address, requests path. These can be used to analyze traffic patterns and also debugging issues."
+extra:
+  entity: aws_alb
+  type: resource
+guidelines: |-
+    #### Description
+    Application/Network Load Balancing (ALB/NLB) automatically distributes your incoming traffic across multiple targets, such as EC2 instances, containers, and IP addresses. It monitors the health of its registered targets, and routes traffic only to the healthy ones. Access logs of these provides detailed information about the requests sent, time requet was sent, latencies, client's IP address, requests path. These can be used to analyze traffic patterns and also debugging issues.
+
+    #### Rationale
+    Access logs of an LBs can provide very useful information about the client's IP Address, resources requested etc for security and auditing purposes.
+
+    #### Remediation
+    Set the `access_logs.enabled` to true always in `aws_lb` and `aws_alb`.
+
+    Terraform example:
+    ```
+    resource "aws_lb" "test" {
+        name               = "test-lb-tf"
+        internal           = false
+        load_balancer_type = "application"
+        security_groups    = [aws_security_group.lb_sg.id]
+        subnets            = aws_subnet.public.*.id
+
+        access_logs {
+          bucket  = aws_s3_bucket.lb_logs.bucket
+          prefix  = "test-lb"
+    -     enabled = false
+    +     enabled = true
+        }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+
+    ```
+    {
+      "Type" : "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties" : {
+          "IpAddressType": "ipv4",
+          "Scheme" : "internal",
+          "Name" : "api-lb",
+    +     "LoadBalancerAttributes" : {
+    +        "access_logs.s3.enabled" : true,
+    +        "access_logs.s3.bucket" : "example-bucket"
+    +     },
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/modules/terraform-aws-modules/alb/aws/latest
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb#access_logs
+    * https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-elasticloadbalancingv2-loadbalancer-loadbalancerattributes.html
+lwid:
+  - LW_AWS_NETWORKING_49
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: access_logs.enabled
+        resourceAttributeType: blockAttribute
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_lb
+ruleId: CKV_AWS_91
+severity: Low
+sid: ckv-aws-91
+title: "Ensure the ELBv2 has access logging enabled"

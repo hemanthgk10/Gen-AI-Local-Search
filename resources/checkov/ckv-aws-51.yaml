@@ -1,0 +1,78 @@
+---
+category: Containers
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: |-
+    Amazon Elastic Container Registry (ECR) is a fully managed container registry that makes it easy to store, manage, share, and deploy your container images and artifacts anywhere. Amazon ECR eliminates the need to operate your own container repositories or worry about scaling the underlying infrastructure. Amazon ECR hosts your images in a highly available and high-performance architecture, allowing you to reliably deploy images for your container applications.
+    ECR supports immutable tags, a capability that prevents image tags from being overwritten. Previously, tags could be overwritten requiring manual methodologies to uniquely identify an image, but now with tag immutability you can use a common, intuitive approach which easily integrates with your CI/CD build options.
+    Ensuring ECR image tags to be immutable, helps in uniquely identifying the images. This helps in correlating the deployed image version with the build that produced the image.
+extra:
+  entity: "AWS::ECR::Repository"
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elastic Container Registry (ECR) is a fully managed container registry that makes it easy to store, manage, share, and deploy your container images and artifacts anywhere. Amazon ECR eliminates the need to operate your own container repositories or worry about scaling the underlying infrastructure. Amazon ECR hosts your images in a highly available and high-performance architecture, allowing you to reliably deploy images for your container applications.
+
+    ECR supports immutable tags, a capability that prevents image tags from being overwritten. Previously, tags could be overwritten requiring manual methodologies to uniquely identify an image, but now with tag immutability you can use a common, intuitive approach which easily integrates with your CI/CD build options.
+
+    Ensuring ECR image tags to be immutable, helps in uniquely identifying the images. This helps in correlating the deployed image version with the build that produced the image.
+
+    #### Rationale
+    Immutable tags can prevent image tags from being overwritten. If tags are immutable, it helps to uniquely identify an image and also helps to easily integrate in CI/CD build options.
+
+    #### Remediation
+    Set `aws_ecr_repository.image_tag_mutability` to `IMMUTABLE`.
+
+    Terraform example:
+    ```
+    resource "aws_ecr_repository" "foo" {
+      name                 = "bar"
+    - image_tag_mutability = "MUTABLE"
+    + image_tag_mutability = "IMMUTABLE"
+
+      image_scanning_configuration {
+        scan_on_push = true
+      }
+      ...
+      ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+      "Type" : "AWS::ECR::Repository",
+      "Properties" : {
+          "ImageScanningConfiguration" : {
+             "scanOnPush": "true"
+          },
+          "RepositoryName" : "bar",
+    -     "ImageTagMutability" : "MUTABLE",
+    +     "ImageTagMutability" : "IMMUTABLE",
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://aws.amazon.com/about-aws/whats-new/2019/07/amazon-ecr-now-supports-immutable-image-tags
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository#image_tag_mutability
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecr-repository.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_51
+severity: Low
+sid: ckv-aws-51
+title: "Ensure ECR Image Tags are immutable"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: image_tag_mutability
+    resourceAttributeType: string
+    resourceAttributeValue: "IMMUTABLE"
+    resourceType: [ "aws_ecr_repository" ]

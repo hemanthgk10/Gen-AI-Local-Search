@@ -1,0 +1,52 @@
+---
+category: Security
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: |-
+    Github repository should be set to be private.
+    You can do this by either setting private attribute to `true` or visibility attribute to `internal` or `private`
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/gen003.go"
+guidelines: |-
+    #### Description
+    Github repository should be set to be private.
+
+    You can do this by either setting private attribute to `true` or visibility attribute to `internal` or `private`.
+
+    #### Rationale
+    Checking the password in to the code is dangerous and exposes the password to every one. This might also check-in into the source control increasing the risk of accidental leak to un-intended users.
+
+    #### Remediation
+    Set the `visibility` flag to either `private` or `internal`. If your organization is associated with an enterprise account using GitHub Enterprise Cloud or GitHub Enterprise Server 2.20+, then only visibility can be set to `internal`.
+
+    The visibility parameter overrides the `private` parameter.
+
+    Terraform example
+    ```
+    resource "github_repository" "bad_example" {
+        name        = "example"
+        description = "My awesome codebase"
+
+    -   visibility  = "public"
+    +   visibility  = "private"
+
+        template {
+          owner = "github"
+          repository = "terraform-module-template"
+        }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository#visibility
+    * https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-repository-visibility
+    * https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-repository-visibility#about-internal-repositories
+lwid: []
+provider: GCP
+ruleId: GEN004
+severity: Critical
+sid: tfsec-gen004
+title: "Github repository shouldn't be public"

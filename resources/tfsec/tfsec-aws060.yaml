@@ -1,0 +1,69 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Athena databases and workspace result sets should be encrypted at rests. These databases and query sets are generally derived from data in S3 buckets and should have the same level of at rest protection."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws060.go"
+guidelines: |-
+    #### Description
+    Amazon Athena is an interactive query service that makes it easy to analyze data directly in Amazon Simple Storage
+    Service (Amazon S3) using standard SQL. Athena Database uses the 256-bit Advanced Encryption Standard (AES-256)
+    to encrypt your data using encryption keys stored in AWS Key Management Service (AWS KMS). AWS handles data encryption
+    and decryption transparently with minimal impact on DB performance. While encrypting, we should also make sure that
+    client is not able to disable the encryption.
+
+    #### Rationale
+    Ensure that AWS Athena is encrypted at rest for data security and in order to meet compliance requirements.
+    The encrypted data includes your Athena query results in S3 bucket and the data in the AWS Glue Data Catalog. We don't
+    want the client be able to disable the encyrption accidentally or purposefully by enabling a flag.
+
+    #### Remediation
+    Set the `configuration.enforce_workgroup_configuration` to true for enforcing configuration to prevent client
+    from disabling the encryption.
+
+    Terraform example:
+    ```
+    resource "aws_athena_workgroup" "example" {
+      name = "example"
+
+      configuration {
+    +   enforce_workgroup_configuration    = true
+        publish_cloudwatch_metrics_enabled = true
+
+        result_configuration {
+          output_location = "s3://${aws_s3_bucket.example.bucket}/output/"
+
+          encryption_configuration {
+            encryption_option = "SSE_KMS"
+            kms_key_arn       = aws_kms_key.example.arn
+          }
+        }
+      }
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/athena/latest/ug/workgroups-settings.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/athena_workgroup#enforce_workgroup_configuration
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: configuration.enforce_workgroup_configuration
+        resourceAttributeType: blockAttribute
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_athena_workgroup
+ruleId: AWS060
+severity: High
+sid: tfsec-aws060
+title: "Athena workgroups should enforce configuration to prevent client disabling encryption"

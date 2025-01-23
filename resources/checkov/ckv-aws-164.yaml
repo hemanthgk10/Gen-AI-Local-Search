@@ -1,0 +1,67 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS Transfer Family is a secure transfer service that enables you to transfer files into and out of Amazon Simple Storage Service (S3) and Amazon Elastic File System (EFS) using SFTP, FTPS, and FTP protocols. Common use cases for Transfer Family with Amazon S3 are the following:
+
+      a. Data lakes in AWS for uploads from third parties such as vendors and partners.
+      b. Subscription-based data distribution with your customers.
+      c. Internal transfers within your organization.
+
+    Access to this type of data should be provided only to the authorized users only.
+extra:
+  entity: aws_transfer_server
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Transfer Family is a secure transfer service that enables you to transfer files into and out of Amazon Simple Storage Service (S3) and Amazon Elastic File System (EFS) using SFTP, FTPS, and FTP protocols. Common use cases for Transfer Family with Amazon S3 are the following:
+
+      a. Data lakes in AWS for uploads from third parties such as vendors and partners.
+      b. Subscription-based data distribution with your customers.
+      c. Internal transfers within your organization.
+
+    Access to this type of data should be provided only to the authorized users only.
+
+    #### Rationale
+    Not having a public transfer server can prevent unauthorized access to the data.
+
+    #### Remediation
+    Set `endpoint_type` to `VPC` or `VPC_ENDPOINT`. By default, it is set to `PUBLIC`.
+
+    Terraform example
+    ```
+    resource "aws_transfer_server" "example" {
+        security_policy_name = "TransferSecurityPolicy-2020-06"
+        tags = {
+          Name = "Example"
+        }
+    +   endpoint_type = "VPC"
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::Transfer::Server",
+      "Properties" : {
+          "Domain" : "EFS",
+    +     "EndpointType": "VPC"
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/transfer_server#endpoint_type
+    * https://docs.aws.amazon.com/transfer/latest/userguide/what-is-aws-transfer-family.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_164
+severity: Low
+sid: ckv-aws-164
+title: "Ensure Transfer Server is not exposed publicly"

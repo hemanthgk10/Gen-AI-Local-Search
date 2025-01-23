@@ -1,0 +1,77 @@
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure Amazon EKS control plane logging enabled for all log types. AWS
+  by default does not send cluster control plane logs to CloudWatch. You must enable
+  them individually based on what information you are interested in
+extra:
+  entity: aws_eks_cluster
+  type: resource
+guidelines: |-
+  #### Description
+  AWS by default does not send cluster control plane logs to CloudWatch. You must enable them individually based on what information you are interested in.
+
+  Types of logs available:
+   * API
+   * Audit
+   * Authenticator
+   * ControllerManager
+   * Scheduler
+
+  #### Rationale
+  Enabling the EKS control plane logs provides us with audit and diagnostic logs in the cloudwatch. These logs make it easy to secure and run your cluster.
+
+  #### Remediation
+  Set the argument `enabled_cluster_log_types` with the list of the desired control plane logging to enable.
+  For more information, see Amazon [EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
+
+  Terraform example:
+  ```
+  resource "aws_eks_cluster" "example" {
+     depends_on                = [aws_cloudwatch_log_group.example]
+  +  enabled_cluster_log_types = ["api", "audit"]
+     name                      = "example"
+     ...
+     ...
+  }
+  ```
+
+  CloudFormation example:
+  ```
+  {
+      "Type" : "AWS::EKS::Cluster",
+      "Properties" : {
+          "Name" : "example",
+  +       "Logging" : {
+  +          "ClusterLogging" : {
+  +             "EnabledTypes" : [ { "Type": "audit" }, { "Type": "api"} ]
+  +         }
+  +       },
+          ...
+          ...
+      }
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_cluster#enabled_cluster_log_types
+  * https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-eks-cluster-loggingtypeconfig.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_37
+severity: Low
+sid: ckv-aws-37
+title: Ensure Amazon EKS control plane logging enabled for all log types
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: enabled_cluster_log_types
+    resourceAttributeType: array
+    resourceAttributeValue: "api,authenticator,audit,scheduler,controllerManager"
+    resourceType: [ "aws_eks_cluster" ]

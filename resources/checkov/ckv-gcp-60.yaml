@@ -1,0 +1,78 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure SQL database do not have public IP
+extra:
+  entity: google_sql_database_instance
+  type: resource
+guidelines: |-
+  #### Description
+  It is recommended to configure Second Generation Sql instance to use private IPs instead of public IPs.
+
+  #### Rationale
+  To lower the organization's attack surface, Cloud SQL databases should not have public IPs. Private IPs provide improved network security and lower latency for your application.
+
+  #### Remediation
+  By default, Cloud Sql instances have a public IP.
+
+  Terraform example
+  ```
+  resource "google_sql_database_instance" "master" {
+      name             = "master-instance"
+      database_version = "SQLSERVER"
+      region           = "us-central1"
+
+      settings {
+        tier             = "db-f1-micro"
+        ip_configuration {
+  +         ipv4_enabled     =  false
+  +         private_network = google_compute_network.private_network.id
+        }
+      }
+      ...
+      ...
+  }
+  ```
+
+  Using *Console*
+  1. Go to the [Cloud SQL Instances page](https://console.cloud.google.com/sql/instances)
+  2. Click the instance name to open its Instance details page.
+  3. Select the `Connections` tab.
+  4. Deselect the `Public IP` checkbox.
+  5. Click `Save` to update the instance.
+
+  Using *CLI*
+  1. For every instance remove its public IP and assign a private IP instead.
+  ```
+   gcloud beta sql instances patch INSTANCE_NAME --network=VPC_NETWOR_NAME --no- assign-ip
+  ```
+  2. Confirm the changes using the following command.
+  ```
+  gcloud sql instances describe INSTANCE_NAME
+  ```
+
+  #### Prevention
+  To prevent new SQL instances from getting configured with public IP addresses, set up a `Restrict Public IP access` on Cloud SQL instances Organization policy at:
+  https://console.cloud.google.com/iam-admin/orgpolicies/sql-restrictPublicIp
+
+
+  #### Impact
+  Removing the public IP address on SQL instances may break some applications that relied on it for database connectivity.
+
+  #### References
+  * https://cloud.google.com/sql/docs/mysql/configure-private-ip
+  * https://cloud.google.com/sql/docs/mysql/private-ip
+  * https://cloud.google.com/resource-manager/docs/organization-policy/org-policy-constraints
+  * https://console.cloud.google.com/iam-admin/orgpolicies/sql-restrictPublicIp
+
+  #### Notes
+  Replicas inherit their private IP status from their primary instance. You cannot configure a private IP directly on a replica.
+lwid:
+  - GCP_CIS12_6_6
+provider: GCP
+ruleId: CKV_GCP_60
+severity: Medium
+sid: ckv-gcp-60
+title: Google sql database instance check

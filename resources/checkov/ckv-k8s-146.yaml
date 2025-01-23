@@ -1,0 +1,107 @@
+---
+category: General
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    kubelet is the primary "node agent" that runs on each node in a Kubernetes cluster. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    Kubelet has the option to control the modification to `hostname`. Setting this option `--hostname-override`, will let Kubernetes use this string as identification instead of the actual hostname. If `--cloud-provider` is set, the cloud provider determines the name of the node. It is recommended to not override node hostnames.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    kubelet is the primary "node agent" that runs on each node in a Kubernetes cluster. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    Kubelet has the option to control the modification to `hostname`. Setting this option `--hostname-override`, will let Kubernetes use this string as identification instead of the actual hostname. If `--cloud-provider` is set, the cloud provider determines the name of the node. It is recommended to not override node hostnames.
+
+    #### Rationale
+    Overriding hostnames could potentially break TLS setup between the kubelet and the apiserver. Additionally, with overridden hostnames, it becomes increasingly difficult to associate logs with a particular node and process them for security analytics. Hence, you should setup your kubelet nodes with resolvable FQDNs and avoid overriding the hostnames with IPs.
+
+    #### Audit
+    Run the following command on each node:
+    ```
+     ps -ef | grep kubelet
+    ```
+    Verify that `--hostname-override` argument does not exist.
+
+    **Note:** This setting is not configurable via the Kubelet config file.
+
+    #### Remediation
+    Edit the kubelet service file `/etc/systemd/system/kubelet.service.d/10-kubeadm.conf` on each worker node and remove the `--hostname-override` argument from the `KUBELET_SYSTEM_PODS_ARGS` variable.
+
+    Based on your system, restart the `kubelet` service. For example:
+    ```
+       systemctl daemon-reload
+       systemctl restart kubelet.service
+    ```
+
+    By default, `--hostname-override` argument is not set.
+
+    Example:
+    ```yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          annotations:
+            scheduler.alpha.kubernetes.io/critical-pod: ""
+          labels:
+            component: kubelet
+            tier: control-plane
+          name: kubelet
+          namespace: kube-system
+        spec:
+          containers:
+          - command:
+            - kubelet
+            - --address="0.0.0.0"
+            - --anonymous-auth=false
+    -       - --hostname-override="myhost"
+            ...
+            ...
+            image: gcr.io/google_containers/kubelet-amd64:v1.6.0
+            name: kubelet
+            volumeMounts:
+            - mountPath: /etc/kubernetes/
+              name: k8s
+              readOnly: true
+            - mountPath: /etc/ssl/certs
+              name: certs
+            - mountPath: /etc/pki
+              name: pki
+          hostNetwork: true
+          volumes:
+          - hostPath:
+              path: /etc/kubernetes
+            name: k8s
+          - hostPath:
+              path: /etc/ssl/certs
+            name: certs
+          - hostPath:
+              path: /etc/pki
+            name: pki
+         ...
+         ...
+    ```
+
+    #### Impact
+    Some cloud providers may require this flag to ensure that hostname matches names issued by the cloud provider. In these environments, this recommendation should not apply.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kubelet/
+    * https://github.com/kubernetes/kubernetes/issues/22063
+
+    #### CIS Controls:
+    **Version 6**
+      *3 Secure Configurations for Hardware and Software on Mobile Devices, Laptops, Workstations, and Servers*
+provider: Kubernetes
+ruleId: CKV_K8S_146
+severity: Low
+sid: ckv-k8s-146
+title: "Ensure that the --hostname-override argument is not set"

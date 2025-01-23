@@ -1,0 +1,80 @@
+---
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+  - HIPAA
+description: |-
+    Amazon S3 has a simple web services interface that you can use to store and retrieve any amount of data, at any time, from anywhere on the web. It gives any developer access to the same highly scalable, reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.
+    The Amazon S3 Block Public Access feature provides settings for access points, buckets, and accounts to help you manage public access to Amazon S3 resources.
+    AWS S3 block by default doesn't allow public access to S3 objects in new buckets. Users can modify bucket policies access point policies, or object permissions to allow public access. By enabling `block_public_policy`, Amazon S3 rejects calls to `PUT` bucket policy, if the specified bucket policy allows public access.
+extra:
+  entity: "AWS::S3::Bucket"
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon S3 has a simple web services interface that you can use to store and retrieve any amount of data, at any time, from anywhere on the web. It gives any developer access to the same highly scalable, reliable, fast, inexpensive data storage infrastructure that Amazon uses to run its own global network of web sites.
+
+    The Amazon S3 Block Public Access feature provides settings for access points, buckets, and accounts to help you manage public access to Amazon S3 resources.
+
+    AWS S3 block by default doesn't allow public access to S3 objects in new buckets. Users can modify bucket policies access point policies, or object permissions to allow public access. By enabling `block_public_policy`, Amazon S3 rejects calls to `PUT` bucket policy, if the specified bucket policy allows public access.
+
+    #### Rationale
+    With AWS S3 Block Public Access, you can easily set up centralized controls to limit public access to your Amazon S3 resources that are enforced regardless of how the resources are created.
+
+    #### Remediation
+    Set `aws_s3_bucket_public_access_block.block_public_policy` to true.
+
+    Terraform example:
+    ```
+    resource "aws_s3_bucket" "example" {
+       bucket = "example"
+    }
+
+    resource "aws_s3_bucket_public_access_block" "example" {
+       bucket = aws_s3_bucket.example.id
+
+       block_public_acls   = true
+    +  block_public_policy = true
+       ...
+       ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+          "BucketName" : "my-bucket",
+          "PublicAccessBlockConfiguration" : {
+            "BlockPublicAcls"   : true,
+    +       "BlockPublicPolicy" : true,
+            ...
+            ...
+          },
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block#block_public_policy
+    * https://docs.aws.amazon.com/AmazonS3/latest/dev/access-control-block-public-access.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_54
+severity: High
+sid: ckv-aws-54
+title: "Ensure S3 bucket has block public policy enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: block_public_policy
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_s3_bucket_public_access_block" ]

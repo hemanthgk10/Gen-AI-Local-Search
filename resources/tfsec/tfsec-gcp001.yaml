@@ -1,0 +1,107 @@
+---
+category: Compute
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: |-
+    By default, Compute Engine encrypts all data at rest. Compute Engine handles and manages this encryption for you without any additional actions on your part.
+     If the <code>disk_encryption_key</code> block is included in the resource declaration then it *must* include a <code>raw_key</code> or <code>kms_key_self_link</code>.
+     To use the default offering of Google managed keys, do not include a <code>disk_encryption_key</code> block at all.
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/gcp001.go"
+guidelines: |-
+    #### Description
+    Customer-Supplied Encryption Keys (CSEK) are a feature in Google Cloud Storage and Google Compute Engine. If you supply your own encryption keys, Google uses your key to protect the Google-generated keys used to encrypt and decrypt your data. By default, Google Compute Engine encrypts all data at rest. Compute Engine handles and manages this encryption for you without any additional actions on your part. However, if you wanted to control and manage this encryption yourself, you can provide your own encryption keys.
+
+    #### Rationale
+    By default, Google Compute Engine encrypts all data at rest. Compute Engine handles and manages this encryption for you without any additional actions on your part. However, if you wanted to control and manage this encryption yourself, you can provide your own encryption keys.
+
+    If you provide your own encryption keys, Compute Engine uses your key to protect the Google-generated keys used to encrypt and decrypt your data. Only users who can provide the correct key can use resources protected by a customer-supplied encryption key.
+
+    Google does not store your keys on its servers and cannot access your protected data unless you provide the key. This also means that if you forget or lose your key, there is no way for Google to recover the key or to recover any data encrypted with the lost key.
+
+    At least business critical VMs should have VM disks encrypted with CSEK.
+
+    #### Remediation
+    Currently there is no way to update the encryption of an existing disk. Therefore create a new disk with `Encryption` set to `Customer supplied`.
+
+    Terraform example
+
+    ```
+    resource "google_compute_disk" "default" {
+        name                = "test-disk"
+        type                = "pd-ssd"
+        zone                = "us-central1-a"
+        image               = "debian-9-stretch-v20200805"
+    +   disk_encryption_key {
+    +      raw_key = ""
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    Using *Console*
+
+    1. Go to `Compute Engine`.
+    2. Go to `Disks`.
+    3. For each disk
+    4. Set `Encryption` to `Customer supplied`
+    5. Provide the `Key` in the box.
+    6. Select `Wrapped key`
+    7. Click `Create`
+
+    Using *CLI*
+
+    In the gcloud compute tool, encrypt a disk using the --csek-key-file flag during instance creation. If you are using an RSA-wrapped key, use the gcloud beta component:
+
+    ```
+    gcloud (beta) compute instances create <instanceName> --csek-key-file <example-file.json>
+    ```
+
+    To encrypt a standalone persistent disk:
+
+    ```
+    gcloud (beta) compute disks create <diskName> --csek-key-file <examplefile.json>
+    ```
+
+    #### References
+    * https://cloud.google.com/compute/docs/disks/customer-supplied-encryption#encrypt_a_new_persistent_disk_with_your_own_keys
+    * https://cloud.google.com/compute/docs/reference/rest/v1/disks/get
+    * https://cloud.google.com/compute/docs/disks/customer-supplied-encryption#key_file
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk#disk_encryption_key
+
+    #### Notes
+    `Note 1`: When you delete a persistent disk, Google discards the cipher keys, rendering the data irretrievable. This process is irreversible.
+    `Note 2`: It is up to you to generate and manage your key. You must provide a key that is a 256-bit string encoded in RFC 4648 standard base64 to Compute Engine.
+    `Note 3`: An example key file looks like this.
+
+    ```
+    [
+       {
+         "uri": "https://www.googleapis.com/compute/v1/projects/myproject/zones/uscentral1-a/disks/example-disk",
+         "key": "acXTX3rxrKAFTF0tYVLvydU1riRZTvUNC4g5I11NY-c=",
+         "key-type": "raw"
+         },
+         {
+         "uri":
+        "https://www.googleapis.com/compute/v1/projects/myproject/global/snapshots/my
+        -private-snapshot",
+         "key":
+        "ieCx/NcW06PcT7Ep1X6LUTc/hLvUDYyzSZPPVCVPTVEohpeHASqC8uw5TzyO9U+Fka9JFHz0mBib
+        XUInrC/jEk014kCK/NPjYgEMOyssZ4ZINPKxlUh2zn1bV+MCaTICrdmuSBTWlUUiFoDD6PYznLwh8
+        ZNdaheCeZ8ewEXgFQ8V+sDroLaN3Xs3MDTXQEMMoNUXMCZEIpg9Vtp9x2oeQ5lAbtt7bYAAHf5l+g
+        JWw3sUfs0/Glw5fpdjT8Uggrr+RMZezGrltJEF293rvTIjWOEB3z5OHyHwQkvdrPDFcTqsLfh+8Hr
+        8g+mf+7zVPEC8nEbqpdl3GPv3A7AwpFp7MA=="
+         "key-type": "rsa-encrypted"
+       }
+    ]
+    ```
+lwid:
+  - GCP_CIS_4_6
+  - GCP_CIS12_4_7
+provider: GCP
+ruleId: GCP001
+severity: Medium
+sid: tfsec-gcp001
+title: "Unencrypted compute disk"

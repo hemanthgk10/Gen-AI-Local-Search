@@ -1,0 +1,68 @@
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Stackdriver Logging is part of the Stackdriver suite of products in Google
+  Cloud Platform. It includes storage for logs, a user interface called the Logs Viewer,
+  and an API to manage logs programmatically. Stackdriver Logging lets you have Kubernetes
+  Engine automatically collect, process, and store your container and system logs
+  in a dedicated, persistent datastore. Container logs are collected from your containers.
+  System logs are collected from the cluster's components, such as docker and kubelet.
+  Events are logs about activity in the cluster, such as the scheduling of Pods.
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+  #### Description
+  Stackdriver Logging is part of the Stackdriver suite of products in Google Cloud Platform. It includes storage for logs, a user interface called the Logs Viewer, and an API to manage logs programmatically. Stackdriver Logging lets you have Kubernetes Engine automatically collect, process, and store your container and system logs in a dedicated, persistent datastore. Container logs are collected from your containers. System logs are collected from the cluster's components, such as docker and kubelet. Events are logs about activity in the cluster, such as the scheduling of Pods.
+
+  #### Rationale
+  By Enabling you will have container and system logs, Kubernetes Engine deploys a pernode logging agent that reads container logs, adds helpful metadata, and then stores them.
+
+  The logging agent checks for container logs in the following sources:
+    * Standard output and standard error logs from containerized processes
+    * kubelet and container runtime logs
+    * Logs for system components, such as VM startup scripts
+
+  For events, Kubernetes Engine uses a Deployment in the kube-system namespace which automatically collects events and sends them to Stackdriver Logging. Stackdriver Logging is compatible with JSON and glog formats. Logs are stored for up to 30 days.
+
+  #### Remediation
+  Set the `logging_service` to `logging.googleapis.com/kubernetes`.
+
+  Terraform example:
+  ```
+  resource "google_container_cluster" "primary" {
+      name                = "marcellus-wallace"
+      location            = "us-central1-a"
+      initial_node_count  = 3
+  +   logging_service     = "logging.googleapis.com/kubernetes"
+      ...
+      ...
+  }
+  ```
+
+  Using Console:
+    1. Go to Kubernetes [GCP Console](https://console.cloud.google.com/kubernetes/list)
+    2. Select reported Kubernetes clusters for which logging is disabled
+    3. Click on `EDIT` button and Set `Stackdriver Logging` to `Enabled`
+
+  #### Impact:
+  You are charged for the accrued storage costs when you export logs to another Google Cloud Platform service, such as BigQuery. Exporting logs from Stackdriver has no Stackdriver charge.
+
+  #### Default Value
+  By default, Stackdriver Logging is enabled when you create a new cluster using the gcloud command-line tool or Google Cloud Platform Console.
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#logging_service
+  * https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-container-cluster
+  * https://cloud.google.com/kubernetes-engine/docs/how-to/logging?hl=en_US
+  * https://cloud.google.com/logging/docs/basic-concepts
+lwid:
+  - GCP_CIS_7_1
+  - GCP_K8S_1_1
+provider: GCP
+ruleId: CKV_GCP_1
+severity: Low
+sid: ckv-gcp-1
+title: GKE with stackdriver logging enabled check

@@ -1,0 +1,77 @@
+category: Compute
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: Ensure no hard coded AWS access & secret keys exists in lambda environment.
+  Committing them to a repository or leaving them in the code increases the chance
+  of exposing to unauthorized users. Most of these are easy targets for an attacker.
+extra:
+  entity: aws_lambda_function
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure no hard coded AWS access & secret keys exists in lambda environment. Committing them to a repository or leaving them in the code increases the chance of exposing to unauthorized users. Most of these are easy targets for an attacker.
+
+  #### Rationale
+  For Infrastructure as Code (IaC) Static credentials are committed to repository that others can have access too. This can fall in the hands of a person who shouldn't have permissions to know them, causing security breaches.
+
+  #### Remediation
+  Instead of providing the static credentials in the lambda code, use IAM accounts instead. Remove them from environment variables. One of the best ways to protect your account is to not have access keys for your AWS account root user. Unless you must have root user access keys (which is rare), it is best not to generate
+  them. Instead, the recommended best practice is to create one or more AWS Identity and Access Management (IAM) users. Grant those IAM users the necessary permissions and use them for everyday interaction with AWS. Use temporary security credentials (IAM roles) instead of long-term access keys.
+
+  Terraform example:
+  ```
+  resource "aws_lambda_function" "test_lambda" {
+     filename      = "lambda_function_payload.zip"
+     function_name = "lambda_function_name"
+  +  role          = "arn:aws:iam::123456789012:role/S3Access"
+     handler       = "exports.test"
+
+     # The filebase64sha256() function is available in Terraform 0.11.12 and later
+     # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
+     # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
+     source_code_hash = filebase64sha256("lambda_function_payload.zip")
+
+     runtime = "nodejs12.x"
+
+     environment {
+       variables = {
+         foo                   = "bar"
+  -      aws_access_key_id     = "xyaca"
+  -      aws_secret_access_key = "abc"
+       }
+     }
+  }
+  ```
+
+  CloudFormation example:
+  ```
+  {
+    "Type" : "AWS::Lambda::Function",
+    "Properties" : {
+        "Description" : "example lambda function",
+        "FunctionName" : "lambda_function_name",
+        "KmsKeyArn" : String,
+        "MemorySize" : 10240,
+        "PackageType" : "Image",
+        "ReservedConcurrentExecutions" : 2,
+  +     "Role" : "arn:aws:iam::123456789012:role/S3Access",
+        "Environment" : {
+  -         "Variables" : { "AWS_ACCESS_KEY_ID" : "xyz", "AWS_SECRET_ACCESS_KEY": "abc" }
+        }
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://www.terraform.io/docs/providers/aws/index.html#static-credentials
+  * https://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_45
+severity: Critical
+sid: ckv-aws-45
+title: No hard coded access keys and secret in lambdas

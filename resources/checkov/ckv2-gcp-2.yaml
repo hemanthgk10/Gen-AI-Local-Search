@@ -1,0 +1,55 @@
+--- 
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: 
+  - CIS
+description: |-
+    Legacy networks have a single IP address range that cannot be divided into subnets. The network is global in scope and spans all cloud regions.
+    
+    In a legacy network, instance IP addresses are not grouped by region or zone. One IP address can appear in one region, and the following IP address can be in a different region. Any given range of IPs can be spread across all regions, and the IP addresses of instances created within a region are not necessarily contiguous.
+extra: 
+  entity: google_project
+  type: resource
+guidelines: |-
+    #### Description
+    Legacy networks have a single IP address range that cannot be divided into subnets. The network is global in scope and spans all cloud regions.
+    
+    In a legacy network, instance IP addresses are not grouped by region or zone. One IP address can appear in one region, and the following IP address can be in a different region. Any given range of IPs can be spread across all regions, and the IP addresses of instances created within a region are not necessarily contiguous.
+    
+    #### Rationale
+    Legacy networks are not recommended and can no longer be created. Many newer Google Cloud features are not supported in legacy networks. Instead, use Virtual Private Cloud (VPC) networks.
+    
+    VPC networks are divided into subnets. Each Google Cloud region can have one or more subnets in a VPC network.
+    
+    #### Remediation
+    Set `auto_create_subnetworks` to `false` in `google_compute_network`.
+    
+    Terraform example
+    ```
+    resource "google_project" "example" {
+        name       = "My Project"
+        project_id = "your-project-id"
+        org_id     = "12345678"
+    }
+    
+    resource "google_compute_network" "vpc_network" {
+        project                 = google_project.example.id
+        name                    = "vpc-network"
+    -   auto_create_subnetworks = true
+    +   auto_create_subnetworks = false
+        mtu                     = 1460
+    }
+    ```
+    
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network
+    * https://cloud.google.com/vpc/docs/legacy#:~:text=Google%20Cloud%20converts%20the%20legacy,as%20the%20original%20legacy%20network.&text=Google%20Cloud%20creates%20a%20subnet%20and%20its%20subnet%20route%20during%20the%20conversion
+lwid: 
+  - GCP_CIS12_3_2
+  - GCP_CIS_3_2
+provider: GCP
+ruleId: CKV2_GCP_2
+severity: Low
+sid: ckv2-gcp-2
+title: "Ensure legacy networks do not exist for a project"

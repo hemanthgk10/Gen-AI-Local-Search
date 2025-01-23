@@ -1,0 +1,58 @@
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+- CIS
+description: Do not permit init containers with capabilities assigned beyond
+  the default set.
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  Do not permit init containers with capabilities assigned beyond the default set.
+
+  #### Rationale
+  Containers run with a default set of capabilities as assigned by the Container Runtime. Capabilities outside of this set can be added to containers which could expose them to risks of container breakout attacks.
+
+  #### Remediation
+  Ensure that the `capabilities` added are limited to a specific requirement rather than using the wildcard `*`. Note that Lacework currently does not support `ADD` capabilities.
+
+  Example of Pod
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: flask-cap
+    namespace: default
+  spec:
+    containers:
+    - image: mateobur/flask
+      name: flask-cap
+      securityContext:
+        capabilities:
+          add:
+  -       - '*'
+  +       - 'NET_ADMIN'
+  +       - 'SYS_TIME'
+      ...
+      ...
+    initContainers:
+    - name: init-pod
+      image: busybox:1.28
+      securityContext:
+        capabilities:
+          add:
+  -       - '*'
+  +       - NET_RAW
+  +       - 'SYS_TIME'
+      ...
+      ...
+  ```
+
+  #### References
+provider: Kubernetes
+ruleId: CKV_K8S_25
+severity: Medium
+sid: ckv-k8s-25
+title: Prevent the admission of containers with added capabilities

@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that My SQL server enables Threat detection policy"
+extra:
+  entity: azurerm_mysql_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_127
+severity: High
+sid: ckv-azure-127
+title: "Ensure that My SQL server enables Threat detection policy"

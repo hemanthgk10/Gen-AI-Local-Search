@@ -1,0 +1,14 @@
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that App service enables failed request tracing"
+extra:
+  entity: azurerm_app_service
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_66
+severity: Medium
+sid: ckv-azure-66
+title: "Ensure that App service enables failed request tracing"

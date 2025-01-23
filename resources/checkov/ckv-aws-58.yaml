@@ -1,0 +1,79 @@
+category: Encryption
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+- CIS
+description: Secrets in Kubernetes enable you manage sensitive information, such as
+  passwords or API keys, in a Kubernetes-native way. Ensure EKS Cluster has Secrets
+  Encryption Enabled to prevent any exposure of sensitive information.
+extra:
+  entity: AWS::EKS::Cluster
+  type: resource
+guidelines: |-
+  #### Description
+  Secrets in Kubernetes enable you manage sensitive information, such as passwords or API keys, in a Kubernetes-native way. Ensure EKS Cluster has Secrets Encryption Enabled to prevent any exposure of sensitive information.
+
+  #### Rationale
+  Secrets in Kubernetes enable you manage sensitive information, such as passwords or API keys, in a Kubernetes-native way. But these secrets can easily be exposed if they are not encrypted.
+
+  #### Remediation
+  Set `aws_eks_cluster.encryption_config` argument and provide `key_arn` to encrypt the secrets.
+
+  Terraform example:
+  ```
+  resource "aws_eks_cluster" "example" {
+     name    = "my-cluster"
+  +  encryption_config {
+  +     resources   = "secrets"
+  +     provider  {
+  +        key_arn  = "alias/eks/key"
+  +     }
+    }
+    ...
+    ...
+  }
+  ```
+
+  CloudFormation example:
+  ```json
+  {
+    "Type" : "AWS::EKS::Cluster",
+    "Properties" : {
+         "Name" : "my-cluster",
+  +      "EncryptionConfig" : [{
+  +        "Provider" : {
+  +          "KeyArn": "alias/eks/key"
+  +        },
+  +        "Resources" : [ "secrets" ]
+  +      }],
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_cluster#resources
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-eks-cluster-encryptionconfig.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_58
+severity: High
+sid: ckv-aws-58
+title: Ensure EKS Cluster has Secrets Encryption Enabled
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: encryption_config
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      encryption_config {
+         provider {
+            key_arn = "<Provide the ARN for KMS key>"
+         }
+         resources  = [ "secrets" ]
+      }
+    resourceType: [ "aws_eks_cluster" ]

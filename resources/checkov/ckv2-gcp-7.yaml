@@ -1,0 +1,67 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: "At the time of MySQL Instance creation, not providing an administrative password allows anyone to connect to the SQL database instance with administrative privileges. The root password should be set to ensure only authorized users have these privileges."
+extra:
+  entity: google_sql_database_instance
+  type: resource
+guidelines: |-
+    #### Description
+    At the time of MySQL Instance creation, not providing an administrative password allows anyone to connect to the SQL database instance with administrative privileges. The root password should be set to ensure only authorized users have these privileges.
+
+    #### Rationale
+    It is recommended to set a password for the administrative user (root by default) to prevent unauthorized access to the SQL database instances. This recommendation is applicable only for MySQL Instances. PostgreSQL does not offer any setting for No Password from the cloud console.
+
+    #### Remediation
+    Second-generation instances include a default `'root'@'%'` user with no password. This user will be deleted by Terraform on instance creation. You should use `google_sql_user` to define a custom user with a restricted host and strong password.
+
+    Terraform example
+    ```
+    resource "google_sql_database_instance" "example" {
+        name             = "master-instance"
+        database_version = "POSTGRES_11"
+        region           = "us-central1"
+
+        settings {
+          # Second-generation instance tiers are based on the machine
+          tier = "db-f1-micro"
+        }
+        ...
+        ...
+    }
+
+    + resource "google_sql_user" "users" {
+    +    name     = "me"
+    +    instance = google_sql_database_instance.example.name
+    +    host     = "me.com"
+    +    password = "changeme"
+    + }
+    ```
+
+    *From Command Line:*
+
+    Set a password to a MySql instance:
+      ```
+      gcloud sql users set-password [USER_NAME] [HOST] --instance=[INSTANCE_NAME] --password=[PASSWORD]
+      ```
+
+    ####Impact
+    Connection strings for administrative clients need to be reconfigured to use a password.
+
+    *Default Value:*
+    From the Google Cloud Platform Console, the `Create Instance` workflow enforces the rule to enter the root password unless the option `No Password` is selected explicitly.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/sql_user
+    * https://cloud.google.com/sql/docs/mysql/create-manage-users
+    * https://cloud.google.com/sql/docs/mysql/create-instance
+lwid:
+  - GCP_CIS12_6_1_1
+provider: GCP
+ruleId: CKV2_GCP_7
+severity: High
+sid: ckv2-gcp-7
+title: "Ensure that a MySQL database instance does not allow anyone to connect with administrative privileges"

@@ -1,0 +1,44 @@
+---
+category: Security
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Opening up ports to the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that explicitly require it where possible."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws009.go"
+guidelines: |-
+    #### Description
+    Opening up ports to connect out to/from the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that are explicitly required where possible.
+
+    #### Rationale
+    Removing unfettered connectivity from remote console services, reduces a server's exposure to risk.
+
+    #### Remediation
+    Do not have `cidr_block` set to `0.0.0.0/0`. Instead have it configured with a specific subnet IP CIDR blocks.
+
+    Terraform example:
+    ```
+    resource "aws_security_group" "my-rule" {
+       name        = "my-rule"
+       description = "Allow TLS outbound traffic"
+       vpc_id      = aws_vpc.main.id
+       egress = [{
+          from_port        = 0
+          to_port          = 0
+          protocol         = "-1"
+    -     cidr_blocks      = ["0.0.0.0/0"]
+    +     cidr_blocks.     = ["1.2.3.4/32"]
+       }]
+       ...
+       ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group#cidr_blocks
+lwid: []
+provider: AWS
+ruleId: AWS009
+severity: High
+sid: tfsec-aws009
+title: "An inline egress security group rule allows traffic to `/0`"

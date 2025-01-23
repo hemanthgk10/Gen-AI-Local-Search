@@ -1,0 +1,73 @@
+---
+autofix: true
+category: IAM
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "IAM account password policies should ensure that passwords have a minimum length. The account password policy should be set to enforce minimum password length of at least 14 characters."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws039.go"
+guidelines: |-
+    #### Description
+    Password policies are, in part, used to enforce password complexity requirements. IAM password policies can be used to ensure password are at least a given length.
+    It is recommended that the password policy require a minimum password length 14.
+
+    #### Rationale
+    Setting a password policy increases account resiliency against brute force login attempts. While it is possible to set additinal complexity requirements such as requiring an upper-case letter and numbers,
+    this often leads to passwords like "Soluble123!". Instead, enforcing a longer password length but NOT mandating character sets is ideal.
+
+    #### Remediation
+    Set `minimum_password_length` to 14 or greater to keep password more secure.
+
+    Terraform example:
+    ```
+    resource "aws_iam_account_password_policy" "strict" {
+    -   minimum_password_length        = 5
+    +   minimum_password_length        = 15
+        max_password_age               = 0
+        require_lowercase_characters   = false
+        require_numbers                = false
+        require_uppercase_characters   = false
+        require_symbols                = false
+        allow_users_to_change_password = true
+
+        ...
+        ...
+    }
+    ```
+
+    From *Console*:
+
+    1. Go to IAM Service on the [AWS Console](https://console.aws.amazon.com/iam)
+    2. Click on Account Settings on the Left Pane
+    3. Set `Minimum password length` to `14 or greater`
+    4. Click `Apply password policy`
+
+    #### Note
+    All commands starting with `aws iam update-account-password-policy` can be combined into a single command.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_account_password_policy#minimum_password_length
+    * https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_passwords_account-policy.html
+    * https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#configure-strong-password-policy
+lwid:
+  - AWS_CIS_1_9
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: minimum_password_length
+        resourceAttributeType: integer
+        resourceAttributeValue: "15"
+        resourceType:
+          - aws_iam_account_password_policy
+ruleId: AWS039
+severity: Medium
+sid: tfsec-aws039
+title: "IAM Password policy should have minimum password length of 14 or more characters"

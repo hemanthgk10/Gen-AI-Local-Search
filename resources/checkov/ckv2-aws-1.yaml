@@ -1,0 +1,54 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS NACL (network access control list) is an optional layer of security for your VPC that acts as a firewall for controlling traffic in and out of one or more subnets. The following are the basic things that you need to know about network ACLs:
+
+    * Your VPC automatically comes with a modifiable default network ACL. By default, it allows all inbound and outbound IPv4 traffic and, if applicable, IPv6 traffic.
+    * You can create a custom network ACL and associate it with a subnet. By default, each custom network ACL denies all inbound and outbound traffic until you add rules.
+    * Each subnet in your VPC must be associated with a network ACL. If you don't explicitly associate a subnet with a network ACL, the subnet is automatically associated with the default network ACL.
+    * You can associate a network ACL with multiple subnets. However, a subnet can be associated with only one network ACL at a time. When you associate a network ACL with a subnet, the previous association is removed.
+extra:
+  entity: aws_network_acl
+  type: resource
+guidelines: |-
+    #### Description
+    AWS NACL (network access control list) is an optional layer of security for your VPC that acts as a firewall for controlling traffic in and out of one or more subnets. The following are the basic things that you need to know about network ACLs:
+
+    * Your VPC automatically comes with a modifiable default network ACL. By default, it allows all inbound and outbound IPv4 traffic and, if applicable, IPv6 traffic.
+    * You can create a custom network ACL and associate it with a subnet. By default, each custom network ACL denies all inbound and outbound traffic until you add rules.
+    * Each subnet in your VPC must be associated with a network ACL. If you don't explicitly associate a subnet with a network ACL, the subnet is automatically associated with the default network ACL.
+    * You can associate a network ACL with multiple subnets. However, a subnet can be associated with only one network ACL at a time. When you associate a network ACL with a subnet, the previous association is removed.
+
+    #### Rationale
+    Without a NACL, all the inbound and outbound traffic to a subnet are denied.
+
+    #### Remediation
+    Set the `subnet_ids` in the `aws_network_acl`.
+
+    Terraform example
+    ```
+    resource "aws_subnet" "sb_main" {
+      vpc_id     = aws_vpc.main.id
+      cidr_block = "10.0.2.0/24"
+    }
+
+    resource "aws_network_acl" "example" {
+        vpc_id     = aws_vpc.main.id
+    +   subnet_ids = [aws_subnet.sb_main.id]
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_acl
+    * https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_1
+severity: Low
+sid: ckv2-aws-1
+title: "Ensure that all NACL are attached to subnets"

@@ -1,0 +1,14 @@
+category: "Backup & Recovery"
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that PostgreSQL server enables geo-redundant backups"
+extra:
+  entity: azurerm_postgresql_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_102
+severity: Low
+sid: ckv-azure-102
+title: "Ensure that PostgreSQL server enables geo-redundant backups"

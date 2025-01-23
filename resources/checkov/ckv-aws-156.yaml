@@ -1,0 +1,87 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon WorkSpaces is a fully managed, persistent desktop virtualization service that enables your users to access the data, applications, and resources they need, anywhere, anytime, from any supported device. You can use Amazon WorkSpaces to provision either Windows or Linux desktops in just a few minutes and quickly scale to provide thousands of desktops to workers across the globe. Amazon WorkSpaces is deployed within an Amazon Virtual Private Cloud (VPC), and no user data is stored on the local device.
+
+    AWS Key Management Service (AWS KMS) provides an easy integration to encrypt the encrypt storage volumes of WorkSpaces using customer master keys (CMKs). When you launch a WorkSpace, you can encrypt the root volume (for Microsoft Windows, the C drive; for Linux, /) and the user volume (for Windows, the D drive; for Linux, /home).
+extra:
+  entity: aws_workspaces_workspace
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon WorkSpaces is a fully managed, persistent desktop virtualization service that enables your users to access the data, applications, and resources they need, anywhere, anytime, from any supported device. You can use Amazon WorkSpaces to provision either Windows or Linux desktops in just a few minutes and quickly scale to provide thousands of desktops to workers across the globe. Amazon WorkSpaces is deployed within an Amazon Virtual Private Cloud (VPC), and no user data is stored on the local device.
+
+    AWS Key Management Service (AWS KMS) provides an easy integration to encrypt the encrypt storage volumes of WorkSpaces using customer master keys (CMKs). When you launch a WorkSpace, you can encrypt the root volume (for Microsoft Windows, the C drive; for Linux, /) and the user volume (for Windows, the D drive; for Linux, /home).
+
+    #### Rationale
+    Encrypting the data stored in root volumes, user volumes, snapshots of AWS WorkSpaces prevents any exploitation of sensitive information of the users.
+
+    #### Remediation
+    Set the `root_volume_encryption_enabled` property to encrypt the data stored on the root volumes of the AWS WorkSpaces.
+
+    Terraform example
+    ```
+    data "aws_workspaces_bundle" "value_windows_10" {
+        bundle_id = "wsb-bh8rsxt14" # Value with Windows 10 (English)
+    }
+
+    resource "aws_workspaces_workspace" "example" {
+        directory_id = aws_workspaces_directory.example.id
+        bundle_id    = data.aws_workspaces_bundle.value_windows_10.id
+        user_name    = "john.doe"
+
+    +   root_volume_encryption_enabled = true
+        user_volume_encryption_enabled = true
+        volume_encryption_key          = "alias/aws/workspaces"
+
+        workspace_properties {
+          compute_type_name                         = "VALUE"
+          user_volume_size_gib                      = 10
+          root_volume_size_gib                      = 80
+          running_mode                              = "AUTO_STOP"
+          running_mode_auto_stop_timeout_in_minutes = 60
+        }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::WorkSpaces::Workspace",
+      "Properties" : {
+          "BundleId" : "bundle-id",
+          "DirectoryId" : "my-id",
+    +     "RootVolumeEncryptionEnabled" : true,
+          "UserName" : "john.doe",
+          "UserVolumeEncryptionEnabled" : true,
+          "VolumeEncryptionKey" : "alias/aws/workspaces",
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/workspaces_workspace#user_volume_encryption_enabled
+    * https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_156
+severity: Medium
+sid: ckv-aws-156
+title: "Ensure that Workspace root volumes are encrypted"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: root_volume_encryption_enabled
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_workspaces_workspace" ]

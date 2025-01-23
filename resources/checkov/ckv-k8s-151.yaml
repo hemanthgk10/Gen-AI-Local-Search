@@ -1,0 +1,134 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    kubelet is the primary "node agent" that runs on each node in a Kubernetes cluster. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    By default, requests to the kubelet's HTTPS endpoint that are not rejected by other configured authentication methods are treated as anonymous requests, and given a username of `system:anonymous` and a group of `system:unauthenticated`. Using certificate based authentication provides extra security for the communication of kubelets with it's clients.
+
+    Ensure that the Kubelet is configured to only use strong cryptographic ciphers for it's TLS connections.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    kubelet is the primary "node agent" that runs on each node in a Kubernetes cluster. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    By default, requests to the kubelet's HTTPS endpoint that are not rejected by other configured authentication methods are treated as anonymous requests, and given a username of `system:anonymous` and a group of `system:unauthenticated`. Using certificate based authentication provides extra security for the communication of kubelets with it's clients.
+
+    Ensure that the Kubelet is configured to only use strong cryptographic ciphers for it's TLS connections.
+
+    #### Rationale
+    TLS ciphers have had a number of known vulnerabilities and weaknesses, which can reduce the protection provided by them. By default Kubernetes supports a number of TLS ciphersuites including some that have security concerns, weakening the protection provided.
+
+    #### Audit
+    The set of cryptographic ciphers currently considered secure is the following:
+       * TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+       * TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+       * TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+       * TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+       * TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+       * TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+       * TLS_RSA_WITH_AES_256_GCM_SHA384
+       * TLS_RSA_WITH_AES_128_GCM_SHA256
+
+    ```
+     ps -ef | grep kubelet
+    ```
+    If the `--tls-cipher-suites` argument is present, ensure it only contains values included in this set.
+
+    If it is not present check that there is a Kubelet config file specified by `--config`, and that file sets `TLSCipherSuites` to only include values from this set.
+
+    #### Remediation
+    If using a Kubelet config file, edit the file to set `TLSCipherSuites` to `TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256`,`TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256`, `TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305`, `TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384`, `TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305`, `TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384`, `TLS_RSA_WITH_AES_256_GCM_SHA384`, `TLS_RSA_WITH_AES_128_GCM_SHA256` or to a subset of these values.
+
+    Edit the kubelet service file `/etc/systemd/system/kubelet.service.d/10-kubeadm.conf` on each worker node and set the ``--tls-cipher-suites` parameter as follows, or to a subset of these values.
+    ```
+      --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM _SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM _SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM _SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256
+    ```
+
+    Based on your system, restart the `kubelet` service. For example:
+    ```
+       systemctl daemon-reload
+       systemctl restart kubelet.service
+    ```
+
+    By default the Kubernetes API server supports a wide range of TLS ciphers
+
+    Example:
+    ```yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          annotations:
+            scheduler.alpha.kubernetes.io/critical-pod: ""
+          labels:
+            component: kubelet
+            tier: control-plane
+          name: kubelet
+          namespace: kube-system
+        spec:
+          containers:
+          - command:
+            - kubelet
+            - --address="0.0.0.0"
+            - --anonymous-auth=false
+            - --tls-cert-file="/etc/kubelet/pki/server/request.crt"
+            - --tls-private-key-file="/etc/kubelet/pki/server/request.key"
+            - --feature-gates=RotateKubeletServerCertificate=true
+    +       - --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM _SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM _SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM _SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256
+            ...
+            ...
+            image: gcr.io/google_containers/kubelet-amd64:v1.6.0
+            name: kubelet
+            volumeMounts:
+            - mountPath: /etc/kubernetes/
+              name: k8s
+              readOnly: true
+            - mountPath: /etc/ssl/certs
+              name: certs
+            - mountPath: /etc/pki
+              name: pki
+          hostNetwork: true
+          volumes:
+          - hostPath:
+              path: /etc/kubernetes
+            name: k8s
+          - hostPath:
+              path: /etc/ssl/certs
+            name: certs
+          - hostPath:
+              path: /etc/pki
+            name: pki
+         ...
+         ...
+    ```
+
+    #### Impact
+    Kubelet clients that cannot support modern cryptographic ciphers will not be able to make connections to the Kubelet API.
+
+    **Notes:** The list chosen above should be fine for modern clients. It's essentially the list from the Mozilla 1Modern cipher1 option with the ciphersuites supporting CBC mode removed, as CBC has traditionally had a lot of issues
+
+    #### References
+    * https://kubernetes.io/docs/admin/kubelet/
+    * https://github.com/kubernetes/kubernetes/pull/45059
+    * https://kubernetes.io/docs/admin/kubelet-tls-bootstrapping/#kubelet-configuration
+
+    #### CIS Controls
+    **Version 6**
+      *3.4 Use Only Secure Channels For Remote System Administration* -- Perform all remote administration of servers, workstation, network devices, and similar equipment over secure channels. Protocols such as telnet, VNC, RDP, or others that do not actively support strong encryption should only be used if they are performed over a secondary encryption channel, such as SSL, TLS or IPSEC.
+
+    **Version 7**
+      *4.5 Use Multifactor Authentication For All Administrative Access* -- Use multi-factor authentication and encrypted channels for all administrative account access.
+provider: Kubernetes
+ruleId: CKV_K8S_151
+severity: Medium
+sid: ckv-k8s-151
+title: "Ensure that the Kubelet only makes use of Strong Cryptographic Ciphers"

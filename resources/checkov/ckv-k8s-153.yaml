@@ -1,0 +1,74 @@
+--- 
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: |-
+    Ingress is an API object that manages external access to the services in a cluster, typically HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource.
+    
+    Ingress also provide load balancing, SSL termination and name-based virtual hosting. You must have an Ingress controller to satisfy an Ingress and one such controller is NGINX Ingress.
+    
+    Recently, a security issue was discovered which can allow LUA code execution.
+extra: 
+  entity: ingress
+  type: resource
+guidelines: |-
+    #### Description
+    Ingress is an API object that manages external access to the services in a cluster, typically HTTP and HTTPS routes from outside the cluster to services within the cluster. Traffic routing is controlled by rules defined on the Ingress resource.
+    
+    Ingress also provide load balancing, SSL termination and name-based virtual hosting. You must have an Ingress controller to satisfy an Ingress and one such controller is NGINX Ingress.
+    
+    Recently, a security issue was discovered which can allow LUA code execution.
+    
+    #### Rationale
+    A security issue was discovered in ingress-nginx where a user that can create or update ingress objects can use the custom snippets feature to obtain all secrets in the cluster.
+    
+    #### Remediation
+    Either don't allow the `allow-snippet-annotations` in the `ConfigMap` or make sure the annotations on the `Ingress` doesn't contain `snippet` with `badInjectionPatterns`.
+    
+    Example
+    ```
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: minimal-ingress
+        annotations:
+          nginx.ingress.kubernetes.io/rewrite-target: /
+    -     snippet: badInjectionPatterns=lua_xxx
+      spec:
+        rules:
+          - http:
+            paths:
+      ...
+      ...
+    
+    OR
+    
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        labels:
+          helm.sh/chart: ingress-nginx-4.0.10
+          app.kubernetes.io/name: ingress-nginx
+          app.kubernetes.io/instance: ingress-nginx
+          app.kubernetes.io/version: 1.1.0
+          app.kubernetes.io/managed-by: Helm
+          app.kubernetes.io/component: controller
+        name: ingress-nginx-controller
+        namespace: ingress-nginx
+      data:
+    -   allow-snippet-annotations: 'true'
+    +   allow-snippet-annotations: 'false'
+      ...
+      ...
+    ```
+    
+    #### References
+    * https://nvd.nist.gov/vuln/detail/CVE-2021-25742
+    * https://github.com/kubernetes/ingress-nginx/issues/7837
+    * https://www.lua.org/manual/2.4/node14.html
+provider: Kubernetes
+ruleId: CKV_K8S_153
+severity: High
+sid: ckv-k8s-153
+title: "Prevent All NGINX Ingress annotation snippets. See CVE-2021-25742"

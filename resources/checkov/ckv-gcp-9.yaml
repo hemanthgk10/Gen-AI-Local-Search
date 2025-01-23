@@ -1,0 +1,69 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure 'Automatic node repair' is enabled for Kubernetes Clusters
+extra:
+  entity: google_container_node_pool
+  type: resource
+guidelines: |-
+  #### Description
+  Kubernetes Engine's node auto-repair feature helps you keep the nodes in your cluster in a healthy, running state. When enabled, Kubernetes Engine makes periodic checks on the health state of each node in your cluster. If a node fails consecutive health checks over an extended time period, Kubernetes Engine initiates a repair process for that node. If you disable node auto-repair at any time during the repair process, the in-progress repairs are not cancelled and still complete for any node currently under repair.
+
+  #### Rationale
+  Kubernetes Engine uses the node's health status to determine if a node needs to be repaired. A node reporting a Ready status is considered healthy. Kubernetes Engine triggers a repair action if a node reports consecutive unhealthy status reports for a given time threshold. An unhealthy status can mean:
+
+    * A node reports a NotReady status on consecutive checks over the given time threshold (approximately 10 minutes).
+    * A node does not report any status at all over the given time threshold (approximately 10 minutes).
+    * A node's boot disk is out of disk space for an extended time period (approximately 30 minutes).
+
+  You can enable node auto-repair on a per-node pool basis. When you create a cluster, you can enable or disable auto-repair for the cluster's default node pool. If you create additional node pools, you can enable or disable node auto-repair for those node pools, independent of the auto-repair setting for the default node pool. Kubernetes Engine generates an entry in its operation logs for any automated repair event. You can check the logs by using the gcloud container operations list command.
+
+  #### Remediation
+  Set the `management.auto_repair` to `true`.
+
+  Terraform example
+  ```
+  resource "google_container_node_pool" "primary_preemptible_nodes" {
+      name       = "my-node-pool"
+      location   = "us-central1"
+      cluster    = google_container_cluster.primary.name
+      node_count = 1
+
+  +   management {
+  +      auto_repair = "true"
+  +   }
+      ...
+      ...
+  }
+  ```
+
+  From *Console*
+    1. Go to [Kubernetes GCP Console](https://console.cloud.google.com/kubernetes/list)
+    2. Select reported Kubernetes clusters for which `Automatic node repair` is disabled.
+    3. Click on `EDIT` button and Set `Automatic node repair` to Enabled.
+
+  Using *Command line*
+
+  To enable `Automatic node repair` for an existing cluster with `node pool`, run the following command
+  ```
+  gcloud container node-pools update [POOL_NAME] --cluster [CLUSTER_NAME] --zone [COMPUTE_ZONE] --enable-autorepair
+  ```
+
+  *Note:* Node auto-repair is only available for nodes that use Container-Optimized OS as their node image. Node auto-repair is not available on Alpha Clusters.
+
+  #### Impact
+  If multiple nodes require repair, Kubernetes Engine might repair them in parallel. Kubernetes Engine limits number of repairs depending on the size of the cluster (bigger clusters have a higher limit) and the number of broken nodes in the cluster (limit decreases if many nodes are broken)
+
+  #### References
+  * https://cloud.google.com/kubernetes-engine/docs/concepts/node-auto-repair
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_node_pool#auto_repair
+lwid:
+  - GCP_CIS_7_7
+  - GCP_K8S_1_7
+provider: GCP
+ruleId: CKV_GCP_9
+severity: Medium
+sid: ckv-gcp-9
+title: Ensure 'Automatic node repair' is enabled for Kubernetes Clusters

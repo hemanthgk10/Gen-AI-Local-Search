@@ -1,0 +1,62 @@
+category: Monitoring
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+- CIS
+description: Ensure that your AWS CloudWatch log group has the retention period configured
+  to let AWS know how long the log events should be kept in AWS CloudWatch Logs.
+extra:
+  entity: AWS::Logs::LogGroup
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure that your AWS CloudWatch log group has the retention period configured to let AWS know how long the log events should be kept in AWS CloudWatch Logs.
+
+  #### Rationale
+  Having some number for retention days of cloudwatch logs helps in accessing them after the day is passed. This is required for monitoring as well as auditing purposes.
+
+  #### Remediation
+  Set the argument `retention_in_days` to some desirable value. Possible values are 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653.
+
+  Terraform example:
+  ```
+  resource "aws_cloudwatch_log_group" "yada" {
+     name               = "Yada"
+  +  retention_in_days  = 365
+     ...
+     ...
+  }
+  ```
+
+  CloudFormation example:
+  ```json
+  {
+    "Type" : "AWS::Logs::LogGroup",
+    "Properties" : {
+        "LogGroupName"    : "Yada",
+  +     "RetentionInDays" : 365
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group#retention_in_days
+  * https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_66
+severity: Low
+sid: ckv-aws-66
+title: Ensure cloudwatch log groups specify retention days
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: retention_in_days
+    resourceAttributeType: integer
+    resourceAttributeValue: "365"
+    resourceType: [ "aws_cloudwatch_log_group" ]

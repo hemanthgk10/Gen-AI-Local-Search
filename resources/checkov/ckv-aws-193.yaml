@@ -1,0 +1,88 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "AWS AppSync provides a robust, scalable GraphQL interface for application developers to combine data from multiple sources, including Amazon DynamoDB, AWS Lambda, and HTTP APIs.\n\n\
+    AWS AppSync provides powerful GraphQL schema editing through the AWS AppSync console, including automatic GraphQL schema generation from DynamoDB and efficient data caching.\n\n\
+    Using AWS AppSync, you can use GraphQL to request data from the cloud. There are often times when you want to get more information about the execution of your API. "
+extra:
+  entity: aws_appsync_graphql_api
+  type: resource
+guidelines: |-
+    #### Description
+    AWS AppSync provides a robust, scalable GraphQL interface for application developers to combine data from multiple sources, including Amazon DynamoDB, AWS Lambda, and HTTP APIs.
+
+    AWS AppSync provides powerful GraphQL schema editing through the AWS AppSync console, including automatic GraphQL schema generation from DynamoDB and efficient data caching.
+
+    Using AWS AppSync, you can use GraphQL to request data from the cloud. There are often times when you want to get more information about the execution of your API.
+
+    #### Rationale
+    To help debug issues / audit related to request execution of your GraphQL API, you can enable Amazon CloudWatch Logs to monitor API calls.
+
+    #### Remediation
+    Set the `log_config` in `aws_appsync_graphql_api`.
+
+    Terraform example
+    ```
+    + resource "aws_iam_role" "example" {
+    +    name = "example"
+    +    assume_role_policy = <<POLICY
+    +  {
+    +      "Version": "2012-10-17",
+    +      "Statement": [
+    +          {
+    +          "Effect": "Allow",
+    +          "Principal": {
+    +              "Service": "appsync.amazonaws.com"
+    +          },
+    +          "Action": "sts:AssumeRole"
+    +          }
+    +      ]
+    +  }
+    +  POLICY
+    + }
+
+    + resource "aws_iam_role_policy_attachment" "example" {
+    +   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs"
+    +   role       = aws_iam_role.example.name
+    + }
+
+    resource "aws_appsync_graphql_api" "example" {
+        authentication_type = "API_KEY"
+        name                = "example"
+
+    +   log_config {
+    +      cloudwatch_logs_role_arn = aws_iam_role.example.arn
+    +      field_log_level          = "ERROR"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::AppSync::GraphQLApi",
+      "Properties" : {
+          "Name": "managed-rule-example",
+    +     "LogConfig": {
+    +        "CloudWatchLogsRoleArn" : "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c",
+    +        "ExcludeVerboseContent" : true,
+    +        "FieldLogLevel" : "ERROR"
+    +     }
+          ...
+          ...
+      }
+    }
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appsync_graphql_api#log_config
+    * https://docs.aws.amazon.com/appsync/latest/devguide/monitoring.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_193
+severity: Low
+sid: ckv-aws-193
+title: "Ensure AppSync has Logging enabled"

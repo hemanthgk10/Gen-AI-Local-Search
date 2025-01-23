@@ -1,0 +1,77 @@
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: Ensure that your Amazon EFS file systems are encrypted in order to meet
+  security and compliance requirements. Your data is transparently encrypted while
+  being written and transparently decrypted while being read from your file system,
+  therefore the encryption process does not require any additional action from you
+  or your application. Encryption keys are managed by AWS KMS service, eliminating
+  the need to build and maintain a secure key management infrastructure.
+extra:
+  entity: AWS::EFS::FileSystem
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure that your Amazon EFS file systems are encrypted in order to meet security and compliance requirements. Your data is transparently encrypted while being written and transparently decrypted while being read from your file system, therefore the encryption process does not require any additional action from you or your application. Encryption keys are managed by AWS KMS service, eliminating the need to build and maintain a secure key management infrastructure.
+
+  #### Rationale
+  Ensure that your Amazon EFS file systems are encrypted in order to meet security and compliance requirements. Encrypting the data keeps it protected from unathorized access.
+
+  #### Remediation
+  Set the `encrypted` argument to true in `aws_efs_file_system`. You also need specify `kms_key_id` to encrypt the data.
+
+  Terraform example:
+  ```
+  resource "aws_efs_file_system" "foo" {
+     creation_token = "my-product"
+     tags = {
+       Name = "MyProduct"
+     }
+  +  encrypted      = true
+  +  kms_key_id     = "arn:aws:kms:us-west-2:111122223333:key/example"
+     ...
+     ...
+  }
+
+  ```
+
+  CloudFormation example:
+  ```json
+  {
+    "Type" : "AWS::EFS::FileSystem",
+    "Properties" : {
+  +     "Encrypted" : true,
+  +     "KmsKeyId"  : "arn:aws:kms:us-west-2:111122223333:key/example"
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://docs.aws.amazon.com/efs/latest/ug/encryption.html
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-efs-filesystem.html
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/efs_file_system#encrypted
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_42
+severity: Medium
+sid: ckv-aws-42
+title: Ensure EFS is securely encrypted
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: encrypted
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_efs_file_system" ]
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: kms_key_id
+    resourceAttributeType: string
+    resourceAttributeValue: "<Provide the ARN of the default SSL server certificate>"
+    resourceType: [ "aws_efs_file_system" ]

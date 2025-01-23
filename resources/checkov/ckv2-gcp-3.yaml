@@ -1,0 +1,68 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: |-
+    A service account is a special kind of account used by an application or compute workload, such as a Compute Engine virtual machine (VM) instance, rather than a person. Applications use service accounts to make authorized API calls, authorized as either the service account itself, or as Google Workspace or Cloud Identity users through domain-wide delegation.
+
+    Service account is different from the user accounts and it should not let user accounts impersonate the service accounts. Keys created by these service accounts have privileges to access other GCP resources and shouldn't be used by user accounts. GCP-managed keys are used by Cloud Platform services such as App Engine and Compute Engine.
+
+    Apart from the GCP managed service accounts, there shouldn't be any other service account that has key.
+extra:
+  entity: google_service_account_key
+  type: resource
+guidelines: |-
+    #### Description
+    A service account is a special kind of account used by an application or compute workload, such as a Compute Engine virtual machine (VM) instance, rather than a person. Applications use service accounts to make authorized API calls, authorized as either the service account itself, or as Google Workspace or Cloud Identity users through domain-wide delegation.
+
+    Service account is different from the user accounts and it should not let user accounts impersonate the service accounts. Keys created by these service accounts have privileges to access other GCP resources and shouldn't be used by user accounts. GCP-managed keys are used by Cloud Platform services such as App Engine and Compute Engine.
+
+    Apart from the GCP managed service accounts, there shouldn't be any other service account that has key.
+
+    #### Rationale
+    Anyone who has access to the service account keys will be able to access resources through the service account. It is recommended to prevent user-managed service account keys.
+
+    #### Remediation
+    Create `google_service_account_key` only for `google_service_account`.
+
+    Terraform example
+    ```
+    resource "google_service_account" "example" {
+        account_id   = "service-account-id"
+        display_name = "Service Account"
+    }
+
+    + resource "google_service_account_key" "example_key" {
+    +   public_key_type     = "TYPE_X509_PEM_FILE"
+    +   service_account_id  = google_service_account.example.name
+    +    ...
+    +    ...
+    + }
+    ```
+
+    *From Command Line*
+    ```
+    gcloud iam service-accounts keys delete --iam-account=<user-managed-serviceaccount-EMAIL> <KEY>
+    ```
+
+    *From Console*
+    * Login to IAM page in the GCP Console
+    * In the left navigation pane, click `Service accounts`.
+    * Check if their corresponding keys are listed.
+    * Click the service account represented in the `Email` column.
+    * Click dots in the `Actions` column to navigate `Manage Keys`.
+    * Delete the keys.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_service_account
+    * https://cloud.google.com/iam/docs/service-accounts
+lwid:
+  - GCP_CIS_1_3
+  - GCP_CIS12_1_4
+provider: GCP
+ruleId: CKV2_GCP_3
+severity: Medium
+sid: ckv2-gcp-3
+title: "Ensure that there are only GCP-managed service account keys for each service account"

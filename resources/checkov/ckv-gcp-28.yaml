@@ -1,0 +1,60 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure that Cloud Storage bucket is not anonymously or publicly accessible
+extra:
+  entity: google_storage_bucket_iam_binding
+  type: resource
+guidelines: |-
+  #### Description
+  It is recommended that IAM policy on Cloud Storage bucket does not allows anonymous and/or public access.
+
+  #### Rationale
+  Allowing anonymous and/or public access grants permissions to anyone to access bucket content. Such access might not be desired if you are storing any sensitive data. Hence, ensure that anonymous and/or public access to a bucket is not allowed.
+
+  #### Remediation
+
+  By Default, Storage buckets are not publicly shared. Do not use `allUsers` and `allAuthenticatedUsers` for members. Instead you can use `serviceAccount` or `group` or `domain`.
+
+  Terraform example
+  ```
+  resource "google_storage_bucket_iam_member" "member" {
+      bucket = google_storage_bucket.default.name
+      role = "roles/storage.admin"
+      members = [
+  -      "allUsers",
+  -      "allAuthenticatedUsers"
+  +      {"domain": "google.com"}
+      ]
+  }
+  ```
+
+  From *Console*
+    1. Go to the Google Cloud Portal
+    2. Go to `Storage` Section
+    3. In Storage, Click `Browser`
+    4. Select each storage bucket and `click on menu` in right most column.
+    5. Select `Edit Bucket Permissions`.
+    6. Expand every role displayed.
+    7. Click `Delete` button in front of `allUsers` and/or `allAuthenticatedUsers` to remove that particular role assignment.
+
+  #### Impact
+  No storage buckets would be publicly accessible. You would have to explicitly administer bucket access.
+
+  #### References
+  * https://cloud.google.com/storage/docs/access-control/iam-reference
+  * https://cloud.google.com/storage/docs/access-control/making-data-public
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket_iam#member/members
+
+  #### Notes
+  To implement Access restrictions on buckets, configuring Bucket IAM is preferred way than configuring Bucket ACL. On GCP console, "Edit Permissions" for bucket exposes IAM configurations only. Bucket ACLs are configured automatically as per need in order to implement/support User enforced Bucket IAM policy. In-case administrator changes bucket ACL using command-line(gsutils)/API bucket IAM also gets updated automatically
+lwid:
+  - GCP_CIS_5_1
+  - GCP_CIS12_5_1
+provider: GCP
+ruleId: CKV_GCP_28
+severity: Critical
+sid: ckv-gcp-28
+title: Ensure that Cloud Storage bucket is not anonymously or publicly accessible

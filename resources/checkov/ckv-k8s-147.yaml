@@ -1,0 +1,83 @@
+---
+category: Monitoring
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    kubelet is the primary "node agent" that runs on each node in a Kubernetes cluster. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    The `--event-qps` flag on the Kubelet can be used to limit the rate at which events are gathered. This is required to capture any Security relevant information. Setting this too low could result in relevant events not being logged, however the unlimited setting of 0 could result in a denial of service on the kubelet.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    kubelet is the primary "node agent" that runs on each node in a Kubernetes cluster. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    The `--event-qps` flag on the Kubelet can be used to limit the rate at which events are gathered. This is required to capture any Security relevant information. Setting this too low could result in relevant events not being logged, however the unlimited setting of 0 could result in a denial of service on the kubelet.
+
+    #### Rationale
+    It is important to capture all events and not restrict event creation. Events are an important source of security information and analytics that ensure that your environment is consistently monitored using the event data.
+
+    #### Audit
+    Run the following command on each node:
+    ```
+     ps -ef | grep kubelet
+    ```
+    Review the value set for the `--event-qps` argument and determine whether this has been set to an appropriate level for the cluster. The value of `0` can be used to ensure that all events are captured.
+
+    If the `--event-qps` argument does not exist, check that there is a Kubelet config file specified by `--config` and review the value in this location.
+
+    #### Remediation
+    If using a Kubelet config file, edit the file to set `eventRecordQPS:` to an appropriate level. If using command line arguments, edit the kubelet service file `/etc/systemd/system/kubelet.service.d/10-kubeadm.conf` on each worker node and set the below parameter in `KUBELET_SYSTEM_PODS_ARGS` variable.
+
+    Based on your system, restart the `kubelet` service. For example:
+    ```
+       systemctl daemon-reload
+       systemctl restart kubelet.service
+    ```
+
+    By default, `--event-qps` argument is set to `5`.
+
+    Example of Kubelet Configuration file:
+    ```yaml
+         apiVersion: kubelet.config.k8s.io/v1beta1
+         kind: KubeletConfiguration
+         address: 0.0.0.0
+         authentication:
+            anonymous:
+              enabled: false
+            x509:
+              clientCaFile: "/etc/pf9/kube.d/certs/kubelet/server/ca.crt"
+         evictionHard:
+            memory.available:  "200Mi"
+         podCIDR: 10.200.0.0/16
+         authorization:
+            mode: Webhook
+         maxPods: 200
+         readOnlyPort: 0
+    +    eventRecordQPS: 50
+         ...
+         ...
+    ```
+
+    #### Impact
+    Setting this parameter to 0 could result in a denial of service condition due to excessive events being created. The cluster's event processing and storage systems should be scaled to handle expected event loads.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kubelet/
+    * https://github.com/kubernetes/kubernetes/blob/master/pkg/kubelet/apis/kubeletconfig/v1beta1/types.go
+
+    #### CIS Controls:
+    **Version 6**
+      *6 Maintenance, Monitoring, and Analysis of Audit Logs*
+provider: Kubernetes
+ruleId: CKV_K8S_147
+severity: Low
+sid: ckv-k8s-147
+title: "Ensure that the --event-qps argument is set to 0 or a level which ensures appropriate event capture"

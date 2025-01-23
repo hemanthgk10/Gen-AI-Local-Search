@@ -1,0 +1,45 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: Ensure no hard coded AWS access & secret keys exists in the provider.
+  Most of these are easy targets for an attacker in a repository. Committing them
+  a repository are leaving them in the code increases the chance of exposing to unauthorized
+  users.
+extra:
+  entity: serverless_aws
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure no hard coded AWS access & secret keys exists in the provider. Most of these are easy targets for an attacker. Committing them to a repository or leaving them in the code increases the chance of exposing to unauthorized users.
+
+  #### Rationale
+  For Infrastructure as Code (IaC) Static credentials are committed to repository that others can have access too. This can fall in the hands of a person who shouldn't have permissions to know them, causing security breaches.
+
+  #### Remediation
+  Instead of providing the static credentials in the provider such as terraform or cloudformation, use environmental variables.
+
+  Terraform example:
+  ```
+  provider "aws" {
+  -  region     = "us-west-2"
+  -  access_key = "my-access-key"
+  -  secret_key = "my-secret-key"
+  }
+  ```
+  ```
+  # Instead of providing above use environmental variables
+  $ export AWS_ACCESS_KEY_ID="anaccesskey"
+  $ export AWS_SECRET_ACCESS_KEY="asecretkey"
+  $ export AWS_DEFAULT_REGION="us-west-2"
+  ```
+
+  #### References
+  * https://www.terraform.io/docs/providers/aws/index.html#static-credentials
+  * https://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_41
+severity: Critical
+sid: ckv-aws-41
+title: Ensure no hard coded AWS access & secret keys exists in provider

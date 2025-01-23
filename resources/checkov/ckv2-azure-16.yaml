@@ -1,0 +1,15 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that MySQL server enables customer-managed key for encryption"
+extra:
+  entity: azurerm_mysql_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV2_AZURE_16
+severity: High
+sid: ckv2-azure-16
+title: "Ensure that MySQL server enables customer-managed key for encryption"

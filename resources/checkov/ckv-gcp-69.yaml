@@ -1,0 +1,84 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Every node stores its metadata on a metadata server. Some of this metadata, such as kubelet credentials and the VM instance identity token, is sensitive and should not be exposed to a Kubernetes workload. Enabling the GKE Metadata server prevents pods (that are not running on the host network) from accessing this metadata and facilitates Workload Identity.
+
+    When unspecified, the default setting allows running pods to have full access to the node's underlying metadata server.
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Every node stores its metadata on a metadata server. Some of this metadata, such as kubelet credentials and the VM instance identity token, is sensitive and should not be exposed to a Kubernetes workload. Enabling the GKE Metadata server prevents pods (that are not running on the host network) from accessing this metadata and facilitates Workload Identity.
+
+    When unspecified, the default setting allows running pods to have full access to the node's underlying metadata server.
+
+    #### Rationale
+    Running the GKE Metadata Server prevents workloads from accessing sensitive instance metadata and facilitates Workload Identity.
+
+    #### Remediation
+    Supported values for the `mode` in `workload_metadata_config` are `UNSPECIFIED`, `GCE_METADATA` and `GKE_METADATA`.
+
+    Terraform example
+    ```
+    resource "google_container_cluster" "example" {
+        name                        = "my-gke-cluster"
+        location                    = "us-central1"
+        remove_default_node_pool    = true
+        initial_node_count          = 1
+        node_config {
+          service_account = google_service_account.default.email
+    +     workload_metadata_config {
+    +       mode  = "GKE_METADATA"
+    +     }
+          ...
+          ...
+        }
+        ...
+        ...
+    }
+
+     OR
+
+    resource "google_container_node_pool" "example_preemptible_nodes" {
+        name       = "my-node-pool"
+        location   = "us-central1"
+        cluster    = google_container_cluster.primary.name
+        node_config {
+          preemptible  = true
+    +     workload_metadata_config {
+    +       mode  = "GKE_METADATA"
+    +     }
+          ...
+          ...
+        }
+        ...
+        ...
+    }
+    ```
+
+    #### Impact
+    The GKE Metadata Server must be run when using Workload Identity. Because Workload Identity replaces the need to use Metadata Concealment, the two approaches are incompatible.
+
+    When the GKE Metadata Server and Workload Identity are enabled, unless the Pod is running on the host network, Pods cannot use the Compute Engine default service account.
+
+    You may also need to modify workloads in order for them to use Workload Identity as described within https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity.
+
+    #### Default Value
+    By default, running pods to have full access to the node's underlying metadata server.
+
+    #### Note
+    `GKE_METADATA` feature can only be enabled if workload identity is enabled at the cluster level.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#workload_metadata_config
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/protecting-cluster-metadata#concealment
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_69
+severity: Low
+sid: ckv-gcp-69
+title: "Ensure the GKE Metadata Server is Enabled"

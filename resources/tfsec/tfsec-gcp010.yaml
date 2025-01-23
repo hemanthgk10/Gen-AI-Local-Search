@@ -1,0 +1,78 @@
+---
+autofix: true
+category: Compute
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "CIS GKE Benchmark Recommendation: 6.5.5. Ensure Shielded GKE Nodes are Enabled. Shielded GKE Nodes provide strong, verifiable node identity and integrity to increase the security of GKE nodes and should be enabled on all GKE clusters."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/gcp010.go"
+guidelines: |-
+    #### Description
+    Shielded GKE Nodes provides verifiable integrity via secure	boot, virtual trusted platform module (vTPM)-enabled measured boot, and	integrity monitoring.
+
+    #### Rationale
+    Shielded GKE nodes protects clusters against boot-or kernel-level malware or rootkits which	persist beyond infected OS.
+
+    Shielded GKE nodes run firmware which is signed and verified using Google's Certificate Authority, ensuring that the nodes' firmware is unmodified and establishing the root of trust for Secure Boot. GKE node identity is strongly protected via virtual Trusted Platform Module (vTPM) and verified remotely by the master node before the node joins the cluster. Lastly, GKE node integrity (i.e., boot sequence and kernel) is measured and can be monitored and verified remotely.
+
+    #### Remediation
+    Terraform example:
+    ```
+    resource "google_container_cluster" "gke" {
+       name       = "my-node-pool"
+       location   = "us-central1"
+
+    -  enable_shielded_nodes = "false"
+    +  enable_shielded_nodes = "true"
+       ...
+       ...
+    }
+    ```
+
+    Using *Google Cloud Console*:
+
+    To update an existing cluster to use Shielded GKE nodes
+    1.) Navigate to [Kubernetes Engine](https://console.cloud.google.com/kubernetes/list) in GCP
+    2.) Select the cluster which you wish to enable `Shielded GKE Nodes` and Click `EDIT`
+    3.) Locate	the `Shielded GKE Nodes` drop-down menu and select 'Enabled'
+    4.) Click `SAVE`
+
+    Using *Command Line*:
+    To migrate an existing cluster, you will need to specify the `--enable-shielded-nodes` flag on a cluster update command.
+    ```
+    gcloud beta container clusters update [CLUSTER_NAME] --zone [CLUSTER_ZONE] --enable-shielded-nodes
+    ```
+
+    #### Impact
+    After you enable Shielded GKE Nodes in a cluster, any nodes created in a Node pool without	`Shielded GKE Nodes` enabled, or created outside of any Node pool, aren't able to join the cluster.
+
+    `Shielded GKE Nodes` can only be used with Container-Optimized OS (COS), COS with containerd, and Ubuntu node images.
+
+    #### Default Value
+    Currently, Shielded GKE Nodes are not enabled by default.
+
+    If `Shielded GKE Nodes` are enabled,Integrity Monitoring (through Stackdriver) is enabled by default and Secure Boot is disabled by default.
+
+    #### References
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/shielded-gke-nodes
+    * https://www.terraform.io/docs/providers/google/r/container_cluster.html#enable_shielded_nodes
+lwid: []
+provider: GCP
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: enable_shielded_nodes
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - google_container_cluster
+ruleId: GCP010
+severity: Medium
+sid: tfsec-gcp010
+title: "Shielded GKE nodes not enabled"

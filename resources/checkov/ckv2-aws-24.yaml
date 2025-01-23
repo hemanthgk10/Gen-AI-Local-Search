@@ -1,0 +1,40 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon SageMaker is a fully managed machine learning service. With SageMaker, data scientists and developers can quickly and easily build and train machine learning models, and then directly deploy them into a production-ready hosted environment. It provides an integrated Jupyter authoring notebook instance for easy access to your data sources for exploration and analysis, so you don't have to manage servers."
+extra:
+  entity: aws_sagemaker_notebook_instance
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon SageMaker is a fully managed machine learning service. With SageMaker, data scientists and developers can quickly and easily build and train machine learning models, and then directly deploy them into a production-ready hosted environment. It provides an integrated Jupyter authoring notebook instance for easy access to your data sources for exploration and analysis, so you don't have to manage servers.
+
+    #### Rationale
+    Configuring a SageMaker to use SSE-KMS provides additional confidentiality controls on SageMaker Studio notebooks and SageMaker notebook instances, along with your model-building data and model artifacts.
+
+    #### Remediation
+    Set the `kms_key_id` in the `aws_sagemaker_notebook_instance`.
+
+    Terraform example
+    ```
+    resource "aws_sagemaker_notebook_instance" "ni" {
+        name          = "my-notebook-instance"
+        role_arn      = aws_iam_role.role.arn
+        instance_type = "ml.t2.medium"
+    +   kms_key_id    = "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c"
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sagemaker_notebook_instance#kms_key_id
+    * https://docs.aws.amazon.com/sagemaker/latest/dg/encryption-at-rest.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_24
+severity: Medium
+sid: ckv2-aws-24
+title: "Ensure SageMaker Notebook is encrypted at rest using KMS CMK"

@@ -1,0 +1,74 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Amazon Elasticsearch Service now lets you configure your domains to require that all traffic be submitted over HTTPS so that you can ensure that communications between your clients and your domain are encrypted. You can also configure the minimum required TLS version to accept. This option is a useful additional security control to ensure your clients are not misconfigured."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws054.go"
+guidelines: |-
+    #### Description
+    Amazon ElasticSearch is a fully managed service to help you run, deploy a secure ElasticSearch service cost effectively.
+    ElasticSearch helps to store, analyze, and correlate application and infrastructure log data to find and fix issues faster
+    and improve application performance. This can contain sensitive information and it should be safely protected, so any
+    communication between your client and you domain are done over TLS only.
+
+    #### Rationale
+    To ensure that communication between your clients and your domain are encrypted, Amazon ElasticSearch provides the option
+    to enforce `https` for all traffic. You can also configure the minimum required TLS version to accept. This is an useful
+    security control to ensure your clients are not misconfigured.
+
+    #### Remediation
+    Set argument `domain_endpoint_options.enforce_https` to true and also provide the policy for tls.
+    Available options for policy:
+
+    * Policy-Min-TLS-1-2-2019-07
+    * Policy-Min-TLS-1-0-2019-07
+
+    Terraform will only perform drift detection if a configuration value is provided.
+
+    Terraform example:
+    ```
+    resource "aws_elasticsearch_domain" "es" {
+        domain_name           = var.domain
+        elasticsearch_version = "6.3"
+
+        cluster_config {
+           instance_type = "m4.large.elasticsearch"
+        }
+    +   domain_endpoint_options {
+    +      enforce_https         = true
+    +      tls_security_policy   = "Policy-Min-TLS-1-2-2019-07"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticsearch_domain#enforce_https
+    * https://aws.amazon.com/about-aws/whats-new/2019/10/amazon-elasticsearch-service-provides-option-to-mandate-https/
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: domain_endpoint_options
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            domain_endpoint_options {
+               enforce_https         = true
+               tls_security_policy   = "Policy-Min-TLS-1-2-2019-07"
+            }
+        resourceType:
+          - aws_elasticsearch_domain
+ruleId: AWS054
+severity: Critical
+sid: tfsec-aws054
+title: "ElasticSearch domains should enforce HTTPS"

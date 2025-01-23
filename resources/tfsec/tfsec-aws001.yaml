@@ -1,0 +1,72 @@
+---
+autofix: true
+category: Storage
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "S3 bucket permissions should be set to deny public access unless explicitly required. Granting write access publicly with <code>public-read-write</code> is especially dangerous as you will be billed for any uploaded files. Additionally, you should not use the <code>authenticated-read</code> canned ACL, as this provides read access to any authenticated AWS user, not just AWS users within your organisation."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws001.go"
+guidelines: |-
+    #### Description
+    AWS S3 by default doesn't allow public access to S3 objects in new buckets. Users can modify bucket policies access point policies,
+    or object permissions to allow public access.
+    Enabling the option causes the following behavior:
+    * PUT Bucket acl and PUT Object acl calls fail if the specified access control list (ACL) is public.
+    * PUT Object calls fail if the request includes a public ACL.
+    * If this setting is applied to an account, then PUT Bucket calls fail if the request includes a public ACL.
+    #### Rationale
+    With AWS S3 Block Public Access, you can easily set up centralized controls to limit public access to your Amazon S3 resources that
+    are enforced regardless of how the resources are created.
+    #### Remediation
+    Set `aws_s3_bucket_public_access_block.block_public_acls` to true.
+    Terraform example:
+    ```
+    resource "aws_s3_bucket" "example" {
+       bucket = "example"
+    }
+    resource "aws_s3_bucket_public_access_block" "example" {
+       bucket = aws_s3_bucket.example.id
+    +  block_public_acls   = true
+       block_public_policy = true
+    }
+    ```
+    CloudFormation example:
+    ```json
+    {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+          "BucketName" : "my-bucket",
+          "PublicAccessBlockConfiguration" : {
+    +       "BlockPublicAcls" : true,
+            ...
+            ...
+          },
+          ...
+          ...
+        }
+    }
+    ```
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block#block_public_acls
+    * https://docs.aws.amazon.com/AmazonS3/latest/dev/access-control-block-public-access.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: block_public_acls
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_s3_bucket_public_access_block
+ruleId: AWS001
+severity: High
+sid: tfsec-aws001
+title: "S3 Bucket has an ACL defined which allows public access"

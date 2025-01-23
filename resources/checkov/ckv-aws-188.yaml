@@ -1,0 +1,46 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Redshift is a fully managed, petabyte-scale data warehouse service in the cloud. You can upload your data set and then perform data analysis queries. Regardless of the size of the data set, Amazon Redshift offers fast query performance using the same SQL-based tools and business intelligence applications that you use today.
+
+    Data protection refers to protecting data while in-transit (as it travels) to and from Amazon Redshift at rest (while it is stored on disks in Amazon Redshift data centers). You can protect data in transit by using SSL or by using client-side encryption.
+extra:
+  entity: aws_redshift_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Redshift is a fully managed, petabyte-scale data warehouse service in the cloud. You can upload your data set and then perform data analysis queries. Regardless of the size of the data set, Amazon Redshift offers fast query performance using the same SQL-based tools and business intelligence applications that you use today.
+
+    Data protection refers to protecting data while in-transit (as it travels) to and from Amazon Redshift at rest (while it is stored on disks in Amazon Redshift data centers). You can protect data in transit by using SSL or by using client-side encryption.
+
+    #### Rationale
+    Encryption helps you protect your stored data against unauthorized access and other security risks.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_redshift_cluster`.
+
+    Terraform example
+    ```
+    resource "aws_redshift_cluster" "example" {
+        cluster_identifier = "tf-redshift-cluster"
+        database_name      = "mydb"
+        node_type          = "dc1.large"
+        cluster_type       = "single-node"
+    +   kms_key_id         = ${aws_kms_key.example.arn}
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/redshift_cluster#kms_key_id
+    * https://docs.aws.amazon.com/redshift/latest/mgmt/security-data-protection.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_188
+severity: High
+sid: ckv-aws-188
+title: "Ensure RedShift Cluster is encrypted by KMS using a customer managed Key (CMK)"

@@ -1,0 +1,88 @@
+---
+autofix: true
+category: Queues
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure Amazon MQ Broker logging is enabled"
+extra:
+  entity: aws_mq_broker
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon MQ is a managed message broker service that allows software applications and components to communicate using various programming languages, operating systems, and formal messaging protocols. Enabling the logs on the MQ helps you to debug and audit the logs. Cloudwatch provides an easy way to ingest MQ logs for monitoring.
+
+    #### Rationale
+    Monitoring an Amazon MQ broker provides more insights into the reliability, availability and performance of your AWS solution. You should collect data from the logs to debug a multi point failures if it happens. AWS provides an easy to ingest MQ broker logs to cloudwatch logs.
+
+    #### Remediation
+    Enable the argument `log` with `general` and `audit` to true.
+
+    Terraform example:
+    ```
+    resource "aws_mq_broker" "example" {
+        broker_name = "example"
+        configuration {
+          id       = aws_mq_configuration.test.id
+          revision = aws_mq_configuration.test.latest_revision
+        }
+
+        engine_type        = "ActiveMQ"
+        engine_version     = "5.15.0"
+        host_instance_type = "mq.t2.micro"
+        security_groups    = [aws_security_group.test.id]
+    +   logs {
+    +      general = true
+    +      audit   = true
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```
+    {
+      "Type" : "AWS::AmazonMQ::Broker",
+      "Properties" : {
+          "AuthenticationStrategy" : "SIMPLE",
+          "AutoMinorVersionUpgrade" : true,
+          "BrokerName" : "example",
+          "DeploymentMode" : "CLUSTER_MULTI_AZ",
+    +     "Logs" : {
+    +       "Audit" : true,
+    +       "General" : true
+    +     },
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/security-logging-monitoring-configure-cloudwatch.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/mq_broker#logs
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-amazonmq-broker-loglist.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: logs
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            logs {
+               general = true
+               audit   = true
+            }
+        resourceType:
+          - aws_mq_broker
+ruleId: CKV_AWS_48
+severity: Low
+sid: ckv-aws-48
+title: "Ensure Amazon MQ Broker logging is enabled"

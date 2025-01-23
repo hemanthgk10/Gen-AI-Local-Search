@@ -1,0 +1,76 @@
+---
+category: Compute
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Lambda is a compute service that lets you run code without provisioning or managing servers. Lambda runs your code on a high-availability compute infrastructure and performs all of the administration of the compute resources, including server and operating system maintenance, capacity provisioning and automatic scaling, code monitoring and logging. With Lambda, you can run code for virtually any type of application or backend service. You organize your code into Lambda functions. Lambda runs your function only when needed and scales automatically, from a few requests per day to thousands per second.
+
+    The first time you invoke your function, AWS Lambda creates an instance of the function and runs its handler method to process the event. When the invocation fails, you can configure your function with a dead-letter queue to save discarded events for further processing. A dead-letter queue acts the same as an on-failure destination in that it is used when an event fails all processing attempts or expires without being processed. However, a dead-letter queue is part of a function's version-specific configuration, so it is locked in when you publish a version. You can either send it to an SNS topic or SQS queue.
+extra:
+  entity: aws_lambda_function
+  type: resource
+guidelines: |-
+    #### Description
+    Lambda is a compute service that lets you run code without provisioning or managing servers. Lambda runs your code on a high-availability compute infrastructure and performs all of the administration of the compute resources, including server and operating system maintenance, capacity provisioning and automatic scaling, code monitoring and logging. With Lambda, you can run code for virtually any type of application or backend service. You organize your code into Lambda functions. Lambda runs your function only when needed and scales automatically, from a few requests per day to thousands per second.
+
+    The first time you invoke your function, AWS Lambda creates an instance of the function and runs its handler method to process the event. When the invocation fails, you can configure your function with a dead-letter queue to save discarded events for further processing. A dead-letter queue acts the same as an on-failure destination in that it is used when an event fails all processing attempts or expires without being processed. However, a dead-letter queue is part of a function's version-specific configuration, so it is locked in when you publish a version. You can either send it to an SNS topic or SQS queue.
+
+    #### Rationale
+    With the Dead Letter Queues (DLQ), Lambda function developers can now create much simpler functions by focusing only on the business logic, and leverage the AWS Lambda infrastructure to delegate error handling elsewhere in a more graceful manner that can be used for debugging, analyzing issues later.
+
+    #### Remediation
+    Specify the queue or topic ARN where Lambda sends asynchronous events when they fail processing.
+
+    Terraform example:
+    ```
+    variable "lambda_function_name" {
+        default = "lambda_function_name"
+    }
+
+    resource "aws_lambda_function" "test_lambda" {
+        function_name = var.lambda_function_name
+
+        depends_on = [
+          aws_iam_role_policy_attachment.lambda_logs,
+          aws_cloudwatch_log_group.example,
+        ]
+
+    +   dead_letter_config {
+    +     target_arn = "arn:aws:sns:us-east-1:123456789012:mystack-mytopic"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```
+    {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+    +     "DeadLetterConfig" : {
+    +        "TargetArn": "arn:aws:sns:us-east-1:123456789012:mystack-mytopic"
+    +     },
+          "Description" : "Example lambda function for demo",
+          "FunctionName" : "example-lambda",
+          "Handler" : String,
+          "MemorySize" : 10240,
+          "PackageType" : "Zip",
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function#dead_letter_config
+    * https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq
+    * https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-lambda-function-deadletterconfig.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_116
+severity: Low
+sid: ckv-aws-116
+title: "Ensure that AWS Lambda function is configured for a Dead Letter Queue(DLQ)"

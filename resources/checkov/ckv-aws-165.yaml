@@ -1,0 +1,51 @@
+---
+category: "Backup & Recovery"
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon DynamoDB is a fully managed NoSQL database service that provides fast and predictable performance with seamless scalability. DynamoDB lets you offload the administrative burdens of operating and scaling a distributed database so that you don't have to worry about hardware provisioning, setup and configuration, replication, software patching, or cluster scaling.
+
+    You can create on-demand backups of your Amazon DynamoDB tables, or you can enable continuous backups using point-in-time recovery.
+extra:
+  entity: aws_dynamodb_global_table
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon DynamoDB is a fully managed NoSQL database service that provides fast and predictable performance with seamless scalability. DynamoDB lets you offload the administrative burdens of operating and scaling a distributed database so that you don't have to worry about hardware provisioning, setup and configuration, replication, software patching, or cluster scaling.
+
+    You can create on-demand backups of your Amazon DynamoDB tables, or you can enable continuous backups using point-in-time recovery.
+
+    #### Rationale
+    Point-in-time recovery helps protect your DynamoDB tables from accidental write or delete operations.
+
+    #### Remediation
+    This can not be set in the terraform. In CloudFormation, we can set the `PointInTimeRecoveryEnabled` to `true`.
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::DynamoDB::GlobalTable",
+      "Properties" : {
+          "TableName" : "example",
+          "Replicas": [{
+              "Region": "us-west-2",
+    +         "PointInTimeRecoverySpecification" : {
+    +            "PointInTimeRecoveryEnabled" : true
+    +         }
+          }],
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_global_table
+    * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/PointInTimeRecovery_Howitworks.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_165
+severity: Medium
+sid: ckv-aws-165
+title: "Ensure Dynamodb point in time recovery (backup) is enabled for global tables"

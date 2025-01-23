@@ -1,0 +1,48 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Elastic Block Store (Amazon EBS) provides block level storage volumes for use with EC2 instances. EBS volumes behave like raw, unformatted block devices. You can mount these volumes as devices on your instances. EBS volumes that are attached to an instance are exposed as storage volumes that persist independently from the life of the instance.
+
+    You can back up the data on your Amazon EBS volumes to Amazon S3 by taking point-in-time snapshots. Snapshots are incremental backups, which means that only the blocks on the device that have changed after your most recent snapshot are saved. Each snapshot contains all of the information that is needed to restore your data to a new EBS volume.
+
+    Amazon EBS encryption as a straight-forward encryption solution for your EBS resources associated with your EC2 instances.
+extra:
+  entity: aws_ebs_volume
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elastic Block Store (Amazon EBS) provides block level storage volumes for use with EC2 instances. EBS volumes behave like raw, unformatted block devices. You can mount these volumes as devices on your instances. EBS volumes that are attached to an instance are exposed as storage volumes that persist independently from the life of the instance.
+
+    You can back up the data on your Amazon EBS volumes to Amazon S3 by taking point-in-time snapshots. Snapshots are incremental backups, which means that only the blocks on the device that have changed after your most recent snapshot are saved. Each snapshot contains all of the information that is needed to restore your data to a new EBS volume.
+
+    Amazon EBS encryption as a straight-forward encryption solution for your EBS resources associated with your EC2 instances.
+
+    #### Rationale
+    Encryption helps you protect your stored data against unauthorized access and other security risks.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_ebs_volume`.
+
+    Terraform example
+    ```
+    resource "aws_ebs_volume" "example" {
+        availability_zone = "us-west-2a"
+        size              = 40
+    +   kms_key_id        = ${aws_kms_key.example.arn}
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume#kms_key_id
+    * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_189
+severity: High
+sid: ckv-aws-189
+title: "Ensure EBS Volume is encrypted by KMS using a customer managed Key (CMK)"

@@ -1,0 +1,86 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon DynamoDB is a fully managed NoSQL database service that provides fast and predictable performance with seamless scalability. DynamoDB lets you offload the administrative burdens of operating and scaling a distributed database so that you don't have to worry about hardware provisioning, setup and configuration, replication, software patching, or cluster scaling. DynamoDB also offers encryption at rest, which eliminates the operational burden and complexity involved in protecting sensitive data."
+extra:
+  entity: aws_dynamodb_table
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon DynamoDB is a fully managed NoSQL database service that provides fast and predictable performance with seamless scalability. DynamoDB lets you offload the administrative burdens of operating and scaling a distributed database so that you don't have to worry about hardware provisioning, setup and configuration, replication, software patching, or cluster scaling. DynamoDB also offers encryption at rest, which eliminates the operational burden and complexity involved in protecting sensitive data.
+
+    #### Rationale
+    DynamoDB encryption at rest provides enhanced security by encrypting all your data at rest using encryption keys stored in AWS KMS. This helps reduce the operational burden and complexity involved in protecting sensitive data. With encryption at rest, you can build security-sensitive applications that meet strict encryption compliance and regulatory requirements.
+
+    #### Remediation
+    Set the `server_side_encryption.enabled` flag to `true`. We also need to provide the `kms_key_arn` for encrypting the data tables.
+
+    Terraform example
+    ```
+    resource "aws_dynamodb_table" "example" {
+        name             = "example"
+        hash_key         = "TestTableHashKey"
+        billing_mode     = "PAY_PER_REQUEST"
+        stream_enabled   = true
+        stream_view_type = "NEW_AND_OLD_IMAGES"
+
+        attribute {
+          name = "TestTableHashKey"
+          type = "S"
+        }
+
+    +   server_side_encryption {
+    +     enabled     = true
+    +     kms_key_arn = "arn:aws:kms:us-west-2:111122223333:key/example"
+    +   }
+
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+        "Type" : "AWS::DynamoDB::Table",
+        "Properties" : {
+            "BillingMode" : "PAY_PER_REQUEST",
+    +       "SSESpecification" : {
+    +           "KMSMasterKeyId" : "arn:aws:kms:us-west-2:111122223333:key/example",
+    +           "SSEEnabled" : true,
+    +           "SSEType" : "KMS"
+    +       },
+            "TableClass" : "sample",
+            "TableName" : "example",
+            ...
+            ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_table#server_side_encryption
+    * https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/EncryptionAtRest.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-dynamodb-table-ssespecification.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_119
+severity: Medium
+sid: ckv-aws-119
+title: "Ensure DynamoDB Tables are encrypted using KMS"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: server_side_encryption
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      server_side_encryption {
+         enabled     = true
+         kms_key_arn = "<Please provide the KMS key arn here>"
+      }
+    resourceType: [ "aws_dynamodb_table" ]

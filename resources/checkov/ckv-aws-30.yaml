@@ -1,0 +1,77 @@
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: Ensure all data stored in the Elasticache Replication Group is securely
+  encrypted in transit to prevent data from unauthorized access. This helps in securing
+  the data moving from a primary node to a read replica node within a replication
+  group, or between your replication group and your application.
+extra:
+  entity: AWS::ElastiCache::ReplicationGroup
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure all data stored in the Elasticache Replication Group is securely encrypted in transit to prevent data from unauthorized access. This helps in securing the data moving from a primary node to a read replica node within a replication group, or between your replication group and your application.
+
+  #### Rationale
+  Amazon ElastiCache in-transit encryption increases the security of your data at its most vulnerable points—when it is in transit from one location to another.
+
+  ElastiCache in-transit encryption implements:
+    * *Encrypted connections* — both the server and client connections are Secure Socket Layer (SSL) encrypted.
+    * *Encrypted replication* - data moving between a primary node and replica nodes is encrypted.
+    * *Server authentication* - clients can authenticate that they are connecting to the right server.
+    * *Client authentication* - using the Redis AUTH feature, the server can authenticate the clients.
+
+  #### Remediation
+  Enable the attribute `transit_encryption_enabled` to true. You need to specify the `subnet_group_name` along with it.
+
+  Terraform example:
+  ```
+  resource "aws_elasticache_replication_group" "baz" {
+    replication_group_id          = "tf-redis-cluster"
+    replication_group_description = "test description"
+    node_type                     = "cache.t2.small"
+    port                          = 6379
+    automatic_failover_enabled    = true
+
+    at_rest_encryption_enabled    = true
+  + transit_encryption_enabled    = true
+    subnet_group_name             = "my-subnet-group"
+    ...
+    ...
+  }
+  ```
+
+  Cloudformation example:
+  ```json
+  {
+    "Type" : "AWS::ElastiCache::ReplicationGroup",
+    "Properties" : {
+        "AtRestEncryptionEnabled"  : true,
+  +     "TransitEncryptionEnabled" : true,
+        "CacheSubnetGroupName"     : "my-subnet-group",
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_replication_group#transit_encryption_enabled
+  * https://docs.amazonaws.cn/en_us/AmazonElastiCache/latest/red-ug/in-transit-encryption.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_30
+severity: Medium
+sid: ckv-aws-30
+title: Ensure Elasticache Replication Group data is secured in transit
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: transit_encryption_enabled
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_elasticache_replication_group" ]

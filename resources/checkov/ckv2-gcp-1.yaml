@@ -1,0 +1,86 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: |-
+    A GCP service account (as distinct from a Kubernetes ServiceAccount) is an identity that an instance or an application can use to run GCP API requests on your behalf. This identity is used to identify virtual machine instances to other Google Cloud Platform services.
+
+    GKE clusters by default uses Compute Engine default service account when it is created unless a non-default account is specified. This account has broad access by default, as defined by access scopes, making it useful to a wide variety of applications on the VM, but it has more permissions than are required to run your Kubernetes Engine cluster.
+
+    Kubernetes Engine requires, at a minimum, the node service account to have the monitoring.viewer, monitoring.metricWriter, and logging.logWriter roles. Additional roles may need to be added for the nodes to pull images from GCR.
+extra:
+  entity: google_project_default_service_accounts
+  type: resource
+guidelines: |-
+    #### Description
+    A GCP service account (as distinct from a Kubernetes ServiceAccount) is an identity that an instance or an application can use to run GCP API requests on your behalf. This identity is used to identify virtual machine instances to other Google Cloud Platform services.
+
+    GKE clusters by default uses Compute Engine default service account when it is created unless a non-default account is specified. This account has broad access by default, as defined by access scopes, making it useful to a wide variety of applications on the VM, but it has more permissions than are required to run your Kubernetes Engine cluster.
+
+    Kubernetes Engine requires, at a minimum, the node service account to have the monitoring.viewer, monitoring.metricWriter, and logging.logWriter roles. Additional roles may need to be added for the nodes to pull images from GCR.
+
+    #### Rationale
+    Excess permissions can be abused if the cluster is compromised. So, you should create and use a minimally privileged service account to run your Kubernetes Engine cluster instead of using the Compute Engine default service account, and create separate service accounts for each Kubernetes Workload.
+
+    #### Remediation
+    Create a non-default service account and grant IAM roles to that service account for only the resources that the cluster needs. Then, set `service_account` to that non-default service account.
+
+    Terraform example
+    ```
+    - resource "google_project_default_service_accounts" "default" {
+    -    project      = "my-project-id"
+    -    action       = "DELETE"
+    - }
+
+    + resource "google_service_account" "custom_account" {
+    +    account_id   = "service-account-id"
+    +    display_name = "Service Account"
+    + }
+
+    resource "google_container_cluster" "primary" {
+        name                     = "my-gke-cluster"
+        location                 = "us-central1"
+        remove_default_node_pool = true
+        initial_node_count       = 1
+    }
+
+    resource "google_container_node_pool" "primary_preemptible_nodes" {
+        name       = "my-node-pool"
+        location   = "us-central1"
+        cluster    = google_container_cluster.primary.name
+        node_count = 1
+
+        node_config {
+          preemptible  = true
+          machine_type = "e2-medium"
+
+    -     service_account = google_project_default_service_accounts.default.email
+    +     service_account = google_service_account.custom_account.email
+          oauth_scopes    = [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+        ...
+        ...
+    }
+    ```
+
+    ####Impact
+    Instances are automatically granted the https://www.googleapis.com/auth/cloud-platform scope to allow full access to all Google Cloud APIs. This is so that the IAM permissions of the instance are completely determined by the IAM roles of the Service account. Thus, if Kubernetes workloads were using cluster access scopes to perform actions using Google APIs, they may no longer be able to, if not permitted by the permissions of the Service account. To remediate, follow Recommendation 6.2.2.
+    The Service account roles listed here are the minimum required to run the cluster. Additional roles may be required to pull from a private instance of Google Container Registry (GCR).
+
+    *Default Value:*
+    By default, nodes use the Compute Engine default service account when you create a new cluster.
+
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster
+    * https://cloud.google.com/compute/docs/access/service-accounts#compute_engine_default_service_account
+lwid: []
+provider: GCP
+ruleId: CKV2_GCP_1
+severity: Medium
+sid: ckv2-gcp-1
+title: "Ensure GKE clusters are not running using the Compute Engine default service account"

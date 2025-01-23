@@ -1,0 +1,80 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: |-
+    Amazon Elastic Kubernetes Service (Amazon EKS) is a managed service that you can use to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes. Kubernetes is an open-source system for automating the deployment, scaling, and management of containerized applications.
+    When you create a new cluster, Amazon EKS creates an endpoint for the managed Kubernetes API server that you use to communicate with your cluster (using Kubernetes management tools such as kubectl). By default, this API server endpoint is public to the internet, and access to the API server is secured using a combination of AWS Identity and Access Management (IAM) and native Kubernetes Role Based Access Control (RBAC).
+    You can enable private access to the Kubernetes API server so that all communication between your nodes and the API server stays within your VPC. You can limit the IP addresses that can access your API server from the internet, or completely disable internet access to the API server.
+extra:
+  entity: aws_eks_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elastic Kubernetes Service (Amazon EKS) is a managed service that you can use to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes. Kubernetes is an open-source system for automating the deployment, scaling, and management of containerized applications.
+
+    When you create a new cluster, Amazon EKS creates an endpoint for the managed Kubernetes API server that you use to communicate with your cluster (using Kubernetes management tools such as kubectl). By default, this API server endpoint is public to the internet, and access to the API server is secured using a combination of AWS Identity and Access Management (IAM) and native Kubernetes Role Based Access Control (RBAC).
+
+    You can enable private access to the Kubernetes API server so that all communication between your nodes and the API server stays within your VPC. You can limit the IP addresses that can access your API server from the internet, or completely disable internet access to the API server.
+
+    #### Rationale
+    Allowing access to public access without any restrictions can cause attackers to easily access the cluster and attack the vulnerable parts of the clsuter. They can also cause DDoS attack so the concerned users can not access the service.
+
+    #### Remediation
+    Either set the `endpoint_public_access` argument to false in `aws_eks_cluster` or set the `public_access_cidrs` to a specific cidr block rather than leaving it open to `0.0.0.0/0`.
+
+    Terraform example:
+    ```
+    resource "aws_eks_cluster" "example" {
+       name     = "example"
+       role_arn = aws_iam_role.example.arn
+
+       vpc_config {
+          subnet_ids             = [aws_subnet.example1.id, aws_subnet.example2.id]
+    +     endpoint_public_access = false
+          ...
+          ...
+       }
+       ...
+       ...
+    }
+    ```
+
+    CloudFormation example:
+    ```
+    {
+        "Type" : "AWS::EKS::Cluster",
+        "Properties" : {
+            "Name" : "example",
+            "ResourcesVpcConfig" : {
+               "EndpointPrivateAccess" : true
+    +          "EndpointPublicAccess" : false
+            },
+            ...
+            ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_cluster#public_access_cidrs
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_cluster#endpoint_public_access
+    * https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_39
+severity: Critical
+sid: ckv-aws-39
+title: "Ensure Amazon EKS public endpoint disabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: vpc_config.endpoint_public_access
+    resourceAttributeType: blockAttribute
+    resourceAttributeValue: "false"
+    resourceType: [ "aws_eks_cluster" ]

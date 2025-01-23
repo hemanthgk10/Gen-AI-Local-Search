@@ -1,0 +1,58 @@
+category: Compute
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: Memory limit represents a maximum amount of memory that it can use on
+  a node. If a container attempts to use more than the specified limit, the system
+  will throttle that particular container.
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  Memory limit represents a maximum amount of memory that it can use on a node. If a container attempts to use more than the specified limit, the system will throttle that particular container.
+
+  #### Rationale
+  Memory limits should be set on each container to specify the maximum amount of memory it can use on a node. This allows the container the use the node memory upto this limit when there is a spike in traffic.
+
+  #### Remediation
+  Set the `limits.memory` for `containers` and `initContainers`.
+
+  Example of Memory limits for a Pod:
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  spec:
+    containers:
+    - image: nginx
+      name: nginx
+      resources:
+       requests:
+          cpu: 100m
+          memory: 100m
+       limits:
+          cpu: 200m
+  +       memory: 200m
+      ...
+      ...
+    initContainers:
+    - image: nginx-preconfig
+      name: configeditor
+      resources:
+        requests:
+          memory: 100m
+          cpu: 100m
+        limits:
+          cpu: 200m
+  +       memory: 200m
+      ...
+      ...
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+provider: Kubernetes
+ruleId: CKV_K8S_13
+severity: Medium
+sid: ckv-k8s-13
+title: Memory limits should be set

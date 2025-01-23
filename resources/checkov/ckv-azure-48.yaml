@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure 'public network access enabled' is set to 'False' for MariaDB servers"
+extra:
+  entity: azurerm_mariadb_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_48
+severity: Medium
+sid: ckv-azure-48
+title: "Ensure 'public network access enabled' is set to 'False' for MariaDB servers"

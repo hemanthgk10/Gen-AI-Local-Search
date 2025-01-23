@@ -9,3 +9,4 @@ ollama
 numpy
 streamlit-lottie
 requests
+pywebview

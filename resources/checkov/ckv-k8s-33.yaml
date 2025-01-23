@@ -1,0 +1,33 @@
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+- CIS
+description: Ensure the Kubernetes dashboard is not deployed
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  Dashboard is a web-based Kubernetes user interface. You can use Dashboard to deploy containerized applications to a Kubernetes cluster, troubleshoot your containerized application, and manage the cluster resources. You can use Dashboard to get an overview of applications running on your cluster, as well as for creating or modifying individual Kubernetes resources (such as Deployments, Jobs, DaemonSets, etc).
+
+  #### Rationale
+  Kubernetes Dashboard had elevated privileges on the cluster. This either happens mainly because most of the example related to the dashboard shows the installation as
+  ```
+  kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0/aio/deploy/recommended.yaml
+  ```
+  But the example, yaml contains administrative privileges and care is not taken when deploying the dashboard. Users deploy it without properly checking the privileges and security risks.
+
+  #### Remediation
+  * Make sure you have RBAC enabled in the cluster.
+  * Make sure not to grant the dashboard service account elevated privileges.
+    OR
+    Use a ServiceAccount token instead of just giving access to the dashboard ServiceAccount.
+
+  #### References
+  * https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
+  * https://blog.heptio.com/on-securing-the-kubernetes-dashboard-16b09b1b7aca
+provider: Kubernetes
+ruleId: CKV_K8S_33
+severity: Medium
+sid: ckv-k8s-33
+title: Ensure the Kubernetes dashboard is not deployed

@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that PostgreSQL server disables public network access"
+extra:
+  entity: azurerm_postgresql_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_68
+severity: High
+sid: ckv-azure-68
+title: "Ensure that PostgreSQL server disables public network access"

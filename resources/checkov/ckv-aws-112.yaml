@@ -1,0 +1,78 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "AWS Systems Manager (formerly known as SSM) is an AWS service that you can use to view and control your infrastructure on AWS. Using the Systems Manager console, you can view operational data from multiple AWS services and automate operational tasks across your AWS resources. Systems Manager helps you maintain security and compliance by scanning your managed instances and reporting on (or taking corrective action on) any policy violations it detects.
+The AWS SSM document resource creates a Systems Manager (SSM) document in AWS Systems Manager. This document defines the actions that Systems Manager performs on your AWS resources."
+extra:
+  entity: aws_ssm_document
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Systems Manager (formerly known as SSM) is an AWS service that you can use to view and control your infrastructure on AWS. Using the Systems Manager console, you can view operational data from multiple AWS services and automate operational tasks across your AWS resources. Systems Manager helps you maintain security and compliance by scanning your managed instances and reporting on (or taking corrective action on) any policy violations it detects.
+
+    The AWS SSM document resource creates a Systems Manager (SSM) document in AWS Systems Manager. This document defines the actions that Systems Manager performs on your AWS resources.
+
+    When the document type is of `session`, it is better to encrypt the data using AWS KMS. This enables to have a secured communication, for the session data transmitted between your Amazon Elastic Compute Cloud (Amazon EC2) instances and the local machines of users.
+
+    #### Rationale
+    Encrypting session data with your key also enables sessions to handle confidential data interactions, such as password resets, and further improves your security posture when using Systems Manager Session Manager.
+
+    #### Remediation
+    Add `kmsKeyId` in the `inputs` of the aws_ssm_document, if the `document_type=Session`. This will encrypt the contents of the session.
+
+    Terraform example
+    ```
+    resource "aws_ssm_document" "session_logging" {
+          name          = "SSM-SessionManagerRunShell"
+          document_type = "Session"
+
+          content = <<DOC
+          {
+            "schemaVersion": "1.2",
+            "description": "Check ip configuration of a Linux instance.",
+            "sessionType": "Standard_Stream",
+            "inputs": {
+              "s3BucketName": "${coalesce(var.session_logging_bucket_name, module.logs_label.id)}",
+              "s3KeyPrefix": "logs/",
+              "s3EncryptionEnabled": true,
+              "cloudWatchLogGroupName": "${module.logs_label.id}",
+              "cloudWatchEncryptionEnabled": true,
+    +         "kmsKeyId": "${coalesce(var.session_logging_kms_key_arn, module.kms_key.key_arn)}",
+              "runAsEnabled": false,
+              "runAsDefaultUser": ""
+            }
+            ...
+            ...
+          }
+        DOC
+
+        ...
+        ...
+    }
+    ```
+
+    Using *Console*:
+    1. Open the [AWS Systems Manager console](https://console.aws.amazon.com/systems-manager/)
+    2. In the navigation pane, choose `Session Manager`.
+    3. Choose the `Preferences` tab, and then choose `Edit`.
+    4. Select the check box next to `Key Management Service (KMS)`.
+    5. Do one of the following:
+         * Choose the button next to `Select a KMS key in my current account`, then select a key from the list.
+             OR
+         * Choose the button next to `Enter a KMS key alias or KMS key ARN`. Manually enter a KMS key alias for a key created in your current account, or enter the key Amazon Resource Name (ARN) for a key in another account.
+             OR
+         * Choose `Create new key` to create a new KMS key in your account. After you create the new key, return to the `Preferences` tab and select the key for encrypting session data in your account.
+    6. Choose `Save`.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_document#content
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ssm-document.html
+    * https://docs.aws.amazon.com/systems-manager/latest/userguide/session-preferences-enable-encryption.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_112
+severity: High
+sid: ckv-aws-112
+title: "Ensure Session Manager data is encrypted in transit"

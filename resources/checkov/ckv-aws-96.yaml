@@ -1,0 +1,74 @@
+---
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon Aurora (Aurora) is a fully managed relational database engine that's compatible with MySQL and PostgreSQL. Aurora is part of the managed database service Amazon Relational Database Service (Amazon RDS). Amazon RDS is a web service that makes it easier to set up, operate, and scale a relational database in the cloud. Amazon Aurora can encrypt your Amazon Aurora DB clusters. Data that is encrypted at rest includes the underlying storage for DB clusters, its automated backups, read replicas, and snapshots."
+extra:
+  entity: aws_rds_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Aurora (Aurora) is a fully managed relational database engine that's compatible with MySQL and PostgreSQL. Aurora is part of the managed database service Amazon Relational Database Service (Amazon RDS). Amazon RDS is a web service that makes it easier to set up, operate, and scale a relational database in the cloud. Amazon Aurora can encrypt your Amazon Aurora DB clusters. Data that is encrypted at rest includes the underlying storage for DB clusters, its automated backups, read replicas, and snapshots.
+
+    #### Rationale
+    Encrypting data at rest reduces the likelihood that it is unintentionally exposed and can nullify the impact of disclosure if the encryption remains unbroken.
+
+    #### Remediation
+    Aurora serverless is always encrypted by, so it is preferred to use that.
+
+    Terraform example
+    ```
+    resource "aws_rds_cluster" "example" {
+       cluster_identifier      = "aurora-cluster-demo"
+       database_name           = "mydb"
+
+    +  engine_mode = "serverless"
+
+       scaling_configuration {
+          auto_pause               = true
+          max_capacity             = 256
+          min_capacity             = 2
+          seconds_until_auto_pause = 300
+          timeout_action           = "ForceApplyCapacityChange"
+       }
+       ...
+       ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::RDS::DBCluster",
+      "Properties" : {
+          "AvailabilityZones" : ["us-west-2a", "us-west-2b", "us-west-2c"],
+          "BackupRetentionPeriod" : 5,
+          "DatabaseName" : "mydb",
+    +     "EngineMode" : "serverless",
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster#engine_mode
+    * https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.how-it-works.html#aurora-serverless.snapshots
+    * https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Overview.Encryption.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_96
+severity: Medium
+sid: ckv-aws-96
+title: "Ensure all data stored in Aurora is securely encrypted at rest"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: engine_mode
+    resourceAttributeType: string
+    resourceAttributeValue: "serverless"
+    resourceType: [ "aws_rds_cluster" ]

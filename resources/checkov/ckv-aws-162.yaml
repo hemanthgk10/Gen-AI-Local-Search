@@ -1,0 +1,62 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud.
+
+    You can authenticate to your DB cluster using AWS Identity and Access Management (IAM) database authentication. IAM database cluster authentication works with MySQL and PostgreSQL. With this authentication method, you don't need to use a password when you connect to a DB cluster. Instead, you use an authentication token.
+extra:
+  entity: aws_rds_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud.
+
+    You can authenticate to your DB cluster using AWS Identity and Access Management (IAM) database authentication. IAM database cluster authentication works with MySQL and PostgreSQL. With this authentication method, you don't need to use a password when you connect to a DB cluster. Instead, you use an authentication token.
+
+    #### Rationale
+    IAM database authentication provides the following benefits:
+
+      a. Network traffic to and from the database cluster is encrypted using Secure Socket Layer (SSL) or Transport Layer Security (TLS)
+      b. You can use IAM to centrally manage access to your database resources, instead of managing access individually on each DB cluster.
+      c. For applications running on Amazon EC2, you can use profile credentials specific to your EC2 instance to access your database instead of a password, for greater security.
+
+    #### Remediation
+    By default, IAM database authentication is disabled on DB cluster. You can turn on the IAM database authentication by setting `iam_database_authentication_enabled` to `true`.
+
+    Terraform example
+    ```
+    resource "aws_rds_cluster" "default" {
+        cluster_identifier   = "aurora-cluster-demo"
+        engine               = "aurora-postgresql"
+    +   iam_database_authentication_enabled  = true
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::RDS::DBCluster",
+      "Properties" : {
+          "DatabaseName" : "default",
+    +     "EnableIAMDatabaseAuthentication": true
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster#iam_database_authentication_enabled
+    * https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.Enabling.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-rds-dbcluster.html#cfn-rds-dbcluster-enableiamdatabaseauthentication
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_162
+severity: Medium
+sid: ckv-aws-162
+title: "Ensure RDS cluster has IAM authentication enabled"

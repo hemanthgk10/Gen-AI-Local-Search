@@ -1,0 +1,41 @@
+---
+category: General
+checkTool: checkov
+checkType: Docker
+compliance: []
+description: "Ensure that WORKDIR values are absolute paths"
+guidelines: |-
+    #### Description
+    The `WORKDIR` instruction sets the working directory for any `RUN`, `CMD`, `ENTRYPOINT`, `COPY` and `ADD` instructions that follow it in the Dockerfile. If the `WORKDIR` doesn’t exist, it will be created even if it’s not used in any subsequent Dockerfile instruction.
+
+    #### Rationale
+    The `WORKDIR` instruction can be used multiple times in a Dockerfile. If a relative path is provided, it will be relative to the path of the previous `WORKDIR` instruction.
+
+    It is ideal to use the absolute paths to avoid mistakes.
+
+    #### Remediation
+    Ensure that WORKDIR values are absolute paths
+
+    Dockerfile example:
+    ```
+      FROM node:12-alpine
+      RUN apk add --no-cache python2 g++ make
+      USER root
+    + WORKDIR /app
+      COPY . .
+
+      ...
+      ...
+    ```
+
+    #### Default Value
+    If the `WORKDIR` doesn’t exist, it will be created even if it’s not used in any subsequent Dockerfile instruction.
+
+    #### References
+    * https://docs.docker.com/engine/reference/builder/#workdir
+lwid: []
+provider: Docker
+ruleId: CKV_DOCKER_10
+severity: Low
+sid: ckv-docker-10
+title: "Ensure that WORKDIR values are absolute paths"

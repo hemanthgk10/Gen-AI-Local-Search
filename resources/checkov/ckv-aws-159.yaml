@@ -1,0 +1,81 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Athena is an interactive query service that makes it easy to analyze data directly in Amazon Simple Storage Service (Amazon S3) using standard SQL.
+
+    Amazon Athena Workgroups can be used to separate query execution and query history between Users, Teams, or Applications running under the same AWS account. Because Workgroups act as resources, you can use resource-based policies to control access to a Workgroup. As these workgroups may contain sensitive data, it is advised to encrypt it.
+extra:
+  entity: aws_athena_workgroup
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Athena is an interactive query service that makes it easy to analyze data directly in Amazon Simple Storage Service (Amazon S3) using standard SQL.
+
+    Amazon Athena Workgroups can be used to separate query execution and query history between Users, Teams, or Applications running under the same AWS account. Because Workgroups act as resources, you can use resource-based policies to control access to a Workgroup. As these workgroups may contain sensitive data, it is advised to encrypt it.
+
+    #### Rationale
+    Encrypting the Athena Workgroups can prevents in unauthorized access to information.
+
+    #### Remediation
+    Specify the `encryption_configuration` to encrypt the Athena workgroup. Allowed encryption options are `SSE_KMS`, `CSE_KMS` & `SSE_S3`.
+
+    Terraform example
+    ```
+    resource "aws_athena_workgroup" "MyGroup" {
+        name = "MyGroup"
+
+        configuration {
+          enforce_workgroup_configuration    = true
+          publish_cloudwatch_metrics_enabled = true
+
+          result_configuration {
+             output_location = "s3://${aws_s3_bucket.example.bucket}/output/"
+
+    +        encryption_configuration {
+    +          encryption_option = "SSE_KMS"
+    +          kms_key_arn       = "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c"
+    +        }
+          }
+        }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::Athena::WorkGroup",
+      "Properties" : {
+          "Name" : "MyGroup",
+          "WorkGroupConfiguration": {
+            "ResultConfiguration": {
+    +          "EncryptionConfiguration": {
+    +            "EncryptionOption" : "SSE_KMS",
+    +            "KmsKey" : "arn:aws:kms:us-west-2:123456789:key/6f815f63-e628-448c"
+    +          }
+               ...
+               ...
+            }
+            ...
+            ...
+          }
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/athena_workgroup#encryption_configuration
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-athena-workgroup.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-athena-workgroup-encryptionconfiguration.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_159
+severity: High
+sid: ckv-aws-159
+title: "Ensure that Athena Workgroup is encrypted"

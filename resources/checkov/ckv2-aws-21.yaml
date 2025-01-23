@@ -1,0 +1,51 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS IAM policies are JSON-formatted objects that specify actions and resources on which those actions can be taken. The policy is then attached to a resource, such as a user account, EC2 instance, or internal AWS function, allowing that resource to make API calls to execute actions within the account.
+
+    An IAM user group is a collection of IAM users. User groups let you specify permissions for multiple users, which can make it easier to manage the permissions for those users. For example, you could have a user group called Admins and give that user group the types of permissions that administrators typically need. Any user in that user group automatically has the permissions that are assigned to the user group.
+extra:
+  entity: aws_iam_group_membership
+  type: resource
+guidelines: |-
+    #### Description
+    AWS IAM policies are JSON-formatted objects that specify actions and resources on which those actions can be taken. The policy is then attached to a resource, such as a user account, EC2 instance, or internal AWS function, allowing that resource to make API calls to execute actions within the account.
+
+    An IAM user group is a collection of IAM users. User groups let you specify permissions for multiple users, which can make it easier to manage the permissions for those users. For example, you could have a user group called Admins and give that user group the types of permissions that administrators typically need. Any user in that user group automatically has the permissions that are assigned to the user group.
+
+    #### Rationale
+    Controlling the permissions at IAM group level allows it for easy maintenance of roles and permissions. Assign any new user to one or the other group rather than giving permissions to individual users.
+
+    #### Remediation
+    Make sure that all IAM users are part of at least one IAM group.
+
+    Terraform example
+    ```
+    resource "aws_iam_user" "user_two" {
+        name = "test-user"
+    }
+
+    resource "aws_iam_group_membership" "team" {
+        name = "tf-testing-group-membership"
+
+        users = [
+    +     aws_iam_user.user_two.name,
+        ]
+        group = "admin"
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_group_membership#users
+    * https://docs.aws.amazon.com/IAM/latest/UserGuide/id.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_21
+severity: Low
+sid: ckv2-aws-21
+title: "Ensure that all IAM users are members of at least one IAM group"

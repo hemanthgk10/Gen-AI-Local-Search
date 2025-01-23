@@ -1,0 +1,14 @@
+category: "Backup & Recovery"
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that MariaDB server enables geo-redundant backups"
+extra:
+  entity: azurerm_mariadb_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_129
+severity: Low
+sid: ckv-azure-129
+title: "Ensure that MariaDB server enables geo-redundant backups"

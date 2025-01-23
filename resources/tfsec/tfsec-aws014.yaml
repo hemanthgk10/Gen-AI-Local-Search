@@ -1,0 +1,60 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Blocks devices should be encrypted to ensure sensitive data is hel securely at rest."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws014.go"
+guidelines: |-
+    #### Description
+    Ensure that all Amazon Elastic Block Store (EBS) volumes are encrypted, meeting security and compliance requirements.
+    When encryption is enabled for EBS, the encryption is handled by Amazon's Key Management Service (KMS) transparently, and requires no additional action on your part.
+
+    #### Rationale
+    When EBS volumes are unencrypted, data is written to disk in cleartext.
+    The unencrypted data could be readable by anyone who obtains access to the physical disk where your data is stored.
+    Enabling encryption at rest to mitigate this issue is a common regulatory requirement.
+
+    #### Remediation
+    Set `encrypted` flag as true for `root_block_device` and other additional volumes being used.
+
+    Terraform example:
+    ```
+    resource "aws_launch_configuration" "sample_lc" {
+       name_prefix = "sample_lc-"
+       image_id = data.aws_ami.centos.id
+       instance_type = "t2.medium"
+       root_block_device {
+    +    encrypted             = true
+         volume_size           = 100
+        ...
+       }
+       ...
+       ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_configuration#encrypted
+    * https://aws.amazon.com/blogs/compute/must-know-best-practices-for-amazon-ebs-encryption/
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: root_block_device.encrypted
+        resourceAttributeType: blockAttribute
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_launch_configuration
+ruleId: AWS014
+severity: High
+sid: tfsec-aws014
+title: "Launch configuration with unencrypted block device"

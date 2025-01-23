@@ -1,0 +1,83 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - CIS
+description: "Manage disks should be encrypted at rest. When specifying the <code>encryption_settings</code> block, the enabled attribute should be set to <code>true</code>."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/azu003.go"
+guidelines: |-
+    #### Description
+    Ensure that OS disks (boot volumes) and data disks (non-boot volumes) are encrypted with CMK (Customer Managed Keys).
+
+    #### Rationale
+    Encrypting the IaaS VM's OS disk (boot volume), Data disks (non-boot volume) ensures that the entire content is fully unrecoverable without a key and thus protects the volume from unwarranted reads. CMK is superior encryption although requires additional planning.
+
+    #### Remediation
+    Set the `encryption_settings.enabled` flag to `true`.
+
+    Terraform example:
+    ```
+    resource "azurerm_managed_disk" "example" {
+        name                 = "acctestmd"
+        location             = "West US 2"
+        resource_group_name  = azurerm_resource_group.example.name
+        storage_account_type = "Standard_LRS"
+        create_option        = "Empty"
+        disk_size_gb         = "1"
+        encryption_settings {
+    -  		 enabled   = false
+    +      enabled   = true
+      	}
+        ...
+        ...
+    }
+    ```
+
+    From *Azure Console*:
+
+    1. Go to Virtual machines
+    2. For each virtual machine, go to `Settings`
+    3. Click on `Disks`
+    4. Click the `X` to detach the disk from the VM
+    5. Now search for `Disks` and locate the unattached disk
+    6. Click the disk then select `Encryption`
+    7. Change your encryption type, then select your encryption set
+    8. Click `Save`
+    9. Go back to the VM and re-attach the disk
+
+    #### Default Value
+    By default, Azure disks are encrypted using SSE with PMK.
+
+    #### Note
+    Disks must be detached from VMs to have encryption changed.
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/virtual-machines/linux/disk-encryption
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/managed_disk#encryption_settings
+    * https://docs.microsoft.com/en-us/azure/azure-monitor/platform/customer-managed-keys?tabs=portal
+lwid:
+  - Azure_CIS_7_3
+provider: Azure
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: encryption_settings
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            encryption_settings {
+               enabled = true
+            }
+        resourceType:
+          - azurerm_managed_disk
+ruleId: AZU003
+severity: Medium
+sid: tfsec-azu003
+title: "Unencrypted managed disk"

@@ -1,0 +1,59 @@
+---
+autofix: true
+category: Security
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Access to instances should be authenticated using SSH keys. Removing the option of password authentication enforces more secure methods while removing the risks inherent with passwords."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/azu005.go"
+guidelines: |-
+    #### Description
+    SSH is an encrypted connection protocol that provides secure sign-ins over unsecured connections. SSH is the default connection protocol for Linux VMs hosted in Azure. With a secure shell (SSH) key pair, you can create a Linux virtual machine that uses SSH keys for authentication. Access to instances should be authenticated using SSH keys.
+
+    #### Rationale
+    Although, SSH provides an encrypted connection, using passwords with SSH connections still leaves the VM vulnerable to brute-force attacks. Removing the option of password authentication enforces more secure methods while removing the risks inherent with passwords. It is recommend connecting to a VM over SSH using a public-private key pair, also known as SSH keys.
+
+    #### Remediation
+    Set the `disable_password_authentication` flag to `true`. When `disable_password_authentication` is set, `ssh_keys` should also be set.
+
+    Terraform example:
+    ```
+    resource "azurerm_virtual_machine" "main" {
+        name     = "tfvmex"
+      	os_profile_linux_config {
+    -       disable_password_authentication = false
+    +   		disable_password_authentication = true
+    +       ssh_keys                        = "xyz"
+      	}
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/virtual-machines/linux/create-ssh-keys-detailed
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine#disable_password_authentication
+lwid: []
+provider: Azure
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: os_profile_linux_config
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            os_profile_linux_config {
+               disable_password_authentication  = true
+               ssh_keys                         = "<Provide the required SSH Keys>"
+            }
+        resourceType:
+          - azurerm_virtual_machine
+ruleId: AZU005
+severity: Critical
+sid: tfsec-azu005
+title: "Password authentication in use instead of SSH keys"

@@ -1,0 +1,88 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon Redshift is a fully managed, petabyte-scale data warehouse service in the cloud. You can start with just a few hundred gigabytes of data and scale to a petabyte or more. After you provision your cluster, you can upload your data set and then perform data analysis queries. In Amazon Redshift, you associate a parameter group with each cluster that you create. A parameter group is a group of parameters that apply to all of the databases that you create in the cluster. These parameters configure database settings such as query timeout and date style. Amazon Redshift supports Secure Sockets Layer (SSL) connections to encrypt data and server certificates to validate the server certificate that the client connects to."
+extra:
+  entity: aws_redshift_parameter_group
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Redshift is a fully managed, petabyte-scale data warehouse service in the cloud. You can start with just a few hundred gigabytes of data and scale to a petabyte or more. After you provision your cluster, you can upload your data set and then perform data analysis queries.
+
+    In Amazon Redshift, you associate a parameter group with each cluster that you create. A parameter group is a group of parameters that apply to all of the databases that you create in the cluster. These parameters configure database settings such as query timeout and date style.
+
+    Amazon Redshift supports Secure Sockets Layer (SSL) connections to encrypt data and server certificates to validate the server certificate that the client connects to. By default, cluster databases accept a connection whether it uses SSL or not. To configure your cluster to require an SSL connection, set the `require_ssl` parameter to `true` in the parameter group that is associated with the cluster.
+
+    #### Rationale
+    Ensure that all the parameter groups associated with your Amazon Redshift clusters have the `require_ssl` parameter enabled in order to keep your data secure in transit by encrypting the connection between the clients (applications) and your warehouse clusters.
+
+    #### Remediation
+    Set the `require_ssl` parameter to `true`.
+
+    Terraform example
+    ```
+    resource "aws_redshift_parameter_group" "bar" {
+        name   = "parameter-group-test-terraform"
+        family = "redshift-1.0"
+
+    +   parameter {
+    +     name  = "require_ssl"
+    +     value = "true"
+    +   }
+
+        parameter {
+          name  = "query_group"
+          value = "example"
+        }
+
+        ...
+        ...
+
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::Redshift::ClusterParameterGroup",
+      "Properties" : {
+          "Description" : "parameter-group-test-terraform",
+          "ParameterGroupFamily" : "redshift-1.0",
+          "Parameters" : [
+    +       {
+    +            "ParameterValue": "true",
+    +            "ParameterName": "require_ssl",
+    +       }
+          ],
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/redshift_parameter_group#parameter
+    * https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-parameter-groups.html
+    * https://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_105
+severity: High
+sid: ckv-aws-105
+title: "Ensure Redshift uses SSL"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: parameter
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      parameter {
+         name  = "require_ssl"
+         value = "true"
+      }
+    resourceType: [ "aws_redshift_parameter_group" ]

@@ -1,0 +1,73 @@
+---
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: "Amazon DocumentDB (DocDB) is a managed service that makes it easy to run, operate and scale MongoDB compatible databases in the cloud. With Amazon DocumentDB, you can run the same application code and use the same drivers and tools that you use with MongoDB. We need TLS to encrypt the connection between your application and an Amazon DocumentDB cluster. By default, encryption in transit is enabled for newly created Amazon DocumentDB clusters. So ensure that TLS is not disabled."
+extra:
+  entity: "AWS::DocDB::DBClusterParameterGroup"
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon DocumentDB (DocDB) is a managed service that makes it easy to run, operate and scale MongoDB compatible databases in the cloud. With Amazon DocumentDB, you can run the same application code and use the same drivers and tools that you use with MongoDB. We need TLS to encrypt the connection between your application and an Amazon DocumentDB cluster. By default, encryption in transit is enabled for newly created Amazon DocumentDB clusters. So ensure that TLS is not disabled.
+
+    #### Rationale
+    Encryption in transit helps in transferring data between your application and DocDB cluster in a secured way. This can be done by specifying the TLS parameter. So make sure that TLS is not disabled in DocDB.
+
+    #### Remediation
+    Set the `parameter.value` to `enabled` in `aws_docdb_cluster_parameter_group`.
+
+    Terraform example:
+    ```
+    resource "aws_docdb_cluster_parameter_group" "example" {
+        family      = "docdb3.6"
+        name        = "example"
+        description = "docdb cluster parameter group"
+
+        parameter {
+          name  = "tls"
+    -     value = "disabled"
+    +     value = "enabled"
+        }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+      "Type" : "AWS::DocDB::DBClusterParameterGroup",
+      "Properties" : {
+          "Description" : "docdb cluster parameter group",
+          "Family" : "docdb3.6",
+          "Name" : "example",
+          "Parameters" : {
+            "audit_logs": "disabled",
+    -       "tls": "disabled"
+    +       "tls": "enabled"
+          },
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/documentdb/latest/developerguide/security.encryption.ssl.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_90
+severity: Critical
+sid: ckv-aws-90
+title: "Ensure DocDB TLS is not disabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: parameter.value
+    resourceAttributeType: blockAttribute
+    resourceAttributeValue: "enabled"
+    resourceType: [ "aws_docdb_cluster_parameter_group" ]

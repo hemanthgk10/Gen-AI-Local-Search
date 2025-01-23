@@ -1,0 +1,73 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Encryption should be forced for Kafka clusters, including for communication between nodes. This ensure sensitive data is kept private."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws022.go"
+guidelines: |-
+    #### Description
+    Amazon MSK (Managed Streaming for Apache Kafka) enabled you to build and run streaming applications that uses Apache Kafka.
+    MSK detects and automatically recovers from the most common failure scenarios for clusters so that your producer and consumer
+    applications can continue their write and read operations with minimal impact. When Amazon MSK detects a broker failure, it
+    mitigates the failure or replaces the unhealthy or unreachable broker with a new one. MSK can contain security configuration
+    and management tasks for the AWS services that you use.
+
+    #### Rationale
+    In order to meet compliance and security requirements it is always encouraged to encrypt the security configuration and
+    management tasks for the AWS services including MSK. Having any sensitive information in these can be accidentally logged into
+    the diagnostic logs. So we should always makes sure to not put any sensitive information and encrypt them in rest and transit.
+
+    #### Remediation
+    Set the `encryption_info` argument in `aws_msk_cluster` by providing kms_key and also setting the arguments for `encryption_in_transit`.
+
+    Terraform example:
+    ```
+    resource "aws_msk_cluster" "example" {
+         cluster_name           = "example"
+         kafka_version          = "2.4.1"
+         number_of_broker_nodes = 3
+
+    +    encryption_info {
+    +        encryption_at_rest_kms_key_arn = aws_kms_key.kms.arn
+    +        encryption_in_transit {
+    +           in_cluster    = true
+    +           client_broker = "TLS"
+    +        }
+    +    }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/msk/latest/developerguide/msk-encryption.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/msk_cluster#encryption_info
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: encryption_info
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            encryption_info {
+                encryption_at_rest_kms_key_arn = "<Provide the ARN for KMS key>"
+                encryption_in_transit {
+                    client_broker = "TLS"
+                    in_cluster    = true
+            	  }
+             }
+        resourceType:
+          - aws_msk_cluster
+ruleId: AWS022
+severity: High
+sid: tfsec-aws022
+title: "A MSK cluster allows unencrypted data in transit"

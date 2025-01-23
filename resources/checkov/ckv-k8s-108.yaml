@@ -1,0 +1,133 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    Kubernetes controller manager is a daemon that embeds the core control loops shipped with Kubernetes. A controller manager is a control loop that watches the shared state of the cluster through the apiserver and makes changes attempting to move the current state towards the desired state.
+
+    A service account provides an identity for processes that run in a Pod. When a user access the cluster (for example, using kubectl), they are authenticated by the apiserver as a particular User Account. Processes in containers inside pods can also contact the apiserver. When they do, they are authenticated as a particular Service Account (for example, default).
+
+    The controller manager creates a service account per controller in the `kube-system` namespace, generates a credential for it, and builds a dedicated API client with that service account credential for each controller loop to use.
+
+    It is always recommended to use individual service account credentials for each controller.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    Kubernetes controller manager is a daemon that embeds the core control loops shipped with Kubernetes. A controller manager is a control loop that watches the shared state of the cluster through the apiserver and makes changes attempting to move the current state towards the desired state.
+
+    A service account provides an identity for processes that run in a Pod. When a user access the cluster (for example, using kubectl), they are authenticated by the apiserver as a particular User Account. Processes in containers inside pods can also contact the apiserver. When they do, they are authenticated as a particular Service Account (for example, default).
+
+    The controller manager creates a service account per controller in the `kube-system` namespace, generates a credential for it, and builds a dedicated API client with that service account credential for each controller loop to use.
+
+    It is always recommended to use individual service account credentials for each controller.
+
+    #### Rationale
+    Setting the `--use-service-account-credentials` to `true` runs each control loop within the controller manager using a separate service account credential. When used in combination with RBAC, this ensures that the control loops run with the minimum permissions required to perform their intended tasks.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-controller-manager
+    ```
+    Verify that the `--use-service-account-credentials` argument is set to `true`.
+
+    #### Remediation
+    Edit the Controller Manager pod specification file `/etc/kubernetes/manifests/kube-controller-manager.yaml` on the master node to set the below parameter.
+
+    By default, `--use-service-account-credentials` is set to false.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        labels:
+          component: kube-controller-manager
+          tier: control-plane
+        name: kube-controller-manager
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - /bin/sh
+          - -c
+          - exec /usr/local/bin/kube-controller-manager --v=2
+            --cloud-config=/etc/gce.conf
+            --kubeconfig=/etc/srv/kubernetes/kube-controller-manager/kubeconfig
+            --root-ca-file=/etc/srv/kubernetes/pki/ca-certificates.crt
+            --service-account-private-key-file=/etc/srv/kubernetes/pki/serviceaccount.key
+            --cluster-name=zork
+            --cluster-cidr=10.48.0.0/14
+            --service-cluster-ip-range=10.32.240.0/20
+            --allocate-node-cidrs=true
+    -       --use-service-account-credentials=false
+    +       --use-service-account-credentials=true
+            ...
+            ...
+          image: k8s.gcr.io/kube-controller-manager:v1.9.7
+          name: kube-controller-manager
+          volumeMounts:
+          - mountPath: /etc/ssl
+            name: etcssl
+            readOnly: true
+          - mountPath: /usr/share/ca-certificates
+            name: usrsharecacerts
+            readOnly: true
+          - mountPath: /var/ssl
+            name: varssl
+            readOnly: true
+          - mountPath: /etc/openssl
+            name: etcopenssl
+            readOnly: true
+          - mountPath: /etc/pki
+            name: etcpki
+            readOnly: true
+        hostNetwork: true
+        volumes:
+        - hostPath:
+            path: /etc/ssl
+          name: etcssl
+        - hostPath:
+            path: /usr/share/ca-certificates
+          name: usrsharecacerts
+        - hostPath:
+            path: /var/ssl
+          name: varssl
+        - hostPath:
+            path: /etc/openssl
+          name: etcopenssl
+        - hostPath:
+            path: /etc/pki
+          name: etcpki
+        ...
+        ...
+    ```
+
+    #### Impact
+    Whatever authorizer is configured for the cluster, it must grant sufficient permissions to the service accounts to perform their intended tasks. When using the RBAC authorizer, those roles are created and bound to the appropriate service accounts in the kube-system namespace automatically with default roles and rolebindings that are auto-reconciled on startup.
+
+    If using other authorization methods (ABAC, Webhook, etc), the cluster deployer is responsible for granting appropriate permissions to the service accounts (the required permissions can be seen by inspecting the `controller-roles.yaml` and `controller-role-bindings.yaml` files for the RBAC roles.
+
+    #### CIS Controls:
+    **Version 6**
+      14 *Controlled Access Based on the Need to Know* -- Controlled Access Based on the Need to Know.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-controller-manager/
+    * https://kubernetes.io/docs/admin/service-accounts-admin/
+    * https://github.com/kubernetes/kubernetes/blob/release-1.6/plugin/pkg/auth/authorizer/rbac/bootstrappolicy/testdata/controller-roles.yaml
+    * https://github.com/kubernetes/kubernetes/blob/release-1.6/plugin/pkg/auth/authorizer/rbac/bootstrappolicy/testdata/controller-role-bindings.yaml
+    * https://kubernetes.io/docs/admin/authorization/rbac/#controller-roles
+provider: Kubernetes
+ruleId: CKV_K8S_108
+severity: Medium
+sid: ckv-k8s-108
+title: "Ensure that the --use-service-account-credentials argument is set to true"

@@ -1,0 +1,16 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Unattached disks are encrypted"
+extra:
+  entity: azurerm_virtual_machine
+  type: resource
+lwid:
+  - Azure_CIS_131_7_3
+provider: Azure
+ruleId: CKV2_AZURE_14
+severity: High
+sid: ckv2-azure-14
+title: "Ensure that Unattached disks are encrypted"

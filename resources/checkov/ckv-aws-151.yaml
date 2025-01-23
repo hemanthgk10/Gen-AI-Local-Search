@@ -1,0 +1,58 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Elastic Kubernetes Service (Amazon EKS) is a managed service that you can use to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes. Kubernetes is an open-source system for automating the deployment, scaling, and management of containerized applications.
+    Kubernetes Secrets let you store and manage sensitive information, such as passwords, OAuth tokens, and ssh keys. Storing confidential information in a Secret is safer and more flexible than putting it verbatim in a Pod definition or in a container image.
+    AWS Key Management Service (KMS) keys to provide envelope encryption of Kubernetes secrets stored in Amazon Elastic Kubernetes Service (EKS).
+extra:
+  entity: aws_eks_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elastic Kubernetes Service (Amazon EKS) is a managed service that you can use to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes. Kubernetes is an open-source system for automating the deployment, scaling, and management of containerized applications.
+
+    Kubernetes Secrets let you store and manage sensitive information, such as passwords, OAuth tokens, and ssh keys. Storing confidential information in a Secret is safer and more flexible than putting it verbatim in a Pod definition or in a container image.
+
+    AWS Key Management Service (KMS) keys to provide envelope encryption of Kubernetes secrets stored in Amazon Elastic Kubernetes Service (EKS).
+
+    #### Rationale
+    Implementing encryption is considered a security best practice for applications that store sensitive data in the EKS Secrets.
+
+    #### Remediation
+    EKS cluster resources should have the encryption_config block set with protection of the secrets resource.
+
+    Terraform example
+    ```
+    resource "aws_eks_cluster" "example" {
+        name     = "example"
+        role_arn = aws_iam_role.example.arn
+
+        vpc_config {
+          subnet_ids = [aws_subnet.example1.id, aws_subnet.example2.id]
+        }
+
+    +   encryption_config {
+    +      provider {
+    +          key_arn = var.kms_arn
+    +      }
+    +      resources  = [ "secrets" ]
+    +   }
+
+        ...
+        ...
+
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_cluster#encryption_config
+    * https://aws.amazon.com/about-aws/whats-new/2020/03/amazon-eks-adds-envelope-encryption-for-secrets-with-aws-kms/
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_151
+severity: High
+sid: ckv-aws-151
+title: "Ensure Kubernetes Secrets are encrypted using Customer Master Keys (CMKs) managed in AWS KMS"

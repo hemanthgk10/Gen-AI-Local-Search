@@ -1,0 +1,43 @@
+category: GitHub
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: Ensure Repository is Private
+extra:
+  entity: github_repository
+  type: resource
+guidelines: |-
+  #### Description
+  Github allows Owners to set a project’s visibility as *public* or *private*. These visibility levels affect who can see the project.
+  It is extremely critical to make sure to keep it *private* unless it is intended for public access.
+
+  #### Rationale
+  Ensuring a repository is private is critical to any Organization as there are chances of leaking of business logic, vulnerabilities in
+  your code, secrets if any accidentally got merged to the code.
+
+  #### Remediation
+  Set the `private` argument to `true`.
+
+  Terraform example:
+  ```
+  resource "github_repository" "example" {
+      name        = "example"
+      description = "My awesome codebase"
+  +   private = true
+      template {
+        owner = "github"
+        repository = "terraform-module-template"
+      }
+      ...
+      ...
+  }
+  ```
+
+  #### References
+  * https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/setting-repository-visibility
+  * https://www.terraform.io/docs/providers/github/r/repository.html#private
+provider: GitHub
+ruleId: CKV_GIT_1
+severity: Critical
+sid: ckv-git-1
+title: Check Github repository is private

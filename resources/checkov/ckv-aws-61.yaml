@@ -1,0 +1,86 @@
+---
+category: IAM
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: "Each IAM roles in AWS are created with specific permissions. Instead of being uniquely associated with one person, a role is intended to be assumable by anyone who needs it. The assume role policy controls on who can assume it. Specifying `*` allows everyone to assume it which is dangerous. Some of roles might have extensive permissions, so if anyone can assume it then they will have those extensive permissions which they are not supposed to have. So ensure IAM role allows only specific services or principals to assume it."
+extra:
+  entity: "AWS::IAM::Role"
+  type: resource
+guidelines: |-
+    #### Description
+    Each IAM roles in AWS are created with specific permissions. Instead of being uniquely associated with one person, a role is intended to be assumable by anyone who needs it. The assume role policy controls on who can assume it. Specifying `*` allows everyone to assume it which is dangerous. Some of roles might have extensive permissions, so if anyone can assume it then they will have those extensive permissions which they are not supposed to have. So ensure IAM role allows only specific services or principals to assume it.
+
+    #### Rationale
+    Specifying `Principal` to `*` grants permissions to assume the role to resources. It is always safe to allow assuming the role only to specific resources. Specifying `*` is easy to maintain but this might bring unwanted permissions to user or resources that can cause leak sensitive information or delete critical resources.
+
+    #### Remediation
+    Do not set the Principal AWS Arns to `*`. Always specify the arns of all the resources which require access.
+
+    Terraform example:
+    ```
+    resource "aws_iam_role" "test_role" {
+    name = "test_role"
+
+    assume_role_policy = <<EOF
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Action": "sts:AssumeRole",
+            "Principal": {
+    -         "AWS" : "*"
+    +         "AWS": "arn:aws:iam::account-id:user/push-pull-user-1"
+            },
+            "Effect": "Allow",
+            "Sid": ""
+          }
+        ]
+      }
+      EOF
+      ...
+      ...
+    }
+    ```
+
+    CloudFormation example:
+
+    ```
+    {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyDocument" : {
+          "Version": "2020-10-17",
+          "Statement": [
+              {
+                  "Sid": "AllowAllUsersToListAccounts",
+                  "Effect": "Allow",
+                  "Action": [
+                      "s3:ListAllMyBuckets",
+                      "s3:GetBucketLocation"
+                  ],
+                  "Principal": [
+    -               "AWS": "*"
+    +               "AWS": "arn:aws:iam::account-id:user/push-pull-user-1"
+                  ],
+                  ...
+                  ...
+              }
+          ]
+        },
+        "PolicyName" : "s3-default-bucket-policy",
+        ...
+        ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document#principals
+    * https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_61
+severity: Medium
+sid: ckv-aws-61
+title: "Ensure IAM role allows only specific principals"

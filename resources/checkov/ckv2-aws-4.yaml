@@ -1,0 +1,56 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS API gateway acts as an entry point for applications to access data, business logic or functionality of your application backend. It handles the all the API calls to your backend application including traffic management, CORS, authorization and access control, throttling, monitoring, and API version management. There are two types of logs for API gateway: execution logs and access logs.
+    * Execution logs process creates log groups and log streams, and reports the log streams of any caller's requests and responses to cloudwatch logs.
+    * Access logs provides information on who accessed your API and how it was accessed etc.
+extra:
+  entity: aws_api_gateway_method_settings
+  type: resource
+guidelines: |-
+    #### Description
+    AWS API gateway acts as an entry point for applications to access data, business logic or functionality of your application backend. It handles the all the API calls to your backend application including traffic management, CORS, authorization and access control, throttling, monitoring, and API version management. There are two types of logs for API gateway: execution logs and access logs.
+    * Execution logs process creates log groups and log streams, and reports the log streams of any caller's requests and responses to cloudwatch logs.
+    * Access logs provides information on who accessed your API and how it was accessed etc.
+
+    #### Rationale
+    Enabling the AWS API Gateway access logging provides information for auditing purpose in future to know who accessed the API and how did they access it etc.
+
+    #### Remediation
+    Make sure that `logging_level` is either set to `INFO` or `ERROR` and also have the `metrics_enabled` set to `true`.
+
+    Terraform example
+    ```
+    resource "aws_api_gateway_stage" "example" {
+        api_id     = aws_api_gateway_rest_api.test.id
+        ...
+        ...
+    }
+
+    resource "aws_api_gateway_method_settings" "example" {
+        rest_api_id = aws_api_gateway_rest_api.example.id
+        stage_name  = aws_api_gateway_stage.example.stage_name
+        method_path = "*/*"
+
+    +   settings {
+    +      metrics_enabled = true
+    +      logging_level   = "ERROR"
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method_settings#logging_level
+    * https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html
+    * https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#apigateway-cloudwatch-log-formats
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_4
+severity: Low
+sid: ckv2-aws-4
+title: "Ensure API Gateway stage have logging level defined as appropriate"

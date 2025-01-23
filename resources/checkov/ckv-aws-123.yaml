@@ -1,0 +1,63 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    A VPC endpoint enables you to privately connect your VPC to supported AWS services and VPC endpoint services powered by AWS PrivateLink without requiring an internet gateway, NAT device, VPN connection, or AWS Direct Connect connection. Instances in your VPC do not require public IP addresses to communicate with resources in the service. Traffic between your VPC and the other service does not leave the Amazon network.
+    You can create your own application in your VPC and configure it as an AWS PrivateLink-powered service (referred to as an endpoint service). Other AWS principals can create a connection from their VPC to your endpoint service using an interface VPC endpoint or a Gateway Load Balancer endpoint, depending on the type of service. By default, connection requests must be manually accepted. However, the service provider can configure acceptance settings so that any connection requests are automatically accepted.
+extra:
+  entity: aws_vpc_endpoint_service
+  type: resource
+guidelines: |-
+    #### Description
+    A VPC endpoint enables you to privately connect your VPC to supported AWS services and VPC endpoint services powered by AWS PrivateLink without requiring an internet gateway, NAT device, VPN connection, or AWS Direct Connect connection. Instances in your VPC do not require public IP addresses to communicate with resources in the service. Traffic between your VPC and the other service does not leave the Amazon network.
+
+    You can create your own application in your VPC and configure it as an AWS PrivateLink-powered service (referred to as an endpoint service). Other AWS principals can create a connection from their VPC to your endpoint service using an interface VPC endpoint or a Gateway Load Balancer endpoint, depending on the type of service. By default, connection requests must be manually accepted. However, the service provider can configure acceptance settings so that any connection requests are automatically accepted.
+
+    #### Rationale
+    Manual approval process gives more control on the connections being approved.
+
+    #### Remediation
+    Set the `acceptance_required` flag to `true. If the flag is set to `true`, then each VPC endpoint connection requests to the service must be accepted by the service owner.
+
+    Terraform example
+    ```
+    resource "aws_vpc_endpoint_service" "example" {
+    +    acceptance_required        = true
+         network_load_balancer_arns = [aws_lb.example.arn]
+         ...
+         ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+        "Type" : "AWS::EC2::VPCEndpointService",
+        "Properties" : {
+    +       "AcceptanceRequired" : true,
+            "NetworkLoadBalancerArns" : [ "arn:aws:elasticloadbalancing:us-east-1:12324234:targetgroup/nlb-alb-test" ]
+          }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint_service#acceptance_required
+    * https://docs.aws.amazon.com/vpc/latest/privatelink/endpoint-services-overview.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_123
+severity: Low
+sid: ckv-aws-123
+title: "Ensure that VPC Endpoint Service is configured for Manual Acceptance"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: acceptance_required
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_vpc_endpoint_service" ]

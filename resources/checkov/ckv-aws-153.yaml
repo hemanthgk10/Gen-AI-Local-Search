@@ -1,0 +1,87 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon EC2 Auto Scaling group (ASG) contains a collection of Amazon EC2 instances that are treated as a logical grouping for the purposes of automatic scaling and management. An Auto Scaling group also enables you to use Amazon EC2 Auto Scaling features such as health check replacements and scaling policies.
+
+    Tags help you to categorize your Auto Scaling groups in different ways, for example, by purpose, owner, or environment. You can add multiple tags to each Auto Scaling group. Additionally, you can propagate the tags from the Auto Scaling group to the Amazon EC2 instances it launches.
+extra:
+  entity: aws_autoscaling_group
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon EC2 Auto Scaling group (ASG) contains a collection of Amazon EC2 instances that are treated as a logical grouping for the purposes of automatic scaling and management. An Auto Scaling group also enables you to use Amazon EC2 Auto Scaling features such as health check replacements and scaling policies.
+
+    Tags help you to categorize your Auto Scaling groups in different ways, for example, by purpose, owner, or environment. You can add multiple tags to each Auto Scaling group. Additionally, you can propagate the tags from the Auto Scaling group to the Amazon EC2 instances it launches.
+
+    #### Rationale
+    Tagging helps in logical grouping of EC2 resources together and apply controls based on tags. It also helps in estimating the cost based on tags.
+
+    #### Remediation
+    Either set a `tag` configuration block or provide a set of maps containing resource tags.
+
+    Terraform example
+    ```
+    resource "aws_placement_group" "test" {
+        name     = "test"
+        strategy = "cluster"
+    }
+
+    resource "aws_autoscaling_group" "bar" {
+        name                      = "foobar3-terraform-test"
+        max_size                  = 5
+        min_size                  = 2
+        health_check_grace_period = 300
+        health_check_type         = "ELB"
+        desired_capacity          = 4
+        force_delete              = true
+        placement_group           = aws_placement_group.test.id
+
+    +   tag {
+    +      key                 = "foo"
+    +      value               = "bar"
+    +      propagate_at_launch = true
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    OR
+
+    ```
+    resource "aws_autoscaling_group" "bar" {
+        name                 = "foobar3-terraform-test"
+        max_size             = 5
+        min_size             = 2
+        launch_configuration = aws_launch_configuration.foobar.name
+        vpc_zone_identifier  = [aws_subnet.example1.id, aws_subnet.example2.id]
+
+    +   tags = [
+    +        {
+    +          "key"                 = "interpolation1"
+    +          "value"               = "value3"
+    +          "propagate_at_launch" = true
+    +        },
+    +        {
+    +          "key"                 = "interpolation2"
+    +          "value"               = "value4"
+    +          "propagate_at_launch" = true
+    +        },
+    +   ]
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_group#tags
+    * https://docs.aws.amazon.com/autoscaling/ec2/userguide/autoscaling-tagging.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_153
+severity: Low
+sid: ckv-aws-153
+title: "Autoscaling groups should supply tags to launch configurations"

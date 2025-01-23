@@ -1,0 +1,61 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Elastic Load Balancing (ALB) service runs at the application layer. It allows you to define routing rules that are based on content that can span multiple containers or EC2 instances.
+
+    AWS Web Application Firewall (WAF) helps to protect your web applications from common application-layer exploits that can affect availability or consume excessive resources. WAF allows you to use access control lists (ACLs), rules, and conditions that define acceptable or unacceptable requests or IP addresses.
+extra:
+  entity: aws_lb
+  type: resource
+guidelines: |-
+    #### Description
+    Elastic Load Balancing (ALB) service runs at the application layer. It allows you to define routing rules that are based on content that can span multiple containers or EC2 instances.
+
+    AWS Web Application Firewall (WAF) helps to protect your web applications from common application-layer exploits that can affect availability or consume excessive resources. WAF allows you to use access control lists (ACLs), rules, and conditions that define acceptable or unacceptable requests or IP addresses.
+
+    #### Rationale
+    Having WAF infront of the ALB helps you to selectively allow or deny access to specific parts of your web application and you can also guard against various SQL injection attacks.
+
+    #### Remediation
+    Configure the `aws_wafv2_web_acl_association` for the ALB and WAF.
+
+    Terraform example
+    ```
+    resource "aws_lb" "test" {
+        name               = "test-lb-tf"
+        internal           = false
+        load_balancer_type = "network"
+        subnets            = [for subnet in aws_subnet.public : subnet.id]
+        ...
+        ...
+    }
+
+    resource "aws_wafv2_web_acl" "example" {
+        name  = "web-acl-association-example"
+        scope = "REGIONAL"
+
+        default_action {
+          allow {}
+        }
+        ...
+        ...
+    }
+
+    + resource "aws_wafv2_web_acl_association" "example" {
+    +    resource_arn = aws_lb.test.arn
+    +    web_acl_arn  = aws_wafv2_web_acl.example.arn
+    + }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association
+    * https://aws.amazon.com/blogs/aws/aws-web-application-firewall-waf-for-application-load-balancers/
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_28
+severity: High
+sid: ckv2-aws-28
+title: "Ensure public facing ALB are protected by WAF"

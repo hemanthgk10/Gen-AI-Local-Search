@@ -1,0 +1,63 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: Amazon Athena is an interactive query service that makes it easy to analyze
+  data directly in Amazon Simple Storage Service (Amazon S3) using standard SQL. Athena
+  Database uses the 256-bit Advanced Encryption Standard (AES-256) to encrypt your
+  data using encryption keys stored in AWS Key Management Service (AWS KMS). AWS handles
+  data encryption and decryption transparently with minimal impact on DB performance.
+extra:
+  entity: aws_athena_database
+  type: resource
+guidelines: |-
+  #### Description
+  Amazon Athena is an interactive query service that makes it easy to analyze data directly in Amazon Simple Storage Service (Amazon S3) using standard SQL. Athena Database uses the 256-bit Advanced Encryption Standard (AES-256) to encrypt your data using encryption keys stored in AWS Key Management Service (AWS KMS). AWS handles data encryption and decryption transparently with minimal impact on DB performance.
+
+  #### Rationale
+  Ensure that AWS Athena is encrypted at rest for data security and in order to meet compliance requirements. The encrypted data includes your Athena query results in S3 bucket and the data in the AWS Glue Data Catalog.
+
+  #### Remediation
+  Set the `encryption_configuration` block with `kms_key` and `encryption_option` for encrypting the athena DB data.
+
+  Terraform example:
+  ```
+  resource "aws_s3_bucket" "hoge" {
+      bucket = "hoge"
+  }
+
+  resource "aws_athena_database" "hoge" {
+      name   = "database_name"
+      bucket = aws_s3_bucket.hoge.bucket
+  +   encryption_configuration {
+  +      encryption_option = "CSE_KMS"
+  +      kms_key           = "alias/aws/athena-key"
+  +   }
+      ...
+      ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/athena_database#encryption_configuration
+  * https://docs.aws.amazon.com/athena/latest/ug/encryption.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_77
+severity: Medium
+sid: ckv-aws-77
+title: Ensure Athena Database is encrypted at rest
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: encryption_configuration
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      encryption_configuration {
+        encryption_option = "CSE_KMS"
+        kms_key           = "<Please provide the KMS key for encryption>"
+      }
+    resourceType: [ "aws_athena_database" ]

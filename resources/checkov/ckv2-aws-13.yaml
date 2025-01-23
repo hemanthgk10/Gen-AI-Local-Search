@@ -1,0 +1,53 @@
+---
+category: "Backup & Recovery"
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "AWS Backup is a fully-managed service that makes it easy to centralize and automate data protection across AWS services, in the cloud, and on premises. It is a policy expression that defines when, how and for what AWS resources, you want to back up."
+extra:
+  entity: aws_redshift_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Backup is a fully-managed service that makes it easy to centralize and automate data protection across AWS services, in the cloud, and on premises. It is a policy expression that defines when, how and for what AWS resources, you want to back up.
+
+    #### Rationale
+    AWS Backup helps in reducing risk for data loss or service availability, as we can use the backups to restore the service or data.
+
+    #### Remediation
+    Make sure that each EBS volumes have an AWS Backup plan enabled.
+
+    Terraform example
+    ```
+    resource "aws_redshift_cluster" "default" {
+        cluster_identifier = "tf-redshift-cluster"
+        database_name      = "mydb"
+        master_username    = "foo"
+        master_password    = "Mustbe8characters"
+        node_type          = "dc1.large"
+        cluster_type       = "single-node"
+    }
+
+    resource "aws_backup_selection" "example" {
+        iam_role_arn = aws_iam_role.example.arn
+        name         = "tf_example_backup_selection"
+        plan_id      = aws_backup_plan.example.id
+        resources = [
+           aws_rds_cluster.default.arn,
+    +      aws_redshift_cluster.default.arn,
+        ]
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_selection#resources
+    * https://docs.aws.amazon.com/aws-backup/latest/devguide/API_BackupSelection.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/redshift_cluster
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_13
+severity: Low
+sid: ckv2-aws-13
+title: "Ensure that Redshift clusters has backup plan of AWS Backup"

@@ -17,11 +17,11 @@ class LocalSearch:
         # Encode the documents into embeddings
         embeddings = np.array(self.model.encode(self.text_data))
 
-        # Initialize the FAISS index with inner product (cosine similarity)
+        # Initialize the FAISS index with inner product (Euclidean distance)
         dimension = embeddings.shape[1]
-        self.index = faiss.IndexFlatIP(dimension)
+        self.index = faiss.IndexFlatL2(dimension)
 
-        # Normalize embeddings for cosine similarity
+        # Normalize embeddings
         faiss.normalize_L2(embeddings)
 
         # Add embeddings to the index
@@ -44,6 +44,7 @@ class LocalSearch:
                 "content": self.text_data[idx],
                 "score": float(distances[0][i]),
             }
+            print(f"ID: {idx}, Score: {float(distances[0][i])}")
             results.append(result_data)
 
         print(f"Found {len(results)} results for the query: '{query}'")

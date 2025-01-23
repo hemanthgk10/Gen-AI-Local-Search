@@ -1,0 +1,41 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Docker
+compliance: []
+description: "Ensure that COPY is used instead of ADD in Dockerfiles"
+guidelines: |-
+    #### Description
+    Use `COPY` instruction instead of `ADD` instruction in the Dockerfile.
+
+    #### Rationale
+    `COPY` instruction just copies the files from the local host machine to the container file system. `ADD` instruction potentially could retrieve files from remote URLs and perform operations such as unpacking. Thus, `ADD` instruction introduces risks such as adding malicious files from URLs without scanning and unpacking procedure vulnerabilities.
+
+    #### Remediation
+    Use `COPY` instructions in Dockerfiles.
+
+    Dockerfile example:
+    ```
+      FROM node:12-alpine
+      RUN apk add --no-cache python2 g++ make
+      WORKDIR /app
+    - ADD . .
+    + COPY . .
+      RUN yarn install --production
+      HEALTHCHECK --interval=5m --timeout=3s CMD curl -f http://localhost/ || exit 1
+      EXPOSE 3000
+      CMD ["node", "src/index.js"]
+    ```
+
+    #### Impact
+    You would need to take care of the functionalities provided by `ADD` instructions such as fetching files from remote URLs.
+
+    #### References
+    * https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+    * https://docs.docker.com/engine/reference/builder/#copy
+lwid: []
+provider: Docker
+ruleId: CKV_DOCKER_4
+severity: Low
+sid: ckv-docker-4
+title: "Ensure that COPY is used instead of ADD in Dockerfiles"

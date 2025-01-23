@@ -1,0 +1,90 @@
+--- 
+category: Encryption
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: "AWS KMS provides service that makes it easy for you to create and control customer master keys (CMKs), the encryption keys used to encrypt your data. The policy ensures who has access to the encryption keys. Having `*` in principal allows permission to everyone instead of specific user / group."
+extra: 
+  entity: "AWS::KMS::Key"
+  type: resource
+guidelines: |-
+    #### Description
+    AWS KMS provides service that makes it easy for you to create and control customer master keys (CMKs), the encryption keys used to encrypt your data. The policy ensures who has access to the encryption keys. Having `*` in principal allows permission to everyone instead of specific user / group.
+    
+    #### Rationale
+    AWS KMS policies with `Principal` set to `*` provides read access to everyone. This can cause a security breach as the information about your container vulnerabilities and business logic can be exposed easily. This should be restricted to specific users only. AWS KMS is integrated with all other AWS services to encrypt their data. Exposing the keys can result in the exposure of other data.
+    
+    #### Remediation
+    Do not set the `principal` to `*` in KMS policy.
+    
+    Terraform example:
+    ```
+    data aws_kms_policy_document "kms_policy" {
+      statement {
+        sid = "KmsAdminUser"
+    
+        actions = [
+          "kms:Create*",
+          "kms:Describe*",
+          "kms:TagResource",
+          "kms:UntagResource",
+          "kms:CancelKeyDeletion"
+        ]
+        principals {
+    -     identifiers = ["*"]
+    +     identifiers = [ "arn:aws:iam::111122223333:user/KMSAdminUser" ]
+          type        = "AWS"
+        }
+      }
+    }
+    
+    resource "aws_kms_key" "a" {
+      description             = "KMS key 1"
+      deletion_window_in_days = 10
+    }
+    
+    resource "aws_kms_key_policy" "keypolicy" {
+      policy = "${data.aws_kms_policy_document.kms_policy.json}"
+      ...
+    }
+    ```
+    
+    Cloudformation example:
+    ```json
+    {
+      "Type" : "AWS::KMS::Key",
+      "Properties" : {
+          "Description" : "KMS key",
+          "Enabled" : true,
+          "EnableKeyRotation" : true,
+          "KeyPolicy" : {
+            "Sid": "Allow access for Key Administrators",
+            "Effect": "Allow",
+            "Principal": {
+    -         "AWS":  "*"        
+    +         "AWS": "arn:aws:iam::111122223333:user/KMSAdminUser"
+            },
+            "Action": [
+              "kms:Create*",
+              "kms:Describe*",
+              "kms:TagResource",
+              "kms:UntagResource",
+              "kms:CancelKeyDeletion"
+            ],
+            ...
+          },
+          ...
+          ...
+        }
+    }
+    ```
+    
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key#policy
+    * https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_33
+severity: High
+sid: ckv-aws-33
+title: "Ensure KMS key policy does not contain wildcard (*) principal"

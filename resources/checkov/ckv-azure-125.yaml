@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensures that Service Fabric use three levels of protection available"
+extra:
+  entity: azurerm_service_fabric_cluster
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_125
+severity: High
+sid: ckv-azure-125
+title: "Ensures that Service Fabric use three levels of protection available"

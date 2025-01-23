@@ -1,0 +1,58 @@
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+- CIS
+description:  Containers should not run with allowPrivilegeEscalation
+extra:
+  entity: InitContainers
+guidelines: |-
+  #### Description
+  Minimize the admission of containers with `allowPrivilegeEscalation`.
+
+  AllowPrivilegeEscalation controls whether or not a user is allowed to set the security context of a container to allowPrivilegeEscalation=true. This defaults to allowed to not break setuid binaries. Setting it to false ensures that no child process of a container can gain more privileges than its parent.
+
+  #### Rationale
+  A container running with the allowPrivilegeEscalation flag set to true may have processes that can gain more privileges than their parent.
+
+  #### Remediation
+  Set the `securityContext.allowPrivilegeEscalation` to `false` for `containers` and `initContainers`.
+
+  Example of a Pod
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: view-pid
+  spec:
+    containers:
+      - name: view-pid
+        image: discr33t/discr33t-centos:v0.1.3
+        command: ["sh", "-c"]
+        args: ["while true; do echo 'foo'; done;"]
+  +     securityContext:
+  +       allowPrivilegeEscalation: false
+    initContainers:
+      - name: init-myservice
+        image: busybox:1.28
+  +     securityContext:
+  +        allowPrivilegeEscalation: false
+  ```
+
+  #### References
+provider: Kubernetes
+ruleId: CKV_K8S_20
+severity: High
+sid: ckv-k8s-20
+title: Containers should not run with allowPrivilegeEscalation
+autofix: true
+remediation:
+- checkType: Kubernetes
+  steps:
+  - action: modify
+    resource: [ "Pod", "Deployment", "ReplicaSet", "StatefulSet", "DaemonSet", "Job", "CronJob", "ReplicationController" ]
+    resourceAttribute: securityContext.allowPrivilegeEscalation
+    resourceAttributeType: nestedBlock
+    resourceAttributeValue: "false"
+    resourceType: [ "containers", "initContainers" ]

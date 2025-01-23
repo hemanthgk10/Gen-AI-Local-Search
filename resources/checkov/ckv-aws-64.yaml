@@ -1,0 +1,82 @@
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance:
+- HIPAA
+description: Ensure all data stored in the Redshift cluster is securely encrypted
+  at rest. When encrypted, the data blocks and system metadata are encrypted for the
+  cluster and it's snapshot.
+extra:
+  entity: AWS::Redshift::Cluster
+  type: resource
+guidelines: |-
+  #### Description
+  Amazon Redshift is a fully managed, petabyte-scale data warehouse service in the cloud. You can start with just a few hundred gigabytes of data and scale to a petabyte or more. This enables you to use your data to acquire new insights for your business and customers.
+
+  Ensure all data stored in the Redshift cluster is securely encrypted at rest. When encrypted, the data blocks and system metadata are encrypted for the cluster and it's snapshot.
+
+  #### Rationale
+  Encrypting the redshit cluster reduces the chances of exposing the sensitive data to unauthorized people and also helps in meeting the guidelines and regulations of data governence. Encryption is easy and no additional work is required when the AWS KMS is used. Snapshots created from the encrypted are also encrypted.
+
+  #### Remediation
+  Set the `encrypted` argument to `true` and also provide `kms_key_id` for encryption.
+
+  Terraform example:
+  ```
+  resource "aws_redshift_cluster" "default" {
+      cluster_identifier = "tf-redshift-cluster"
+      database_name      = "mydb"
+      master_username    = "foo"
+      master_password    = "Mustbe8characters"
+      node_type          = "dc1.large"
+      cluster_type       = "single-node"
+  +   encrypted          = true
+  +   kms_key_id         = "arn:aws:kms:us-east-1:1112213231:key/my-key-12313"
+      ...
+      ...
+  }
+  ```
+
+  CloudFormation example:
+  ```json
+  {
+    "Type" : "AWS::Redshift::Cluster",
+    "Properties" : {
+        "AllowVersionUpgrade" : true,
+        "ClusterType" : "single-node",
+        "DBName" : "mydb",
+  +     "Encrypted" : true,
+  +     "KmsKeyId" : "arn:aws:kms:us-east-1:1112213231:key/my-key-12313",
+        "NodeType" : "dc1.large",
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-db-encryption.html
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/redshift_cluster#encrypted
+lwid:
+  - LW_AWS_GENERAL_SECURITY_5
+provider: AWS
+ruleId: CKV_AWS_64
+severity: High
+sid: ckv-aws-64
+title: Ensure all data stored in the Redshift cluster is secured
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: encrypted
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_redshift_cluster" ]
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: kms_key_id
+    resourceAttributeType: string
+    resourceAttributeValue: "<Provide the ARN of the default SSL server certificate>"
+    resourceType: [ "aws_redshift_cluster" ]

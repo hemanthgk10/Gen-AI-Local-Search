@@ -1,0 +1,80 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "AWS API gateway acts as an entry point for applications to access data, business logic or functionality of your application backend. It handles the all the API calls to your backend application including traffic management, CORS, authorization and access control, throttling, monitoring, and API version management. There are two types of logs for API gateway: execution logs and access logs.\n\
+    When you enable caching for a stage, API Gateway caches responses from your endpoint for a specified time-to-live (TTL) period, in seconds. API Gateway then responds to the request by looking up the endpoint response from the cache instead of making a request to your endpoint. "
+extra:
+  entity: aws_api_gateway_stage
+  type: resource
+guidelines: |-
+    #### Description
+    AWS API gateway acts as an entry point for applications to access data, business logic or functionality of your application backend. It handles the all the API calls to your backend application including traffic management, CORS, authorization and access control, throttling, monitoring, and API version management. There are two types of logs for API gateway: execution logs and access logs.
+
+    When you enable caching for a stage, API Gateway caches responses from your endpoint for a specified time-to-live (TTL) period, in seconds. API Gateway then responds to the request by looking up the endpoint response from the cache instead of making a request to your endpoint.
+
+    #### Rationale
+    Enable API caching in Amazon API Gateway to cache your endpoint's responses. With caching, you can reduce the number of calls made to your endpoint and also improve the latency of requests to your API.
+
+    #### Remediation
+    Set the `CacheClusterEnabled` flag to `true`. When set, you can set the size of cache cluster too.
+
+    Terraform example
+    ```
+    resource "aws_api_gateway_stage" "example" {
+        api_id     = aws_api_gateway_rest_api.test.id
+        access_log_settings  {
+           destination_arn   = "arn:aws:iam::187416307283:log-group:API-Gateway-Execution-Logs/abd"
+           format            = "$context.identity.sourceIp $context.identity.caller"
+        }
+    +   cache_cluster_enabled = true
+    +   cache_cluster_size    = 118
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+      "Type" : "AWS::ApiGateway::Stage",
+      "Properties" : {
+          "RestApiId" : "aws_api_gateway_rest_api.test.id",
+          "AccessLogSetting" : {
+             "DestinationArn" : "arn:aws:iam::187416307283:log-group:API-Gateway-Execution-Logs/abd",
+             "Format" : ""$context.identity.sourceIp $context.identity.caller""
+          },
+    +     "CacheClusterEnabled": true,
+    +     "CacheClusterSize": 118
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_stage#cache_cluster_enabled
+    * https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-caching.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_120
+severity: Low
+sid: ckv-aws-120
+title: "Ensure API Gateway caching is enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: cache_cluster_enabled
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_api_gateway_stage" ]
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: cache_cluster_size
+    resourceAttributeType: integer
+    resourceAttributeValue: "118"
+    resourceType: [ "aws_api_gateway_stage" ]

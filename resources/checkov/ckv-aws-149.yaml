@@ -1,0 +1,61 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS Secrets Manager is an AWS service that encrypts and stores your secrets, and transparently decrypts and returns them to you in plaintext. It's designed especially to store application secrets, such as login credentials, that change periodically and should not be hard-coded or stored in plaintext in the application. In place of hard-coded credentials or table lookups, your application calls Secrets Manager.
+
+    Secrets Manager integrates with AWS Key Management Service (AWS KMS) to encrypt every version of every secret with a unique data key that is protected by an AWS KMS customer master key (CMK). This integration protects your secrets under encryption keys that never leave AWS KMS unencrypted. It also enables you to set custom permissions on the CMK and audit the operations that generate, encrypt, and decrypt the data keys that protect your secrets.
+extra:
+  entity: aws_secretsmanager_secret
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Secrets Manager is an AWS service that encrypts and stores your secrets, and transparently decrypts and returns them to you in plaintext. It's designed especially to store application secrets, such as login credentials, that change periodically and should not be hard-coded or stored in plaintext in the application. In place of hard-coded credentials or table lookups, your application calls Secrets Manager.
+
+    Secrets Manager integrates with AWS Key Management Service (AWS KMS) to encrypt every version of every secret with a unique data key that is protected by an AWS KMS customer master key (CMK). This integration protects your secrets under encryption keys that never leave AWS KMS unencrypted. It also enables you to set custom permissions on the CMK and audit the operations that generate, encrypt, and decrypt the data keys that protect your secrets.
+
+    #### Rationale
+    Secrets Manager or SSM Parameter store both allow you to encrypt secrets using KMS generated keys and therefore protect your sensitive data.
+
+    #### Remediation
+    Specify the ARN or Id of the AWS KMS customer master key (CMK) to be used to encrypt the secret values in the versions stored in this secret. If you don't specify this value, then Secrets Manager defaults to using the AWS account's default CMK (the one named aws/secretsmanager). If the default KMS CMK with that name doesn't yet exist, then AWS Secrets Manager creates it for you automatically the first time.
+
+    Terraform example
+    ```
+    resource "aws_secretsmanager_secret" "rotation-example" {
+        name                = "rotation-example"
+        rotation_lambda_arn = aws_lambda_function.example.arn
+
+        rotation_rules {
+          automatically_after_days = 7
+        }
+    +   kms_key_id = "arn:aws:kms:us-west-2:111122223333:key/xyz"
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::SecretsManager::Secret",
+      "Properties" : {
+    +     "KmsKeyId" : "arn:aws:kms:us-west-2:111122223333:key/xyz",
+          "Name" : "rotation-example",
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret#kms_key_id
+    * https://docs.aws.amazon.com/kms/latest/developerguide/services-secrets-manager.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_149
+severity: High
+sid: ckv-aws-149
+title: "Ensure that Secrets Manager secret is encrypted using KMS"

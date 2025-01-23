@@ -1,0 +1,55 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS AppSync is a fully managed service that makes it easy to develop GraphQL APIs by handling the heavy lifting of securely connecting to data sources like AWS DynamoDB, Lambda, and more.
+
+    AWS Web Application Firewall (WAF) helps to protect your APIs from common application-layer exploits that can affect availability or consume excessive resources. WAF allows you to use access control lists (ACLs), rules, and conditions that define acceptable or unacceptable requests or IP addresses.
+extra:
+  entity: aws_appsync_graphql_api
+  type: resource
+guidelines: |-
+    #### Description
+    AWS AppSync is a fully managed service that makes it easy to develop GraphQL APIs by handling the heavy lifting of securely connecting to data sources like AWS DynamoDB, Lambda, and more.
+
+    AWS Web Application Firewall (WAF) helps to protect your APIs from common application-layer exploits that can affect availability or consume excessive resources. WAF allows you to use access control lists (ACLs), rules, and conditions that define acceptable or unacceptable requests or IP addresses.
+
+    #### Rationale
+    Having WAF infront of the AppSync helps to protect your Graphql APIs from common web exploits, such as SQL injection and cross-site scripting (XSS) attacks.
+
+    #### Remediation
+    Configure the `aws_wafv2_web_acl_association` for the AppSync and WAF.
+
+    Terraform example
+    ```
+    resource "aws_appsync_graphql_api" "example" {
+        authentication_type = "AMAZON_COGNITO_USER_POOLS"
+        name                = "example"
+
+        user_pool_config {
+          aws_region     = data.aws_region.current.name
+          default_action = "DENY"
+          user_pool_id   = aws_cognito_user_pool.example.id
+        }
+        ...
+        ...
+    }
+
+    + resource "aws_wafv2_web_acl_association" "example" {
+    +    resource_arn = aws_api_gateway_stage.example_gw.arn
+    +    web_acl_arn  = aws_appsync_graphql_api.example.arn
+    + }
+
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/appsync_graphql_api
+    * https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-control-access-aws-waf.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_33
+severity: Medium
+sid: ckv2-aws-33
+title: "Ensure AppSync is protected by WAF"

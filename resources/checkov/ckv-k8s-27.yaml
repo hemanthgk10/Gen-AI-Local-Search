@@ -1,0 +1,46 @@
+category: Network
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: Do not expose the docker daemon socket to containers
+extra:
+  entity: CronJob
+guidelines: |-
+  #### Description
+  Do not expose the docker daemon socket to containers.
+
+  #### Rationale
+  Docker socket /var/run/docker.sock is the UNIX socket that Docker is listening to. This is the primary entry point for the Docker API. The owner of this socket is root. Giving someone access to it is equivalent to giving unrestricted root access to your host.
+
+  #### Remediation
+  Don't allow the kubernetes container to access the docker socket.
+
+  Example of a Pod:
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: redis
+  spec:
+    containers:
+    - name: redis
+      image: redis
+  -   volumeMounts:
+  -   - name: docker-sock-volume
+  -     mountPath: /var/run/docker.sock
+  - volumes:
+  - - name: docker-sock-volume
+  -   hostPath:
+  -    path: /var/run/docker.sock
+    ...
+    ...
+  ```
+
+  #### References
+  * https://docs.docker.com/engine/security/https/
+  * https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html
+provider: Kubernetes
+ruleId: CKV_K8S_27
+severity: High
+sid: ckv-k8s-27
+title: Do not expose the docker daemon socket to containers

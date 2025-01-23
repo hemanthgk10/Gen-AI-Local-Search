@@ -1,0 +1,59 @@
+---
+category: Security
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "SQS Policy actions should always be restricted to a specific set. This ensures that the queue itself cannot be modified or deleted, and prevents possible future additions to queue actions to be implicitly allowed."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws047.go"
+guidelines: |-
+    #### Description
+    Ensure SQS policies that allow all(*) actions are not created. SQS policies should start with a minimum set of
+    actions and include more as needed rather than starting with `*`.
+
+    #### Remediation
+    Providing all actions when unnecessary exposes resources to potentially unwanted actions.
+
+
+    #### Rationale
+    Remove Action with `*` and replace it with specific action that is required.
+
+    ```
+    resource "aws_sqs_queue" "q" {
+      name = "examplequeue"
+    }
+
+    resource "aws_sqs_queue_policy" "test" {
+        queue_url = aws_sqs_queue.q.id
+        policy = <<POLICY
+        {
+          "Version": "2012-10-17",
+          "Id": "sqspolicy",
+          "Statement": [
+            {
+              "Sid": "First",
+              "Effect": "Allow",
+              "Principal": "*",
+    -         "Action": "*"
+    +         "Action": "sqs:SendMessage",
+              "Resource": "${aws_sqs_queue.q.arn}",
+              "Condition": {
+                "ArnEquals": {
+                  "aws:SourceArn": "${aws_sns_topic.example.arn}"
+                }
+              }
+            }
+          ]
+        }
+        POLICY
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue_policy
+lwid: []
+provider: AWS
+ruleId: AWS047
+severity: Medium
+sid: tfsec-aws047
+title: "AWS SQS policy document has wildcard action statement"

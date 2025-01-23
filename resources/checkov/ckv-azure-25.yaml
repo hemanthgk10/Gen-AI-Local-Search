@@ -1,0 +1,45 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Enable all types of Advanced Data Security (ADS) threat protection on
+  SQL servers.
+extra:
+  entity: Microsoft.Sql/servers/databases
+  type: resource
+guidelines: |-
+  #### Description
+  Enable all types of Advanced Data Security (ADS) threat protection on SQL servers.
+
+  #### Rationale
+  Enabling all threat protection types protects against SQL injection, database vulnerabilities, and any other anomalous activities.
+
+  #### Remediation
+  From *Azure Console*
+    1. Go to `SQL servers`
+    2. For each server instance
+    3. Click on `Advanced Data Security`
+    4. At section Advanced Threat Protection Settings, Set `Advanced Threat Protection` types to `All`
+
+  *Azure PowerShell*
+  For each Server, set `ExcludedDetectionTypes` to None:
+
+  ```
+  Set-AzureRmSqlServerThreatDetectionPolicy -ResourceGroupName <resource group name> -ServerName <server name> -ExcludedDetectionType "None"
+  ```
+
+  By default, `Advanced Threat Protection` types is not set.
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/sql-database/sql-database-advanced-data-security
+  * https://docs.microsoft.com/cs-cz/powershell/module/azurerm.sql/get-azurermsqlserverthreatdetectionpolicy?view=azurermps-5.2.0
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-posture-vulnerability-management#pv-6-perform-software-vulnerability-assessments
+lwid:
+  - Azure_CIS_4_1_3
+  - Azure_CIS_4_2_3
+provider: Azure
+ruleId: CKV_AZURE_25
+severity: High
+sid: ckv-azure-25
+title: Ensure that 'Threat Detection types' is set to 'All'

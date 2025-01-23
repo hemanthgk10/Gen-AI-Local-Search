@@ -1,0 +1,51 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure GKE Control Plane is not public
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+  #### Description
+  Google Kubernetes Engine (GKE) control plane is main mother board for the Kubernetes cluster and it acts as a gateway to create, deploy, update, remove and scale resources in the cluster. By default, the GKE control plane is accessible to everyone from public IP Address.
+
+  This access should be limited to few users only or restrict to specific CIDR addresses.
+
+  #### Rationale
+  As per security recommendations, it is always safe to reduce the exposure of the Kubernetes cluster plane to everyone. It should be available to only required users and extend it if any one else is required access.
+
+  This reduces the chances of any security breach.
+
+  #### Remediation
+
+  Do not allow access to master control plane access to everyone. So remove any `cidr_block` containing `0.0.0.0/0`.
+
+  Terraform example
+  ```
+  resource "google_container_cluster" "primary" {
+      name               = "marcellus-wallace"
+      location           = "us-central1-a"
+      initial_node_count = 3
+
+      master_authorized_networks_config {
+         cidr_blocks = [{
+  -            cidr_block = "0.0.0.0/0"
+  +            cidr_block = "192.128.10.4/22"
+               name       = "example-block"
+         }]
+      }
+      ...
+      ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#master_authorized_networks_config
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_18
+severity: Critical
+sid: ckv-gcp-18
+title: Ensure GKE Control Plane is not public

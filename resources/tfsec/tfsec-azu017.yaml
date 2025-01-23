@@ -1,0 +1,73 @@
+---
+category: Network
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "SSH access can be configured on either the network security group or in the network security group rule. SSH access should not be permitted from the internet (*, 0.0.0.0, /0, internet, any)"
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/azu017.go"
+guidelines: |-
+    #### Description
+    Disable SSH access on network security groups from the Internet.
+
+    #### Rationale
+    The potential security problem with using SSH over the Internet is that attackers can use various brute force techniques to gain access to Azure Virtual Machines. Once the attackers gain access, they can use a virtual machine as a launch point for compromising other machines on the Azure Virtual Network or even attack networked devices outside of Azure.
+
+    #### Remediation
+    Disable direct SSH access to your Azure Virtual Machines from the Internet. After direct SSH access from the Internet is disabled, you have other options you can use to access these virtual machines for remote management:
+       * [Point-to-site VPN](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-point-to-site-resource-manager-portal)
+       * [Site-to-site VPN](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-site-to-site-resource-manager-portal)
+       * [ExpressRoute](https://docs.microsoft.com/en-us/azure/expressroute/)
+
+    By default, SSH access from internet is not enabled.
+
+    Manual check:
+    1. Open the Networking blade for the specific Virtual machine in Azure portal
+    2. Verify that the `INBOUND PORT RULES` does not have a rule for SSH such as
+        * port = 22,
+        * protocol = TCP,
+        * Source = Any OR Internet
+
+    Enable ssh access to only a subset of IP subnet rather than opening it to everything (`*`) / remove the port `22` from `destination_port_range`.
+
+    Terraform example:
+    ```
+    resource "azurerm_network_security_rule" "good_example" {
+         name                        = "good_example_security_rule"
+         direction                   = "Inbound"
+         access                      = "Allow"
+         protocol                    = "TCP"
+         source_port_range           = "*"
+    -    destination_port_range      = ["22"]
+    +    destination_port_range      = ["35634"]
+    -    source_address_prefix       = "*"
+    +    source_address_prefix       = "82.102.23.23"
+         destination_address_prefix  = "*"
+    }
+
+    resource "azurerm_network_security_group" "example" {
+        name                = "tf-appsecuritygroup"
+        location            = azurerm_resource_group.example.location
+        resource_group_name = azurerm_resource_group.example.name
+
+        security_rule {
+      	 source_port_range           = "any"
+    -      destination_port_range      = ["22"]
+    +      destination_port_range      = ["35634"]
+    -      source_address_prefix       = "*"
+    +      source_address_prefix       = "82.102.23.23"
+           destination_address_prefix  = "*"
+        }
+    }
+    ```
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/security/azure-security-network-security-best-practices#disable-rdpssh-access-to-azure-virtual-machines
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-network-security#ns-1-implement-security-for-internal-traffic
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule#source_address_prefix
+lwid: []
+provider: Azure
+ruleId: AZU017
+severity: Critical
+sid: tfsec-azu017
+title: "SSH access should not be accessible from the Internet, should be blocked on port 22"

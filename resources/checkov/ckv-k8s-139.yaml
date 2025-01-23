@@ -1,0 +1,93 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    kubelet is the primary "node agent" that runs on each node in a Kubernetes cluster. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    Kubelet supports two modes of authorization.
+      * AlwaysAllow -- (default) AlwaysAllow mode is the authorization mode to apply to requests to the kubelet server.
+      * Webhook -- Webhook mode uses the SubjectAccessReview API to determine authorization.
+
+    Do not use `AlwaysAllow` mode. Enable explicit authorization.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    kubelet is the primary "node agent" that runs on each node in a Kubernetes cluster. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+
+    Kubelet supports two modes of authorization.
+      * AlwaysAllow -- (default) AlwaysAllow mode is the authorization mode to apply to requests to the kubelet server.
+      * Webhook -- Webhook mode uses the SubjectAccessReview API to determine authorization.
+
+    Do not use `AlwaysAllow` mode. Enable explicit authorization.
+
+    #### Rationale
+    Kubelets, by default, allow all authenticated requests (even anonymous ones) without needing explicit authorization checks from the apiserver. You should restrict this behavior and only allow explicitly authorized requests.
+
+    #### Audit
+    Run the following command on each node:
+    ```
+     ps -ef | grep kubelet
+    ```
+    If the `--authorization-mode` argument is present check that it is not set to `AlwaysAllow`. If it is not present check that there is a Kubelet config file specified by `--config`, and that file sets `authorization: mode` to something other than `AlwaysAllow`.
+    It is also possible to review the running configuration of a Kubelet via the `/configz` endpoint on the Kubelet API port (typically `10250/TCP`). Accessing these with appropriate credentials will provide details of the Kubelet's configuration.
+
+    #### Remediation
+    If using a Kubelet config file, edit the file to set `authorization: mode` to Webhook.
+
+    If using executable arguments, edit the kubelet service file `/etc/systemd/system/kubelet.service.d/10-kubeadm.conf` on each worker node and set the below parameter in `KUBELET_AUTHZ_ARGS` variable.
+    ```
+        --authorization-mode=Webhook
+    ```
+
+    Based on your system, restart the `kubelet` service. For example:
+    ```
+       systemctl daemon-reload
+       systemctl restart kubelet.service
+    ```
+
+    By default, `--authorization-mode` argument is set to `AlwaysAllow`.
+
+    Example of Kubelet Configuration file:
+    ```yaml
+         apiVersion: kubelet.config.k8s.io/v1beta1
+         kind: KubeletConfiguration
+         address: 0.0.0.0
+         authentication:
+            anonymous:
+              enabled: false
+         evictionHard:
+            memory.available:  "200Mi"
+         podCIDR: 10.200.0.0/16
+         authorization:
+    -       mode: AlwaysAllow
+    +       mode: Webhook
+         maxPods: 200
+         readOnlyPort: 0
+         ...
+         ...
+    ```
+
+    #### Impact
+    Unauthorized requests will be denied.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kubelet/
+    * https://kubernetes.io/docs/admin/kubelet-authentication-authorization/#kubelet-authentication
+
+    #### CIS Controls:
+    **Version 6**
+      *14 Controlled Access Based on the Need to Know* -- Controlled Access Based on the Need to Know.
+provider: Kubernetes
+ruleId: CKV_K8S_139
+severity: High
+sid: ckv-k8s-139
+title: "Ensure that the --authorization-mode argument is not set to AlwaysAllow"

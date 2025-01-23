@@ -1,0 +1,31 @@
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: |-
+  Helm is a package manager for kubernetes. Tiller is a component of helm that resides in kubernetes cluster and interacts with Kubernetes API server to install, upgarde, remove kubernetes objects.
+  Tiller has lot of access permission as it needs to operate on Kubernetes objects for all the operations.
+extra:
+  entity: Service
+guidelines: |-
+  #### Description
+  Helm is a package manager for kubernetes. Tiller is a component of helm that resides in kubernetes cluster and interacts with Kubernetes API server to install, upgarde, remove kubernetes objects.
+
+  Tiller has lot of access permission as it needs to operate on Kubernetes objects for all the operations.
+
+  #### Rationale
+  Tiller has lot of access permission as it needs to operate on Kubernetes objects for all the operations. And it can be security risk with such excess permissions.
+
+  #### Remediation
+  * Use Helm 3 instead of Helm 2. Migration from Helm 2 to 3 can be done by following
+    https://helm.sh/docs/topics/v2_v3_migration/
+
+  * Remove any Kubernets Service that is running Helm 2.
+
+  #### References
+  * https://helm.sh/
+provider: Kubernetes
+ruleId: CKV_K8S_44
+severity: High
+sid: ckv-k8s-44
+title: Ensure that the Tiller Service (Helm v2) is deleted

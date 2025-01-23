@@ -1,0 +1,117 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The Kubernetes API is the front end of the Kubernetes control plane and is how users interact with their Kubernetes cluster. The API (application programming interface) server determines if a request is valid and then processes it. These Kubernetes API server validates and configures data for the api objects which include pods, services, replicationcontrollers, and others.
+
+    Users access the Kubernetes API using kubectl, client libraries, or by making REST requests. Both human users and Kubernetes service accounts can be authorized for API access. When a request reaches the API, it goes through several stages such as
+      * Authentication
+      * Authorization
+      * Admission Control
+
+    In Authentication phase, when the API servers have the flag `--service-account-lookup`, then they just not verify the token but validates if it is also present in the DB (ETCD). It is always safe to validate service accounts before validating their tokens.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    The Kubernetes API is the front end of the Kubernetes control plane and is how users interact with their Kubernetes cluster. The API (application programming interface) server determines if a request is valid and then processes it. These Kubernetes API server validates and configures data for the api objects which include pods, services, replicationcontrollers, and others.
+
+    Users access the Kubernetes API using kubectl, client libraries, or by making REST requests. Both human users and Kubernetes service accounts can be authorized for API access. When a request reaches the API, it goes through several stages such as
+      * Authentication
+      * Authorization
+      * Admission Control
+
+    In Authentication phase, when the API servers have the flag `--service-account-lookup`, then they just not verify the token but validates if it is also present in the DB (ETCD). It is always safe to validate service accounts before validating their tokens.
+
+    #### Rationale
+    If `--service-account-lookup` is not enabled, the apiserver only verifies that the authentication token is valid, and does not validate that the service account token mentioned in the request is actually present in etcd. This allows using a service account token even after the corresponding service account is deleted. This is an example of time of check to time of use security issue.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-apiserver
+    ```
+    Verify that if the `--service-account-lookup` argument exists it is set to `true`.
+
+    #### Remediation
+    Edit the API server pod specification file `/etc/kubernetes/manifests/kube-apiserver.yaml` on the master node and set the below parameter.
+    ```
+      --service-account-lookup=true
+    ```
+
+    Alternatively, you can delete the `--service-account-lookup` parameter from this file so that the default takes effect.
+
+    By default, `--service-account-lookup` argument is set to `true`.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        annotations:
+          scheduler.alpha.kubernetes.io/critical-pod: ""
+        labels:
+          component: kube-apiserver
+          tier: control-plane
+        name: kube-apiserver
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - kube-apiserver
+          - --admission-control=Initializers,NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,ResourceQuota
+          - --etcd-servers=http://127.0.0.1:2379
+          - --authorization-mode=Node,RBAC
+          - --admission-control-config-file=admission-config.yaml
+          - --enable-admission-plugins=NodeRestriction,NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota
+          - --secure-port=6443
+          - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+          - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+          - --audit-log-path=/var/log/apiserver/audit.log
+          - --audit-log-maxage=30
+          - --audit-log-maxbackup=10
+          - --audit-log-maxsize=100
+          - --request-timeout=60
+    +     - --service-account-lookup=true
+          ...
+          ...
+
+          image: gcr.io/google_containers/kube-apiserver-amd64:v1.8.0
+          livenessProbe:
+            failureThreshold: 8
+            httpGet:
+              host: 127.0.0.1
+              path: /healthz
+              port: 6443
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+          name: kube-apiserver
+          resources:
+            requests:
+              cpu: 250m
+          volumeMounts:
+          - mountPath: /etc/kubernetes/pki
+            name: k8s-certs
+            readOnly: true
+          ...
+          ...
+    ```
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-apiserver/
+    * https://github.com/kubernetes/kubernetes/issues/24167
+    * https://en.wikipedia.org/wiki/Time_of_check_to_time_of_use
+provider: Kubernetes
+ruleId: CKV_K8S_96
+severity: Medium
+sid: ckv-k8s-96
+title: "Ensure that the --service-account-lookup argument is set to true"

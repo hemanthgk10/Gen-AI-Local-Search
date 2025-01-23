@@ -1,0 +1,59 @@
+---
+autofix: true
+category: TLS
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "You should not use outdated/insecure TLS versions for encryption. You should be using TLS v1.2+."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws010.go"
+guidelines: |-
+    #### Description
+    You should not use outdated/insecure TLS versions for encryption. You should be using TLS v1.2+.
+
+    #### Rationale
+    Using an outdated policy, can have vulnerabilities opened up that can leave the underlying resources for exploit.
+
+    #### Remediation
+    Set the `ssl_policy` to TLS v1.2+ or higher. This is required when `protocol` is set to `HTTPS`.
+
+    Terraform example:
+    ```
+    resource "aws_lb_listener" "front_end" {
+        load_balancer_arn = aws_lb.front_end.arn
+        port              = "443"
+        protocol          = "HTTPS"
+    -   ssl_policy        = "ELBSecurityPolicy-TLS-1-1-2017-01"
+    +   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
+        certificate_arn   = "arn:aws:iam::187416307283:server-certificate/test_cert_rab3wuqwgja25ct3n4jdj2tzu4"
+
+        default_action {
+          type             = "forward"
+          target_group_arn = aws_lb_target_group.front_end.arn
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb_listener#ssl_policy
+lwid:
+  - LW_AWS_GENERAL_SECURITY_7
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: ssl_policy
+        resourceAttributeType: string
+        resourceAttributeValue: ELBSecurityPolicy-TLS-1-2-2017-01
+        resourceType:
+          - aws_lb_listener
+ruleId: AWS010
+severity: Critical
+sid: tfsec-aws010
+title: "An outdated SSL policy is in use by a load balancer"

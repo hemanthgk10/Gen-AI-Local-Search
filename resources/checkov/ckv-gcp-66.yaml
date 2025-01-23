@@ -1,0 +1,46 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Binary Authorization is a deploy-time security control that ensures only trusted container images are deployed on Google Kubernetes Engine (GKE) or Cloud Run.
+
+    With Binary Authorization, you can require images to be signed by trusted authorities during the development process and then enforce signature validation when deploying.
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Binary Authorization is a deploy-time security control that ensures only trusted container images are deployed on Google Kubernetes Engine (GKE) or Cloud Run.
+
+    With Binary Authorization, you can require images to be signed by trusted authorities during the development process and then enforce signature validation when deploying.
+
+    #### Rationale
+    By enforcing validation, you can gain tighter control over your container environment by ensuring only verified images are integrated into the build-and-release process.
+
+    #### Remediation
+    Set the flag `authenticator_groups_config` to `true`. If it is `true`, then all container images will be validated by Google Binary Authorization.
+
+    Terraform example
+    ```
+    resource "google_container_cluster" "primary" {
+        name                        = "my-gke-cluster"
+        location                    = "us-central1"
+        remove_default_node_pool    = true
+        initial_node_count          = 1
+    +   authenticator_groups_config = true
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#enable_binary_authorization
+    * https://cloud.google.com/binary-authorization
+lwid: []
+provider: GCP
+ruleId: CKV_GCP_66
+severity: Low
+sid: ckv-gcp-66
+title: "Ensure use of Binary Authorization"

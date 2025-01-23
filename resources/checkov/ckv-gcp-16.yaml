@@ -1,0 +1,67 @@
+category: DNS
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Cloud Domain Name System (DNS) is a fast, reliable and cost-effective
+  domain name system that powers millions of domains on the internet. Domain Name
+  System Security Extensions (DNSSEC) in Cloud DNS enables domain owners to take easy
+  steps to protect their domains against DNS hijacking and man-in-the-middle and other
+  attacks.
+extra:
+  entity: google_dns_managed_zone
+  type: resource
+guidelines: |-
+  #### Description
+  Cloud Domain Name System (DNS) is a fast, reliable and cost-effective domain name system that powers millions of domains on the internet. Domain Name System Security Extensions (DNSSEC) in Cloud DNS enables domain owners to take easy steps to protect their domains against DNS hijacking and man-in-the-middle and other attacks.
+
+  #### Rationale
+  Domain Name System Security Extensions (DNSSEC) adds security to the DNS protocol by enabling DNS responses to be validated. Having a trustworthy DNS that translates a domain name like www.example.com into its associated IP address is an increasingly important building block of today’s web-based applications. Attackers can hijack this process of domain/IP lookup and redirect users to a malicious site through DNS hijacking and man-in- the-middle attacks. DNSSEC helps mitigate the risk of such attacks by cryptographically signing DNS records. As a result, it prevents attackers from issuing fake DNS responses that may misdirect browsers to nefarious websites.
+
+  #### Remediation
+  By default `DNSSEC` is not enabled. `dnssec_config` is required to be turned `on` only if `visibility` is not `private`
+
+  Terraform example
+  ```
+  resource "google_dns_managed_zone" "example-zone" {
+       name        = "example-zone"
+       dns_name    = "example-${random_id.rnd.hex}.com."
+       description = "Example DNS zone"
+
+       visibility  = "public"
+
+  +    dnssec_config {
+  +         state    =  "on"
+  +         ...
+  +         ...
+  +    }
+      ...
+      ...
+  }
+  ```
+
+  From *Console*
+    1. Go to [Cloud DNS](https://console.cloud..google.com/net-services/dns/zones).
+    2. For each zone of `Type Public`, set `DNSSEC` to `On`.
+
+  From *Command Line*
+
+  Use the below command to enable `DNSSEC` for Cloud DNS Zone Name.
+
+  ```
+  gcloud dns managed-zones update ZONE_NAME --dnssec-state on
+  ```
+
+  #### References
+  * https://cloudplatform.googleblog.com/2017/11/DNSSEC-now-available-in-Cloud-DNS.html
+  * https://cloud.google.com/dns/dnssec-config#enabling
+  * https://cloud.google.com/dns/dnssec
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_managed_zone#dnssec_config
+lwid:
+  - GCP_CIS_3_3
+  - GCP_CIS12_3_3
+provider: GCP
+ruleId: CKV_GCP_16
+severity: High
+sid: ckv-gcp-16
+title: Ensure that DNSSEC is enabled for Cloud DNS

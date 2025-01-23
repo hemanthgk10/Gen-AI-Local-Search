@@ -1,0 +1,16 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that storage account enables secure transfer"
+extra:
+  entity: azurerm_storage_account
+  type: resource
+lwid:
+  - Azure_CIS_131_3_1
+  - Azure_CIS_3_1
+provider: Azure
+ruleId: CKV_AZURE_60
+severity: High
+sid: ckv-azure-60
+title: "Ensure that storage account enables secure transfer"

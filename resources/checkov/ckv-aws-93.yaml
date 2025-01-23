@@ -1,0 +1,62 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: Ensure S3 bucket policy does not lockout all but root user. (Prevent
+  lockouts needing root account fixes)
+extra:
+  entity: aws_s3_bucket_policy
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure S3 bucket policy does not lockout all but root user. (Prevent lockouts needing root account fixes)
+
+  #### Rationale
+  Having principal set to `*` means the policy is set for all users and accounts, instead of a specific user. Best security practices is to always allow only for few specific required users.
+
+  #### Remediation
+  Do not set the `principal` to `*`. Instead specify the IAM ARN or the user id.
+
+  Terraform example:
+  ```
+  resource "aws_s3_bucket" "b" {
+      bucket = "my_tf_test_bucket"
+  }
+
+  resource "aws_s3_bucket_policy" "b" {
+    bucket = aws_s3_bucket.b.id
+    policy = <<POLICY
+    {
+      "Version": "2012-10-17",
+      "Id": "MYBUCKETPOLICY",
+      "Statement": [
+        {
+          "Sid": "IPAllow",
+          "Effect": "Deny",
+  -       "Principal": "*",
+  +       "Principal": { AWS: "arn:aws:iam::1234523:user/my-user" },
+  -       "Action": "*",
+  +       "Action": [
+  +         "s3:ListBuckets"
+  +       ],
+          "Resource": "arn:aws:s3:::my_tf_test_bucket/*",
+          ...
+          ...
+        }
+      ]
+    }
+    POLICY
+    ...
+    ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy
+  * https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-bucket-user-policy-specifying-principal-intro.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_93
+severity: Medium
+sid: ckv-aws-93
+title: Ensure root user is not locked out in S3 bucket policy

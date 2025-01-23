@@ -1,0 +1,14 @@
+category: "Backup & Recovery"
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that key vault key is backed by HSM"
+extra:
+  entity: azurerm_key_vault_key
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_112
+severity: Medium
+sid: ckv-azure-112
+title: "Ensure that key vault key is backed by HSM"

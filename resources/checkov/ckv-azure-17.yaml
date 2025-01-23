@@ -1,0 +1,58 @@
+---
+category: Certs
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+  - HIPAA
+description: "Client certificates allow for the app to request a certificate for incoming requests. Only clients that have a valid certificate will be able to reach the app."
+extra:
+  entity: Microsoft.Web/sites
+  type: resource
+guidelines: |-
+    #### Description
+    Client certificates allow for the app to request a certificate for incoming requests. Only clients that have a valid certificate will be able to reach the app.
+
+    #### Rationale
+    The TLS mutual authentication technique in enterprise environments ensures the authenticity of clients to the server. If incoming client certificates are enabled, then only an authenticated client who has valid certificates can access the app.
+
+    #### Remediation
+    Set the `client_cert_enabled` to `true`.
+
+    Terraform example:
+    ```
+    resource "azurerm_app_service" "example" {
+        name                = "example-app-service"
+        location            = azurerm_resource_group.example.location
+        resource_group_name = azurerm_resource_group.example.name
+        app_service_plan_id = azurerm_app_service_plan.example.id
+
+        site_config {
+          dotnet_framework_version = "v4.0"
+          scm_type                 = "LocalGit"
+        }
+    +   client_cert_enabled = true
+        ...
+        ...
+    }
+    ```
+
+    Using Console:
+
+      1. Login to Azure Portal using https://portal.azure.com
+      2. Go to `App Services`
+      3. Click on each App
+      4. Under `Setting` section, Click on `Configuration`
+      5. Set the option `Client certificate` mode located under Incoming client certificates is set to `Require`
+
+    By default, incoming client certificates will be disabled when a new app is created using the command-line tool or Azure Portal console.
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/app_service#client_cert_enabled
+lwid:
+  - Azure_CIS_131_9_4
+provider: Azure
+ruleId: CKV_AZURE_17
+severity: Medium
+sid: ckv-azure-17
+title: "Ensure the web app has 'Client Certificates (Incoming client certificates)' set to ON"

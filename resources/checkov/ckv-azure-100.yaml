@@ -1,0 +1,14 @@
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Cosmos DB accounts have customer-managed keys to encrypt data at rest"
+extra:
+  entity: azurerm_cosmosdb_account
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_100
+severity: High
+sid: ckv-azure-100
+title: "Ensure that Cosmos DB accounts have customer-managed keys to encrypt data at rest"

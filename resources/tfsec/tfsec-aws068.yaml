@@ -1,0 +1,48 @@
+---
+category: Network
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Elastic Kubernetes Service (Amazon EKS) is a managed service that you can use to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes. Kubernetes is an open-source system for automating the deployment, scaling, and management of containerized applications.
+
+    Ensure Amazon EKS public endpoint not accessible to 0.0.0.0/0. If we enabled public access, we should specify which addresses from the Internet can communicate to the public endpoint. If you specify no blocks, then the public API server endpoint receives requests from all (0.0.0.0/0) IP addresses. If you restrict access to your public endpoint using CIDR blocks, it is recommended that you also enable private endpoint access so that nodes and Fargate pods (if you use them) can communicate with the cluster. Without the private endpoint enabled, your public access endpoint CIDR sources must include the egress sources from your VPC. For example, if you have a node in a private subnet that communicates to the internet through a NAT Gateway, you will need to add the outbound IP address of the NAT gateway as part of an allowed CIDR block on your public endpoint.
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws068.go"
+guidelines: |-
+    #### Description
+    Amazon Elastic Kubernetes Service (Amazon EKS) is a managed service that you can use to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes. Kubernetes is an open-source system for automating the deployment, scaling, and management of containerized applications.
+
+    Ensure Amazon EKS public endpoint not accessible to 0.0.0.0/0. If we enabled public access, we should specify which addresses from the Internet can communicate to the public endpoint. If you specify no blocks, then the public API server endpoint receives requests from all (0.0.0.0/0) IP addresses. If you restrict access to your public endpoint using CIDR blocks, it is recommended that you also enable private endpoint access so that nodes and Fargate pods (if you use them) can communicate with the cluster. Without the private endpoint enabled, your public access endpoint CIDR sources must include the egress sources from your VPC. For example, if you have a node in a private subnet that communicates to the internet through a NAT Gateway, you will need to add the outbound IP address of the NAT gateway as part of an allowed CIDR block on your public endpoint.
+
+    #### Rationale
+    Allowing access to public access without any restrictions can cause attackers to easily access the cluster and attack the vulnerable parts of the clsuter. They can also cause DDoS attack so the concerned users can not access the service.
+
+    #### Remediation
+    Either set the `endpoint_public_access` argument to false in `aws_eks_cluster` or set the `public_access_cidrs` to a specific cidr block rather than leaving it open to `0.0.0.0/0`.
+
+    Terraform example:
+    ```
+    resource "aws_eks_cluster" "example" {
+       name     = "example"
+       role_arn = aws_iam_role.example.arn
+       vpc_config {
+         subnet_ids           = [aws_subnet.example1.id, aws_subnet.example2.id]
+    +    public_access_cidrs  = ["10.2.0.0/8"]
+         ...
+         ...
+       }
+       ...
+       ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_cluster#vpc_config
+    * https://docs.aws.amazon.com/eks/latest/userguide/create-public-private-vpc.html
+lwid: []
+provider: AWS
+ruleId: AWS068
+severity: Critical
+sid: tfsec-aws068
+title: "EKS cluster should not have open CIDR range for public access"

@@ -1,0 +1,67 @@
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+- CIS
+description: Minimize the admission of containers with the NET_RAW capability
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  When possible, do not permit containers with NET_RAW capability or restrict them at the cluster level.
+
+  *NET_RAW* is a default permissive setting in Kubernetes to allow ICMP traffic between containers. But this capability grants an application the ability to craft raw packets (like ARP and DNS), so there's a lot of freedom for an attacker to play with network related attacks.
+
+  #### Rationale
+  Init Containers run with a default set of capabilities as assigned by the Container Runtime. By default, this can include potentially dangerous capabilities. With Docker as the container runtime, the NET_RAW capability is enabled which may be misused by malicious containers.
+  Ideally, all containers should drop the NET_RAW capability.
+
+  #### Remediation
+  Make sure to drop the `securityContext.capabilities` for both `containers` and `initContainers`.
+
+  Example of Pod
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: flask-cap
+    namespace: default
+  spec:
+    containers:
+    - image: mateobur/flask
+      name: flask-cap
+  +   securityContext:
+  +     capabilities:
+  +       drop:
+  +       - NET_RAW
+    initContainers:
+    - name: init-pod
+      image: busybox:1.28
+  +   securityContext:
+  +     capabilities:
+  +       drop:
+  +       - NET_RAW
+      ...
+      ...
+  ```
+
+  If your application or service does require a capability to be added, suppress this policy to prevent alerts.
+
+  #### References
+  * https://www.nccgroup.trust/uk/our-research/abusing-privileged-and-unprivileged-linux-containers/
+provider: Kubernetes
+ruleId: CKV_K8S_28
+severity: High
+sid: ckv-k8s-28
+title: Minimize the admission of containers with the NET_RAW capability
+autofix: true
+remediation:
+- checkType: Kubernetes
+  steps:
+  - action: add
+    resource: [ "Pod", "Deployment", "ReplicaSet", "StatefulSet", "DaemonSet", "Job", "CronJob", "ReplicationController" ]
+    resourceAttribute: securityContext.capabilities.drop
+    resourceAttributeType: nestedBlock
+    resourceAttributeValue: "NET_RAW,ALL"
+    resourceType: [ "containers", "initContainers" ]

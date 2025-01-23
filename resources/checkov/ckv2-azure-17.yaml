@@ -1,0 +1,15 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that PostgreSQL server enables customer-managed key for encryption"
+extra:
+  entity: azurerm_postgresql_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV2_AZURE_17
+severity: High
+sid: ckv2-azure-17
+title: "Ensure that PostgreSQL server enables customer-managed key for encryption"

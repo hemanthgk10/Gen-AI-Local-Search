@@ -1,0 +1,67 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: "Granting permissions to `allUsers` or `allAuthenticatedUsers` allows anyone to access the dataset. Such access might not be desirable if sensitive data is stored at the location. In this case, ensure that anonymous and/or public access to a Cloud KMS cryptokey is not allowed."
+extra:
+  entity: google_project
+  type: resource
+guidelines: |-
+    #### Description
+    Granting permissions to `allUsers` or `allAuthenticatedUsers` allows anyone to access the dataset. Such access might not be desirable if sensitive data is stored at the location. In this case, ensure that anonymous and/or public access to a Cloud KMS cryptokey is not allowed.
+
+    #### Rationale
+    It is recommended that the IAM policy on Cloud KMS cryptokeys should restrict anonymous and/or public access.
+
+    #### Remediation
+    Make sure that only `members` contains only user accounts and doesn't contain `allAuthenticatedUsers` or `allUsers`.
+
+    Terraform example
+    ```
+    resource "google_kms_crypto_key_iam_binding" "example" {
+        crypto_key_id = google_kms_crypto_key.bad_key.id
+        role          = "roles/cloudkms.cryptoKeyEncrypter"
+        members = [
+    -     "allAuthenticatedUsers",
+    -     "allUsers",
+    +     "user:alice@soluble.com",
+        ]
+        ...
+        ...
+    }
+    ```
+
+    ####Impact
+    Removing the binding for `allUsers` and `allAuthenticatedUsers` members denies accessing cryptokeys to anonymous or public users.
+
+    *Default Value:*
+    By default Cloud KMS does not allow access to `allUsers` or `allAuthenticatedUsers`.
+
+    #### References
+    * https://cloud.google.com/sdk/gcloud/reference/kms/keys/remove-iam-policy-binding
+    * https://cloud.google.com/sdk/gcloud/reference/kms/keys/set-iam-policy
+    * https://cloud.google.com/sdk/gcloud/reference/kms/keys/get-iam-policy
+    * https://cloud.google.com/kms/docs/object-hierarchy#key_resource_id
+
+    #### Notes
+    `[key_ring_name]` : Is the resource ID of the key ring, which is the fully-qualified Key ring name. This value is case-sensitive and in the form: `projects/PROJECT_ID/locations/LOCATION/keyRings/KEY_RING`
+    You can retrieve the key ring resource ID using the Cloud Console:
+
+    1. Open the `Cryptographic Keys` page in the Cloud Console.
+    2. For the key ring whose resource ID you are retrieving, click the `More icon (3 vertical dots)`.
+    3. Click Copy `Resource ID`. The resource ID for the key ring is copied to your clipboard.
+
+    [`key_name]` : Is the resource ID of the key, which is the fully-qualified CryptoKey name. This value is case-sensitive and in the form: `projects/PROJECT_ID/locations/LOCATION/keyRings/KEY_RING/cryptoKeys/KEY`
+    You can retrieve the key resource ID using the Cloud Console:
+
+    1. Open the `Cryptographic Keys` page in the Cloud Console.
+    2. Click the name of the key ring that contains the key.
+lwid:
+  - GCP_CIS12_1_9
+provider: GCP
+ruleId: CKV2_GCP_6
+severity: High
+sid: ckv2-gcp-6
+title: "Ensure that Cloud KMS cryptokeys are not anonymously or publicly accessible"

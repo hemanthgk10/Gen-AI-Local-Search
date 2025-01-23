@@ -1,0 +1,44 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon FSx a fully managed service, makes it easier for you to use Lustre for workloads where storage speed matters. You can use Lustre for workloads where speed matters, such as machine learning, high performance computing (HPC), video processing, and financial modeling.
+
+    Amazon FSx for Lustre supports two forms of encryption for file systems, encryption of data at rest and encryption in transit. Encryption of data at rest is automatically enabled when creating an Amazon FSx file system. Encryption of data in transit is automatically enabled when you access an Amazon FSx file system from Amazon EC2 instances that support this feature.
+extra:
+  entity: aws_fsx_lustre_file_system
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon FSx a fully managed service, makes it easier for you to use Lustre for workloads where storage speed matters. You can use Lustre for workloads where speed matters, such as machine learning, high performance computing (HPC), video processing, and financial modeling.
+
+    Amazon FSx for Lustre supports two forms of encryption for file systems, encryption of data at rest and encryption in transit. Encryption of data at rest is automatically enabled when creating an Amazon FSx file system. Encryption of data in transit is automatically enabled when you access an Amazon FSx file system from Amazon EC2 instances that support this feature.
+
+    #### Rationale
+    Encryption helps you protect your stored data against unauthorized access and other security risks.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_fsx_lustre_file_system`.
+
+    Terraform example
+    ```
+    resource "aws_fsx_lustre_file_system" "example" {
+        import_path      = "s3://${aws_s3_bucket.example.bucket}"
+        storage_capacity = 1200
+    +   kms_key_id       = ${aws_kms_key.example.arn}
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/fsx_lustre_file_system#kms_key_id
+    * https://docs.aws.amazon.com/fsx/latest/LustreGuide/FSXKMS.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_190
+severity: High
+sid: ckv-aws-190
+title: "Ensure lustre file systems is encrypted by KMS using a customer managed Key (CMK)"

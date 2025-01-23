@@ -1,0 +1,63 @@
+category: LDAP
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure that Register with Azure Active Directory is enabled on App Service
+extra:
+  entity: Microsoft.Web/sites
+  type: resource
+guidelines: |-
+  #### Description
+  Security defaults in Azure Active Directory (Azure AD) make it easier to be secure and help protect your organization. Security defaults contain preconfigured security settings for common attacks.
+  Microsoft is making security defaults available to everyone. The goal is to ensure that all organizations have a basic level of security-enabled at no extra cost. You turn on security defaults in the Azure portal.
+
+  #### Rationale
+  Security defaults provide secure default settings that we manage on behalf of organizations to keep customers safe until they are ready to manage their own identity security story.
+
+  For starters, we’re doing the following:
+  Requiring all users and admins to register for MFA. Challenging users with MFA - mostly when they show up on a new device or app, but more often for critical roles and tasks. Disabling authentication from legacy authentication clients, which can’t do MFA.
+
+  #### Remediation
+  Set the `identity` block in `azurerm_app_service`. Possible types are
+    * UserAssigned
+    * SystemAssigned
+
+  Terraform example:
+  ```
+  resource "azurerm_app_service" "example" {
+      name                = "example-app-service"
+      location            = azurerm_resource_group.example.location
+      resource_group_name = azurerm_resource_group.example.name
+      app_service_plan_id = azurerm_app_service_plan.example.id
+
+      site_config {
+        dotnet_framework_version = "v4.0"
+        scm_type                 = "LocalGit"
+      }
+  +   identity  {
+  +     type          = "SystemAssigned"
+  +   }
+      ...
+      ...
+  }
+  ```
+  To enable security defaults in your directory:
+    1. Sign in to the Azure portal as a security administrator, Conditional Access administrator, or global administrator.
+    2. Browse to Azure Active Directory > Properties.
+    3. Select Manage `security defaults`.
+    4. Set the Enable `security defaults` toggle to `Yes`.
+    5. Select `Save`.
+
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/concept-fundamentals-security-defaults
+  * https://techcommunity.microsoft.com/t5/azure-active-directory-identity/introducing-security-defaults/ba-p/1061414
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/app_service#identity
+lwid:
+  - Azure_CIS_131_1_22
+provider: Azure
+ruleId: CKV_AZURE_16
+severity: High
+sid: ckv-azure-16
+title: Ensure that Register with Azure Active Directory is enabled on App Service

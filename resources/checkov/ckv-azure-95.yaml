@@ -1,0 +1,14 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that automatic OS image patching is enabled for Virtual Machine Scale Sets"
+extra:
+  entity: azurerm_virtual_machine_scale_set
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_95
+severity: Low
+sid: ckv-azure-95
+title: "Ensure that automatic OS image patching is enabled for Virtual Machine Scale Sets"

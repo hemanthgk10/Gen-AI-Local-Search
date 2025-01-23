@@ -1,0 +1,57 @@
+category: Namespace
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+- CIS
+description: Kubernetes namespaces are multiple virtual clusters backed by the same
+  physical cluster. These are required to divide resources between multiple users/teams.
+  Kubernetes provides a default namespace, where objects are placed if no namespace
+  is specified for them.
+extra:
+  entity: Ingress
+guidelines: |-
+  #### Description
+  Kubernetes namespaces are multiple virtual clusters backed by the same physical cluster. These are required to divide resources between multiple users/teams.
+  Kubernetes provides a default namespace, where objects are placed if no namespace is specified for them.
+
+  #### Rationale
+  Resources in a Kubernetes cluster should be segregated by namespace, to allow for security controls to be applied at that level and to make it easier to manage resources.
+
+  #### Remediation
+  Ensure that namespaces are created to allow for appropriate segregation of Kubernetes resources and that all new resources are created in a specific namespace.
+
+  Example of a Pod
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: view-pid
+  + namespace: my-space
+  spec:
+    containers:
+      - name: view-pid
+        image: discr33t/discr33t-centos:v0.1.3
+        command: ["sh", "-c"]
+        args: ["while true; do echo 'foo'; done;"]
+        securityContext:
+          allowPrivilegeEscalation: false
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+provider: Kubernetes
+ruleId: CKV_K8S_21
+severity: Low
+sid: ckv-k8s-21
+title: The default namespace should not be used
+autofix: true
+remediation:
+- checkType: Kubernetes
+  steps:
+  - action: modify
+    resource: [ "Pod", "Deployment", "ReplicaSet", "StatefulSet", "DaemonSet", "Job", "CronJob", "ReplicationController", "Service", "ConfigMap" ]
+    resourceAttribute: metadata.namespace
+    resourceAttributeType: nestedBlock
+    resourceAttributeValue: "<Please provide some valid namespace name>"
+    resourceType: [ ]

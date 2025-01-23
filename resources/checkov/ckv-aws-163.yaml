@@ -1,0 +1,79 @@
+---
+autofix: true
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Elastic Container Registry (Amazon ECR) is an AWS managed container image registry service that is secure, scalable, and reliable. Amazon ECR image scanning helps in identifying software vulnerabilities in your container images.
+
+    You can enable image scans on push for your repositories to ensure every image is automatically checked against an aggregated set of Common Vulnerabilities and Exposures (CVEs).
+extra:
+  entity: aws_ecr_repository
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elastic Container Registry (Amazon ECR) is an AWS managed container image registry service that is secure, scalable, and reliable. Amazon ECR image scanning helps in identifying software vulnerabilities in your container images.
+
+    You can enable image scans on push for your repositories to ensure every image is automatically checked against an aggregated set of Common Vulnerabilities and Exposures (CVEs).
+
+    #### Rationale
+    Scan on push can help you automate detection and responses to container image vulnerabilities prior to promoting and deploying into production.
+
+    #### Remediation
+    By default, image scanning must be manually triggered. `scan_on_push` enables scanning on images as soon as it is pushed to the repository.
+
+    Terraform example
+    ```
+    resource "aws_ecr_repository" "foo" {
+        name                 = "bar"
+        image_tag_mutability = "MUTABLE"
+        ...
+        ...
+
+    +   image_scanning_configuration {
+    +     scan_on_push = true
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::ECR::Repository",
+      "Properties" : {
+          "RepositoryName" : "bar",
+    +     "ImageScanningConfiguration": {
+    +       "ScanOnPush" : true
+    +     }
+          ...
+          ...
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository#scan_on_push
+    * https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ecr-repository-imagescanningconfiguration.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: image_scanning_configuration.scan_on_push
+        resourceAttributeType: blockAttribute
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_ecr_repository
+ruleId: CKV_AWS_163
+severity: Low
+sid: ckv-aws-163
+title: "Ensure ECR image scanning on push is enabled"

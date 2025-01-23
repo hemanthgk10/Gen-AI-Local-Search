@@ -1,0 +1,51 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure audit profile captures all the activities
+extra:
+  entity: microsoft.insights/logprofiles
+  type: resource
+guidelines: |-
+  #### Description
+  The log profile should be configured to export all activities from the control/management plane.
+
+  #### Rationale
+  A log profile controls how the activity log is exported. Configuring the log profile to collect logs for the categories "write", "delete" and "action" ensures that all the control/management plane activities performed on the subscription are exported.
+
+  #### Remediation
+  Set the `categories` field in `azurerm_monitor_log_profile`.
+
+  Terraform example
+  ```
+    resource azurerm_monitor_log_profile "example" {
+        name = "test-logprofile"
+        categories = [
+  +       "Action",
+  +       "Delete",
+  +       "Write",
+        ]
+    }
+  ```
+
+  *Azure Console*
+
+  On Azure portal there is no provision to check or set categories.
+
+  *Azure Command Line Interface 2.0*
+
+  Use command: `az monitor log-profiles update --name default` in order to update existing default log profile.
+
+  #### References
+  * https://docs.microsoft.com/en-us/cli/azure/monitor/log-profiles?view=azure-cli-latest#az-monitor-log-profiles-update
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-logging-threat-detection#lt-4-enable-logging-for-azure-resources
+
+  #### Additional Information
+  Using Azure Portal to create log profile, there is no provision to select or deselect the log categories to export.
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_38
+severity: Low
+sid: ckv-azure-38
+title: Ensure audit profile captures all the activities

@@ -1,0 +1,81 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure that Cloud SQL database Instances are not open to the world
+extra:
+  entity: google_sql_database_instance
+  type: resource
+guidelines: |-
+  #### Description
+  Database Server should accept connections only from trusted Network(s)/IP(s) and restrict access from the world.
+
+  #### Rationale
+  To minimize attack surface on a Database server Instance, only trusted/known and required IP(s) should be white-listed to connect to it.
+
+  Authorized network should not have IPs/networks configured to `0.0.0.0` or `/0` which will allow access to the instance from anywhere in the world.
+
+  #### Remediation
+  By default, authorized networks are not configured. Remote connection to Cloud SQL database instance is not possible unless authorized networks are configured.
+
+  Terraform example
+  ```
+  resource "google_sql_database_instance" "master" {
+      name             = "master-instance"
+      database_version = "POSTGRES_11"
+      region           = "us-central1"
+
+      settings {
+         ip_configuration {
+            dynamic "authorized_networks" {
+                for_each = google_compute_instance.apps
+                iterator = apps
+
+                content {
+                  name  = apps.value.name
+  -               value = "0.0.0.0/0"
+                }
+              }
+
+              dynamic "authorized_networks" {
+                for_each = local.onprem
+                iterator = onprem
+
+                content {
+                  name  = "onprem-${onprem.key}"
+  -               value = "0.0.0.0/0"
+                }
+              }
+            }
+         }
+      }
+      ...
+      ...
+  }
+  ```
+
+
+  Using *Command-line*
+
+  Update the authorized network list by dropping off any addresses
+  ```
+  gcloud sql instances patch [INSTANCE_NAME] --authorizednetworks=[IP_ADDR1],[IP_ADDR2]...
+  ```
+
+  #### Impact
+  The Cloud SQL database instance would not be available to the world.
+
+  #### References
+  * https://cloud.google.com/sql/docs/postgres/configure-ip
+
+  #### Notes
+  There is no IPv6 configuration found for Google cloud SQL server services.
+lwid:
+  - GCP_CIS12_6_5
+  - GCP_CIS_6_2
+provider: GCP
+ruleId: CKV_GCP_11
+severity: Critical
+sid: ckv-gcp-11
+title: Ensure that Cloud SQL database Instances are not open to the world

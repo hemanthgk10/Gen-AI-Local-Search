@@ -1,0 +1,78 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon Neptune is a fast, reliable, fully managed graph database service that makes it easy to build and run applications that work with highly connected datasets. Avoid exposing it to the public which can lead to security breaches of sensitive information."
+extra:
+  entity: aws_neptune_cluster_instance
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Neptune is a fast, reliable, fully managed graph database service that makes it easy to build and run applications that work with highly connected datasets.
+
+    Avoid exposing it to the public which can lead to security breaches.
+
+    #### Rationale
+    Allowing public access to a Neptune cluster instance can expose sensitive information in the datasets of the DB cluster.
+
+    #### Remediation
+    Set the `publicly_accessible = false` for `aws_neptune_cluster_instance`. If `publicly_accessible = false`, then `neptune_subnet_group_name` should also be provided for the cluster instance which should match the `neptune_subnet_group_name` of the `aws_neptune_cluster`.
+
+    Terraform example
+    ```
+    resource "aws_neptune_cluster" "default" {
+        cluster_identifier                  = "my_db_cluster_id"
+        engine                              = "neptune"
+        backup_retention_period             = 5
+        preferred_backup_window             = "07:00-09:00"
+        skip_final_snapshot                 = true
+        iam_database_authentication_enabled = true
+        apply_immediately                   = true
+    +   neptune_subnet_group_name           = "my-subnet-2342"
+        ...
+        ...
+    }
+
+    resource "aws_neptune_cluster_instance" "example" {
+        count                       = 2
+        cluster_identifier          = aws_neptune_cluster.default.id
+        engine                      = "neptune"
+        instance_class              = "db.r4.large"
+        apply_immediately           = true
+    +   publicly_accessible         = false
+    +   neptune_subnet_group_name   = "my-subnet-2342"
+        ...
+        ...
+    }
+
+    ```
+
+    CloudFormation example
+    ```json
+    {
+        "Type" : "AWS::Neptune::DBInstance",
+        "Properties" : {
+            "DBClusterIdentifier" : "my_db_cluster_id",
+            "DBInstanceClass" : "db.r4.large",
+            "DBInstanceIdentifier" : "my_db_cluster_id.Instance1",
+    +       "PubliclyAccessible": false,
+            ...
+            ...
+          }
+    }
+    ```
+
+    *Note*
+    If you specify DBSecurityGroups, AWS CloudFormation ignores the property `PubliclyAccessible`. To specify a security group and this property, you must use a VPC security group. For more information about Amazon RDS and VPC, see Using [Amazon RDS with Amazon VPC](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.html).
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/neptune_cluster_instance#publicly_accessible
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/neptune_cluster_instance#neptune_subnet_group_name
+    * https://docs.aws.amazon.com/neptune/latest/userguide/security-vpc.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_102
+severity: High
+sid: ckv-aws-102
+title: "Ensure Neptune Cluster instance is not publicly available"

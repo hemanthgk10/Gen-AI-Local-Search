@@ -1,0 +1,14 @@
+category: "Backup & Recovery"
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that My SQL server enables geo-redundant backups"
+extra:
+  entity: azurerm_mysql_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_94
+severity: Low
+sid: ckv-azure-94
+title: "Ensure that My SQL server enables geo-redundant backups"

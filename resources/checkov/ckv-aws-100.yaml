@@ -1,0 +1,80 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "AWS Glue is a fully managed ETL (extract, transform, and load) service that makes it simple and cost-effective to categorize your data, clean it, enrich it, and move it reliably between various data stores and data streams. A security configuration is a set of security properties that can be used by AWS Glue. You can use a security configuration to encrypt data at rest. "
+extra:
+  entity: aws_eks_node_group
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elastic Kubernetes Service (Amazon EKS) is a managed service that you can use to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane or nodes. Kubernetes is an open-source system for automating the deployment, scaling, and management of containerized applications.
+
+    Amazon EKS managed node groups automate the provisioning and lifecycle management of nodes (Amazon EC2 instances) for Amazon EKS Kubernetes clusters. With Amazon EKS managed node groups, you don’t need to separately provision or register the Amazon EC2 instances that provide compute capacity to run your Kubernetes applications. Allowing access to these nodes from anywhere (0.0.0.0/0) on port 22 gives access to the open public which should be avoided for security reasons.
+
+
+    #### Rationale
+    Public access to remote server administration ports, such as 22 and 3389, increases resource attack surface and unnecessarily raises the risk of resource compromise.
+
+    #### Remediation
+    Make sure to specify the set of EC2 Security Group IDs (`source_security_group_ids`) to allow SSH access (port 22) from on the worker nodes. If you specify `ec2_ssh_key`, but do not specify this configuration when you create an EKS Node Group, port 22 on the worker nodes is opened to the Internet (0.0.0.0/0).
+
+    Terraform example
+    ```
+    resource "aws_eks_node_group" "example" {
+        cluster_name    = aws_eks_cluster.example.name
+        node_group_name = "example"
+        node_role_arn   = aws_iam_role.example.arn
+        subnet_ids      = aws_subnet.example[*].id
+
+        scaling_config {
+          desired_size = 1
+          max_size     = 1
+          min_size     = 1
+        }
+
+        remote_access {
+           ec2_ssh_key = data.aws_ec2_ssh.ssh.key
+    +      source_security_group_ids = ["sg-123442"]
+        }
+
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+        "Type" : "AWS::Glue::SecurityConfiguration",
+        "Properties" : {
+            "EncryptionConfiguration" : {
+                "CloudWatchEncryption" : {
+    +              "CloudWatchEncryptionMode" : "SSE-KMS",
+    +              "KmsKeyArn" : "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+                },
+                "JobBookmarksEncryption" : {
+    +              "JobBookmarksEncryptionMode" : "CSE-KMS",
+    +              "KmsKeyArn" : "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+                },
+                "S3Encryptions" : {
+    +              "S3EncryptionMode" : "SSE-KMS",
+    +              "KmsKeyArn" : "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+                }
+            },
+            "Name" : "example"
+            ...
+            ...
+          }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eks_node_group#remote_access
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_100
+severity: High
+sid: ckv-aws-100
+title: "Ensure Amazon EKS Node group has implict SSH access from 0.0.0.0/0"

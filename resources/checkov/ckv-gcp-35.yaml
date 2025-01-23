@@ -1,0 +1,71 @@
+category: Compute
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure 'Enable connecting to serial ports' is not enabled for VM Instance
+extra:
+  entity: google_compute_instance
+  type: resource
+guidelines: |-
+  #### Description
+  Interacting with a serial port is often referred to as the serial console, which is similar to using a terminal window, in that input and output is entirely in text mode and there is no graphical interface or mouse support.
+
+  If you enable the interactive serial console on an instance, clients can attempt to connect to that instance from any IP address. Therefore interactive serial console support should be disabled.
+
+  #### Rationale
+  A virtual machine instance has four virtual serial ports. Interacting with a serial port is similar to using a terminal window, in that input and output is entirely in text mode and there is no graphical interface or mouse support. The instance's operating system, BIOS, and other system-level entities often write output to the serial ports, and can accept input such as commands or answers to prompts. Typically, these system-level entities use the first serial port (port 1) and serial port 1 is often referred to as the serial console.
+
+  The interactive serial console does not support IP-based access restrictions such as IP whitelists. If you enable the interactive serial console on an instance, clients can attempt to connect to that instance from any IP address. This allows anybody to connect to that instance if they know the correct SSH key, username, project ID, zone, and instance name.
+
+  Therefore interactive serial console support should be disabled.
+
+  #### Remediation
+  Set the `metadata.serial-port-enable` is set to `TRUE`.
+
+  Terraform example
+  ```
+  resource "google_compute_instance" "default" {
+      name         = "test"
+      machine_type = "e2-medium"
+      zone         = "us-central1-a"
+  +   metadata {
+  +      serial-port-enable = true
+  +   }
+      ...
+      ...
+  }
+  ```
+
+  Using *Console*
+
+  1. Login to Google Cloud console.
+  2. Go to Computer Engine.
+  3. Go to VM instances.
+  4. Click on the Specific VM.
+  5. Click `EDIT`.
+  6. Unselect `Enable connecting to serial ports` below `Remote access` block.
+  7. Click `Save`.
+
+  Using *CLI*
+  Use the below command to disable
+
+  ```
+  gcloud compute instances add-metadata <vmName> --zone=<region> --metadata=serial-port-enable=false
+
+  OR
+
+  gcloud compute instances add-metadata <vmName> --zone=<region> --metadata=serial-port-enable=0
+  ```
+
+  #### References
+  * https://cloud.google.com/compute/docs/instances/interacting-with-serial-console?hl=en_US&_ga=2.176763621.-1799987798.1507876265
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#metadata
+lwid:
+  - GCP_CIS_4_4
+  - GCP_CIS12_4_5
+provider: GCP
+ruleId: CKV_GCP_35
+severity: Low
+sid: ckv-gcp-35
+title: Ensure 'Enable connecting to serial ports' is not enabled for VM Instance

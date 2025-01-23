@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure Front Door WAF prevents message lookup in Log4j2. See CVE-2021-44228 aka log4jshell"
+extra:
+  entity: azurerm_cognitive_account
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_134
+severity: Medium
+sid: ckv-azure-134
+title: "Ensure that Cognitive Services accounts disable public network access"

@@ -1,0 +1,76 @@
+---
+category: Queues
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure SQS policy does not allow ALL (*) actions"
+extra:
+  entity: aws_sqs_queue_policy
+  type: resource
+guidelines: |-
+    #### Description
+    Ensure SQS policies that allow all(*) actions are not created. SQS policies should start with a minimum set of actions and include more as needed rather than starting with `*`.
+
+    #### Remediation
+    Providing all actions when unnecessary exposes resources to potentially unwanted actions.
+
+    #### Rationale
+    Remove Action with `*` and replace it with specific action that is required.
+
+    Terraform example:
+    ```
+    resource "aws_sqs_queue_policy" "test" {
+        queue_url = ["https://sqs:us-east-2.amazonaws.com/444455556666/example-queue"]
+        policy = <<POLICY
+        {
+          "Version": "2012-10-17",
+          "Id": "sqspolicy",
+          "Statement": [
+            {
+              "Sid": "First",
+              "Effect": "Allow",
+              "Principal": "*",
+    -         "Action": "*"
+    +         "Action": [ "sqs:SendMessage", "sqs:ReceiveMessage" ],
+              "Resource": "${aws_sqs_queue.q.arn}",
+              ...
+              ...
+            }
+          ]
+        }
+        POLICY
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+      "Type" : "AWS::SQS::QueuePolicy",
+      "Properties" : {
+          "Queues" : [ "https://sqs:us-east-2.amazonaws.com/444455556666/example-queue" ]
+          "PolicyDocument" : {
+            "Statement":[{
+    -         "Action": "*",
+    +         "Action": ["SQS:SendMessage", "SQS:ReceiveMessage"],
+              "Effect": "Allow",
+              "Resource": "arn:aws:sqs:us-east-2:444455556666:queue2",
+              "Principal": {
+                "AWS": [ "arn:aws:iam::444455556666:user/example-user" ]
+              }
+              ...
+              ...
+            }]
+         }
+      }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sqs_queue_policy
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sqs-queuepolicy.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_72
+severity: Medium
+sid: ckv-aws-72
+title: "Ensure SQS policy does not allow ALL (*) actions"

@@ -1,0 +1,15 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that UDP Services are restricted from the Internet"
+extra:
+  entity: azurerm_network_security_group
+  type: resource
+lwid:
+  - Azure_CIS_131_6_6
+provider: Azure
+ruleId: CKV_AZURE_77
+severity: Medium
+sid: ckv-azure-77
+title: "Ensure that UDP Services are restricted from the Internet"

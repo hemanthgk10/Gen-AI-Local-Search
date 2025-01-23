@@ -1,0 +1,67 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure that 'Email service and co-administrators' is 'Enabled' for MSSQL
+  servers
+extra:
+  entity: Microsoft.Sql/servers/databases
+  type: resource
+guidelines: |-
+  #### Description
+  Enable Administrator and subscription owner to receive security alerts from the SQL server.
+
+  #### Rationale
+  Providing the email address to receive alerts ensures that any detection of anomalous activities is reported as soon as possible, making it more likely to mitigate any potential risk sooner.
+
+  #### Remediation
+  Set the `email_account_admins` to `true`.
+
+  Terraform example:
+  ```
+  resource "azurerm_mssql_server_security_alert_policy" "example" {
+      resource_group_name        = azurerm_resource_group.example.name
+      server_name                = azurerm_sql_server.example.name
+      state                      = "Enabled"
+      storage_endpoint           = azurerm_storage_account.example.primary_blob_endpoint
+      storage_account_access_key = azurerm_storage_account.example.primary_access_key
+      disabled_alerts = [
+        "Sql_Injection",
+        "Data_Exfiltration"
+      ]
+      retention_days        = 20
+  +   email_account_admins  = true
+  }
+  ```
+
+  From *Azure Console*
+    1. Go to `SQL servers`
+    2. For each server instance
+    3. Click on `Advanced Data Security`
+    4. At section Threat Detection Settings, Enable `Administrator and subscription owner`
+
+  *Azure PowerShell*
+  For each Server, `enable Email service and co-administrators`
+
+  ```
+  Set-AzureRmSqlServerThreatDetectionPolicy -ResourceGroupName <resource group name> -ServerName <server name> -EmailAdmins $True
+  ```
+  By default, `Email service and co-administrators` is enabled.
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/sql-database/sql-database-advanced-data-security
+  * https://docs.microsoft.com/cs-cz/powershell/module/azurerm.sql/get-azurermsqlserverthreatdetectionpolicy?view=azurermps-5.2.0
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-governance-strategy#gs-7-define-logging-and-threat-response-strategy
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-incident-response#ir-6-containment,-eradication-and-recovery--automate-the-incident-handling
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-incident-response#ir-4-detection-and-analysis--investigate-an-incident
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-incident-response#ir-1-preparation--update-incident-response-process-for-azure
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server_security_alert_policy#email_account_admins
+lwid:
+  - Azure_CIS_4_1_5
+  - Azure_CIS_4_2_5
+provider: Azure
+ruleId: CKV_AZURE_27
+severity: High
+sid: ckv-azure-27
+title: Ensure that 'Email service and co-administrators' is 'Enabled' for MSSQL servers

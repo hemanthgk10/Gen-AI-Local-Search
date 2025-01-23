@@ -1,0 +1,15 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Azure data factories are encrypted with a customer-managed key"
+extra:
+  entity: azurerm_data_factory
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV2_AZURE_15
+severity: Medium
+sid: ckv2-azure-15
+title: "Ensure that Azure data factories are encrypted with a customer-managed key"

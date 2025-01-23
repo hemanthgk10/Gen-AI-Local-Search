@@ -1,0 +1,53 @@
+category: Network
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: Do not specify hostPort unless absolutely necessary. If it is not necessary,
+  use the NodePort Service.
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  Don't specify a hostPort for a Pod unless it is absolutely necessary. If it is not necessary, use the NodePort Service.
+
+  #### Rationale
+  When you bind a pod to a hostPort, it limits the number of places the pod can be scheduled, because each <`hostIP`, `hostPort`, `protocol`> combination must be unique. If you don't specify the hostIP and protocol explicitly, Kubernetes will use 0.0.0.0 as the default hostIP and TCP as the default protocol.
+
+  #### Remediation
+  Use NodePort Service rather than using the `hostPort`.
+
+  Example of the Pod
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: influxdb
+  spec:
+    containers:
+      - name: influxdb
+        image: influxdb
+        ports:
+          - containerPort: 8086
+  -         hostPort: 8086
+
+
+  + kind: Service
+  + apiVersion: v1
+  + metadata:
+  +   name: influxdb
+  + spec:
+  +   type: NodePort
+  +   ports:
+  +    - port: 8086
+  +      nodePort: 30000
+  +  selector:
+  +    name: influxdb
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/concepts/configuration/overview/
+provider: Kubernetes
+ruleId: CKV_K8S_26
+severity: Medium
+sid: ckv-k8s-26
+title: Do not specify hostPort unless absolutely necessary

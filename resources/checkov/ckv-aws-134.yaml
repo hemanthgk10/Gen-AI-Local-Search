@@ -1,0 +1,86 @@
+---
+category: "Load Balancers"
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon ElastiCache is a web service that makes it easy to set up, manage, and scale a distributed in-memory data store or cache environment in the cloud. It provides a high-performance, scalable, and cost-effective caching solution. At the same time, it helps remove the complexity associated with deploying and managing a distributed cache environment. Amazon ElastiCache works with both the Redis and Memcached engines.
+
+    A cluster is a collection of one or more cache nodes, all of which run an instance of the Redis cache engine software. When you create a cluster, you specify the engine and version for all of the nodes to use.
+
+    For any Redis cluster, you can enable automatic backups. When automatic backups are enabled, ElastiCache creates a backup of the cluster on a daily basis. There is no impact on the cluster and the change is immediate. Automatic backups can help guard against data loss. In the event of a failure, you can create a new cluster, restoring your data from the most recent backup.
+
+    Currently, the option is not available for Memcached ElasticCache engines.
+extra:
+  entity: aws_elasticache_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon ElastiCache is a web service that makes it easy to set up, manage, and scale a distributed in-memory data store or cache environment in the cloud. It provides a high-performance, scalable, and cost-effective caching solution. At the same time, it helps remove the complexity associated with deploying and managing a distributed cache environment. Amazon ElastiCache works with both the Redis and Memcached engines.
+
+    A cluster is a collection of one or more cache nodes, all of which run an instance of the Redis cache engine software. When you create a cluster, you specify the engine and version for all of the nodes to use.
+
+    For any Redis cluster, you can enable automatic backups. When automatic backups are enabled, ElastiCache creates a backup of the cluster on a daily basis. There is no impact on the cluster and the change is immediate. Automatic backups can help guard against data loss. In the event of a failure, you can create a new cluster, restoring your data from the most recent backup.
+
+    Currently, the option is not available for ElasticCache with Memcache engines.
+
+    #### Rationale
+    Enabling a snapshot retention policy for Redis Elastic Cache ensures that the data can be restored in the event of a compromised system or hardware failures.
+
+    #### Remediation
+    Set number of days for which ElastiCache should retain automatic cache cluster snapshots before deleting them. `snapshot_retention_limit` set to 5, means snapshot takenn today will be retained for 5 days before deleting them. If the value of SnapshotRetentionLimit is set to zero `0`, backups are turned off.
+
+    This option is only available for `Redis` engine and it is also not supported for redis caches with `t1.micro` nodes instances.
+
+    Terraform example
+    ```
+    resource "aws_elasticache_cluster" "example" {
+        cluster_id                = "cluster-example"
+        engine                    = "redis"
+        node_type                 = "cache.m4.large"
+        num_cache_nodes           = 1
+        parameter_group_name      = "default.redis3.2"
+        engine_version            = "3.2.10"
+        port                      = 6379
+    +   snapshot_retention_limit  = 5
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::ElastiCache::CacheCluster",
+      "Properties" : {
+          "AutoMinorVersionUpgrade" : true,
+          "CacheNodeType" : "cache.m4.large",
+          "ClusterName" : "my-redis-cluster",
+          "Engine" : "redis",
+          "EngineVersion" : "3.2.10",
+    +     "SnapshotRetentionLimit" : 5,
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_cluster#snapshot_retention_limit
+    * https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/WhatIs.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_134
+severity: Low
+sid: ckv-aws-134
+title: "Ensure that Amazon ElastiCache Redis clusters have automatic backup turned on"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: snapshot_retention_limit
+    resourceAttributeType: integer
+    resourceAttributeValue: "5"
+    resourceType: [ "aws_elasticache_cluster" ]

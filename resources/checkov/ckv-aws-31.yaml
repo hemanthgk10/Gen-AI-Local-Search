@@ -1,0 +1,79 @@
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: Ensure all data stored in the Elasticache Replication Group is securely
+  encrypted in transit to prevent data from unauthorized access. When `TransitEncryptionEnabled`
+  is enabled, we can specify `AuthToken` to provide access to password protected server.
+extra:
+  entity: AWS::ElastiCache::ReplicationGroup
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure all data stored in the Elasticache Replication Group is securely encrypted in transit to prevent data from unauthorized access. When `TransitEncryptionEnabled` is enabled, we can specify `AuthToken` to provide access to password protected server.
+
+  #### Rationale
+  Auth Token provides access to password protected server and it can specified only on the replication groups where `TransitEncryptionEnabled` is `true`.
+
+  #### Remediation
+  When the attribute `transit_encryption_enabled` is set to true, we should specify the `auth_token` along with it.
+
+  Terraform example:
+  ```
+  resource "aws_elasticache_replication_group" "baz" {
+      replication_group_id          = "tf-redis-cluster"
+      replication_group_description = "test description"
+      node_type                     = "cache.t2.small"
+      port                          = 6379
+      automatic_failover_enabled    = true
+
+      at_rest_encryption_enabled    = true
+      transit_encryption_enabled    = true
+      subnet_group_name             = "my-subnet-group"
+  +   auth_token                    = "zuaosidfjasdflkjasadf"
+
+      ...
+      ...
+  }
+  ```
+
+  Cloudformation example:
+  ```json
+  {
+    "Type" : "AWS::ElastiCache::ReplicationGroup",
+    "Properties" : {
+        "AtRestEncryptionEnabled"  : true,
+        "TransitEncryptionEnabled" : true,
+  +     "AuthToken"                : "zuaosidfjasdflkjasadf",
+        "CacheSubnetGroupName"     : "my-subnet-group",
+        ...
+        ...
+      }
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_replication_group#auth_token
+  * https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_31
+severity: Medium
+sid: ckv-aws-31
+title: Ensure data stored in the Elasticache replication group has secured auth token
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: transit_encryption_enabled
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_elasticache_replication_group" ]
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: auth_token
+    resourceAttributeType: string
+    resourceAttributeValue: "<Provide some token for encrypting the data>"
+    resourceType: [ "aws_elasticache_replication_group" ]

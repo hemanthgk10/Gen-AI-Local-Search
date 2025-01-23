@@ -1,0 +1,93 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - HIPAA
+  - CIS
+description: "Enable sensitive data encryption at rest using Customer Managed Keys rather than Microsoft Managed keys."
+extra:
+  entity: azurerm_storage_account
+  type: resource
+guidelines: |-
+    #### Description
+    Enable sensitive data encryption at rest using Customer Managed Keys rather than Microsoft Managed keys.
+
+    #### Rationale
+    By default, data in the storage account is encrypted using Microsoft Managed Keys at rest. All Azure Storage resources are encrypted, including blobs, disks, files, queues, and tables. All object metadata is also encrypted. However, if you want to control and manage this encryption key yourself, you can specify a customer-managed key, that key is used to protect and control access to the key that encrypts your data. You can also choose to automatically update the key version used for Azure Storage encryption whenever a new version is available in the associated Key Vault.
+
+    #### Impact
+    If the key expires by setting the `activation date` and `expiration date` of the key, the user must rotate the key manually.
+
+    Using Customer Managed Keys may also incur additional man-hour requirements to create, store, manage, and protect the keys as needed.
+
+    #### Remediation
+    By default, Encryption type is set to Microsoft Managed Keys. You can either define a Customer Managed Key both within the azurerm_storage_account resource via the `customer_managed_key` block or by using the `azurerm_storage_account_customer_managed_key`.
+
+    Terraform example
+    ```
+    resource "azurerm_key_vault" "example" {
+      name                = "examplekv"
+      sku_name            = "standard"
+      ...
+      ...
+    }
+
+    resource "azurerm_storage_account" "example" {
+        name                     = "storageaccountname"
+        account_kind             = "StorageV2"
+        account_tier             = "Standard"
+        account_replication_type = "GRS"
+        ...
+        ...
+    }
+
+    + resource "azurerm_storage_account_customer_managed_key" "example" {
+    +    storage_account_id = azurerm_storage_account.example.id
+    +    key_vault_id       = azurerm_key_vault.example.id
+    +    key_name           = azurerm_key_vault_key.example.name
+    + }
+    ```
+
+    OR
+
+    ```
+    resource "azurerm_storage_account" "example" {
+        name                     = "storageaccountname"
+        account_kind             = "StorageV2"
+        account_tier             = "Standard"
+        account_replication_type = "GRS"
+
+        identity {
+           type = "UserAssigned"
+           ...
+           ...
+        }
+
+    +   customer_managed_key {
+    +      key_vault_key_id           = azurerm_key_vault.example.id
+    +      ...
+    +      ...
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### Note
+    `customer_managed_key` can only be set when the `account_kind` is set to `StorageV2` and the identity type is `UserAssigned`.
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/storage/common/storage-service-encryption
+    * https://docs.microsoft.com/en-us/azure/security/fundamentals/data-encryption-best-practices#protect-data-at-rest
+    * https://docs.microsoft.com/en-us/azure/storage/common/storage-service-encryption#azure-storage-encryption-versus-disk-encryption
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-data-protection#dp-1-discovery,-classify-and-label-sensitive-data
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account#customer_managed_key
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account_customer_managed_key
+lwid:
+  - Azure_CIS_131_3_9
+provider: Azure
+ruleId: CKV2_AZURE_1
+severity: High
+sid: ckv2-azure-1
+title: "Ensure storage for critical data are encrypted with Customer Managed Key"

@@ -1,0 +1,14 @@
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Storage accounts disallow public access"
+extra:
+  entity: azurerm_storage_account
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_59
+severity: High
+sid: ckv-azure-59
+title: "Ensure that Storage accounts disallow public access"

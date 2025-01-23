@@ -1,0 +1,75 @@
+---
+autofix: true
+category: Logging
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Amazon ES exposes four Elasticsearch logs through Amazon CloudWatch Logs: error logs, search slow logs, index slow logs, and audit logs. Search slow logs, index slow logs, and error logs are useful for troubleshooting performance and stability issues. Audit logs track user activity for compliance purposes. All the logs are disabled by default."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws057.go"
+guidelines: |-
+    #### Description
+    Amazon ElasticSearch is a fully managed service to help you run, deploy a secure ElasticSearch service cost effectively.
+    ElasticSearch helps to store, analyze, and correlate application and infrastructure log data to find and fix issues faster
+    and improve application performance. It is important to capture the errors and any failures in the logs for debugging. So
+    ensure that logging is enabled.
+
+    #### Rationale
+    As ElasticSearch is a critical component in the application for acting as cache or store information that is critical to
+    infrastructure, it is necessary to collect the information on the slow indexes, slow searches and application information
+    bottlenecks. As it might contain sensitive information audit logs are also important.
+
+    #### Remediation
+    Set the block `log_publishing_options` with cloudwatch arn to send the logs and type of logs that needs to be sent.
+
+    Valid `log_type` are:
+
+    * INDEX_SLOW_LOGS
+    * SEARCH_SLOW_LOGS
+    * ES_APPLICATION_LOGS
+    * AUDIT_LOGS
+
+    Terraform example:
+    ```
+    resource "aws_elasticsearch_domain" "es" {
+        domain_name           = var.domain
+        elasticsearch_version = "6.3"
+
+        cluster_config {
+           instance_type = "m4.large.elasticsearch"
+        }
+    +   log_publishing_options {
+    +      log_type                   = "INDEX_SLOW_LOGS"
+    +      cloudwatch_log_group_arn   = aws_cloudwatch_log_group.example.arn
+    +   }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://aws.amazon.com/blogs/big-data/viewing-amazon-elasticsearch-service-error-logs/
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticsearch_domain#cloudwatch_log_group_arn
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: log_publishing_options
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            log_publishing_options {
+               log_type                  = "INDEX_SLOW_LOGS"
+               cloudwatch_log_group_arn  = "<Provide the ARN for the log group from cloudwatch>"
+            }
+        resourceType:
+          - aws_elasticsearch_domain
+ruleId: AWS057
+severity: Medium
+sid: tfsec-aws057
+title: "Domain logging should be enabled for Elastic Search domains"

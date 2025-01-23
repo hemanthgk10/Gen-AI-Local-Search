@@ -1,0 +1,58 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: |-
+    A VPC comes with a default security group whose initial settings deny all inbound traffic, allow all outbound traffic, and allow all traffic between instances assigned to the security group. If you don't specify a security group when you launch an instance, the instance is automatically assigned to this default security group. Security groups provide stateful filtering of ingress/egress network traffic to AWS resources. It is recommended that the default security group restrict all traffic.
+
+    The default VPC in every region should have its default security group updated to comply. Any newly created VPCs will automatically contain a default security group that will need remediation to comply with this recommendation.
+extra:
+  entity: aws_vpc
+  type: resource
+guidelines: |-
+    #### Description
+    A VPC comes with a default security group whose initial settings deny all inbound traffic, allow all outbound traffic, and allow all traffic between instances assigned to the security group. If you don't specify a security group when you launch an instance, the instance is automatically assigned to this default security group. Security groups provide stateful filtering of ingress/egress network traffic to AWS resources. It is recommended that the default security group restrict all traffic.
+
+    The default VPC in every region should have its default security group updated to comply. Any newly created VPCs will automatically contain a default security group that will need remediation to comply with this recommendation.
+
+    #### Rationale
+    Configuring all VPC default security groups to restrict all traffic will encourage least privilege security group development and mindful placement of AWS resources into security groups which will in-turn reduce the exposure of those resources.
+
+    #### Impact
+    Implementing this recommendation in an existing VPC containing operating resources requires extremely careful migration planning as the default security groups are likely to be enabling many ports that are unknown. Enabling VPC flow logging (of accepts) in an existing environment that is known to be breach free will reveal the current pattern of ports being used for each instance to communicate successfully.
+
+    #### Remediation
+    Each VPC created in AWS comes with a default security group that can be managed but not destroyed. When Terraform first adopts the default security group, it immediately removes all ingress and egress rules in the Security Group. It then creates any rules specified in the configuration. This way only the rules specified in the configuration are created.
+
+    Terraform example
+    ```
+    resource "aws_vpc" "mainvpc" {
+        cidr_block = "10.1.0.0/16"
+    }
+
+    resource "aws_default_security_group" "default" {
+    +   vpc_id = aws_vpc.mainvpc.id
+
+        ingress {
+          protocol  = -1
+          self      = true
+          from_port = 0
+          to_port   = 0
+        }
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/default_security_group#vpc_id
+    * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/default-custom-security-groups.html
+lwid:
+  - AWS_CIS_4_4
+provider: AWS
+ruleId: CKV2_AWS_12
+severity: Low
+sid: ckv2-aws-12
+title: "Ensure the default security group of every VPC restricts all traffic"

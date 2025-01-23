@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Network Interfaces disable IP forwarding"
+extra:
+  entity: azurerm_network_interface
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_118
+severity: Medium
+sid: ckv-azure-118
+title: "Ensure that Network Interfaces disable IP forwarding"

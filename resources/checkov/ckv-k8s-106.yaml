@@ -1,0 +1,128 @@
+---
+category: Security
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+  - CIS
+description: |-
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    Kubernetes controller manager is a daemon that embeds the core control loops shipped with Kubernetes. A controller is a control loop that watches the shared state of the cluster through the apiserver and makes changes attempting to move the current state towards the desired state.
+
+    Pods are the smallest deployable units of computing that can be created and managed in Kubernetes. A Pod is a group of one or more containers (such as Docker containers), with shared storage/network, and a specification for how to run the containers.
+
+    When a Pod is terminated, all the associated storage/network components should be cleaned up. Garbage collection is important to ensure sufficient resource availability and avoiding degraded Kubernetes performance and availability.
+
+    The flag `terminated-pod-gc-threshold` on Kubernetes control manager, specifies the number of terminated pods that can exist before the terminated pod garbage collector starts deleting terminated pods. Activate garbage collector on pod termination, as appropriate.
+extra:
+  entity: containers
+  type: resource
+guidelines: |-
+    #### Description
+    Kubernetes is an open source platform for orchestrating containers. A container is a technology that lets you bundle and isolate applications with their entire runtime environment so that it’s easy to move the contained application between stages (development, production, etc.) and environments (on-premise, public cloud, private cloud, hybrid cloud, or multicloud) while retaining full functionality.
+
+    Kubernetes controller manager is a daemon that embeds the core control loops shipped with Kubernetes. A controller is a control loop that watches the shared state of the cluster through the apiserver and makes changes attempting to move the current state towards the desired state.
+
+    Pods are the smallest deployable units of computing that can be created and managed in Kubernetes. A Pod is a group of one or more containers (such as Docker containers), with shared storage/network, and a specification for how to run the containers.
+
+    When a Pod is terminated, all the associated storage/network components should be cleaned up. Garbage collection is important to ensure sufficient resource availability and avoiding degraded Kubernetes performance and availability.
+
+    The flag `terminated-pod-gc-threshold` on Kubernetes control manager, specifies the number of terminated pods that can exist before the terminated pod garbage collector starts deleting terminated pods. Activate garbage collector on pod termination, as appropriate.
+
+    #### Rationale
+    In the worst case, the system might crash or just be unusable for a long period of time. The current setting for garbage collection is 12,500 terminated pods which might be too high for your system to sustain. Based on your system resources and tests, choose an appropriate threshold value to activate garbage collection.
+
+    #### Audit
+    Run the following command on the master node:
+    ```
+     ps -ef | grep kube-controller-manager
+    ```
+    Verify that the `--terminated-pod-gc-threshold` argument is set as appropriate.
+
+    #### Remediation
+    Edit the Controller Manager pod specification file `/etc/kubernetes/manifests/kube-controller-manager.yaml` on the master node and set the `--terminated-pod-gc-threshold` to an appropriate threshold, for example:
+    ```
+      --terminated-pod-gc-threshold=10
+    ```
+
+    By default, `--terminated-pod-gc-threshold` is set to `12500`. If the value is set to <= 0, the terminated pod garbage collector is disabled.
+
+    Example:
+    ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        labels:
+          component: kube-controller-manager
+          tier: control-plane
+        name: kube-controller-manager
+        namespace: kube-system
+      spec:
+        containers:
+        - command:
+          - /bin/sh
+          - -c
+          - exec /usr/local/bin/kube-controller-manager --v=2
+            --cloud-config=/etc/gce.conf
+            --use-service-account-credentials=true
+            --kubeconfig=/etc/srv/kubernetes/kube-controller-manager/kubeconfig
+            --root-ca-file=/etc/srv/kubernetes/pki/ca-certificates.crt
+            --service-account-private-key-file=/etc/srv/kubernetes/pki/serviceaccount.key
+            --cluster-name=zork
+            --cluster-cidr=10.48.0.0/14
+            --service-cluster-ip-range=10.32.240.0/20
+            --allocate-node-cidrs=true
+    +       --terminated-pod-gc-threshold=10
+            ...
+            ...
+          image: k8s.gcr.io/kube-controller-manager:v1.9.7
+          name: kube-controller-manager
+          volumeMounts:
+          - mountPath: /etc/ssl
+            name: etcssl
+            readOnly: true
+          - mountPath: /usr/share/ca-certificates
+            name: usrsharecacerts
+            readOnly: true
+          - mountPath: /var/ssl
+            name: varssl
+            readOnly: true
+          - mountPath: /etc/openssl
+            name: etcopenssl
+            readOnly: true
+          - mountPath: /etc/pki
+            name: etcpki
+            readOnly: true
+        hostNetwork: true
+        volumes:
+        - hostPath:
+            path: /etc/ssl
+          name: etcssl
+        - hostPath:
+            path: /usr/share/ca-certificates
+          name: usrsharecacerts
+        - hostPath:
+            path: /var/ssl
+          name: varssl
+        - hostPath:
+            path: /etc/openssl
+          name: etcopenssl
+        - hostPath:
+            path: /etc/pki
+          name: etcpki
+        ...
+        ...
+    ```
+
+    #### CIS Controls:
+    **Version 6**
+      14 *Controlled Access Based on the Need to Know* -- Controlled Access Based on the Need to Know.
+
+    #### References
+    * https://kubernetes.io/docs/admin/kube-controller-manager/
+    * https://github.com/kubernetes/kubernetes/issues/28484
+provider: Kubernetes
+ruleId: CKV_K8S_106
+severity: Low
+sid: ckv-k8s-106
+title: "Ensure that the --terminated-pod-gc-threshold argument is set as appropriate"

@@ -1,0 +1,57 @@
+category: Containers
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: |-
+  Kubernetes provides readiness probes to decide whether the container is ready to serve the traffic sent by a kubernetes service.
+  Readiness probes are configured similarly to liveness probes. Readiness and liveness probes can be used in parallel for the same container to ensure that traffic does not reach a container that is not ready for it, and that containers are restarted when they fail.
+extra:
+  entity: containers
+guidelines: |-
+  #### Description
+  Kubernetes provides readiness probes to decide whether the container is ready to serve the traffic sent by a kubernetes service.
+
+  Readiness probes are configured similarly to liveness probes. Readiness and liveness probes can be used in parallel for the same container to ensure that traffic does not reach a container that is not ready for it, and that containers are restarted when they fail.
+
+  #### Rationale
+  Readiness Probe Should be Configured for container manifest. Readiness probe is useful to determine if a container is ready to accept traffic or not.
+
+  For example, an application might need to load large data or configuration files during startup, or depend on external services after startup. In such cases, you don't want to kill the application, but you don't want to send it requests either.
+  Readiness probe helps in such cases to determine whether to send traffic or wait.
+
+  #### Remediation
+  Set the `readinessProbe` for the container manifest.
+
+  Example for readinessProbe:
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  metadata:
+    name: goproxy
+    labels:
+      app: goproxy
+  spec:
+    containers:
+    - name: goproxy
+      image: k8s.gcr.io/goproxy:0.1
+      ports:
+      - containerPort: 8080
+  +   readinessProbe:
+  +     tcpSocket:
+  +       port: 8080
+  +     initialDelaySeconds: 5
+  +     periodSeconds: 10
+      livenessProbe:
+        tcpSocket:
+          port: 8080
+        initialDelaySeconds: 15
+        periodSeconds: 20
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes
+provider: Kubernetes
+ruleId: CKV_K8S_9
+severity: Low
+sid: ckv-k8s-9
+title: Readiness Probe Should be Configured

@@ -1,0 +1,47 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: To prevent use of default network, a project should not have a default
+  network.
+extra:
+  entity: google_project
+  type: resource
+guidelines: |-
+  #### Description
+  To prevent use of default network, a project should not have a default network.
+
+  #### Rationale
+  The `default` network has automatically created firewall rules and has pre-fabricated network configuration. Based on your security and networking requirements, you should create your network and delete the `default` network.
+
+  #### Remediation
+  By default, for each project, a default network is created. So set the `auto_create_network` to prevent it from creating the default one.
+
+  Terraform example
+  ```
+  resource "google_project" "my_project" {
+      name                 = "My Project"
+      project_id           = "your-project-id"
+      org_id               = "1234567"
+
+  +   auto_create_network  = false
+  }
+  ```
+
+  For each Google Cloud Platform project,
+    1. Follow the documentation and create a new network suitable for your requirements.
+    2. Follow the documentation and delete the `default` network.
+
+  #### References
+  * https://cloud.google.com/compute/docs/networking#firewall_rules
+  * https://cloud.google.com/compute/docs/reference/latest/networks/insert
+  * https://cloud.google.com/compute/docs/reference/latest/networks/delete
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_project#auto_create_network
+lwid:
+  - GCP_CIS_3_1
+provider: GCP
+ruleId: CKV_GCP_27
+severity: Low
+sid: ckv-gcp-27
+title: Ensure that the default network does not exist in a project

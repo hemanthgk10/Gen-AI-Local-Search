@@ -1,0 +1,77 @@
+---
+category: TLS
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Aurora (Aurora) is a fully managed relational database engine that's compatible with MySQL and PostgreSQL. Aurora is part of the managed database service Amazon Relational Database Service (Amazon RDS). Amazon RDS is a web service that makes it easier to set up, operate, and scale a relational database in the cloud. Amazon Aurora can encrypt your Amazon Aurora DB clusters. Data that is encrypted at rest includes the underlying storage for DB clusters, its automated backups, read replicas, and snapshots.
+
+    AWS Identity and Access Management (IAM) is an AWS service that helps an administrator securely control access to AWS resources. With IAM identity-based policies, you can specify allowed or denied actions and resources as well as the conditions under which actions are allowed or denied. Aurora supports specific actions, resources, and condition keys.
+extra:
+  entity: aws_rds_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Aurora (Aurora) is a fully managed relational database engine that's compatible with MySQL and PostgreSQL. Aurora is part of the managed database service Amazon Relational Database Service (Amazon RDS). Amazon RDS is a web service that makes it easier to set up, operate, and scale a relational database in the cloud. Amazon Aurora can encrypt your Amazon Aurora DB clusters. Data that is encrypted at rest includes the underlying storage for DB clusters, its automated backups, read replicas, and snapshots.
+
+    AWS Identity and Access Management (IAM) is an AWS service that helps an administrator securely control access to AWS resources. With IAM identity-based policies, you can specify allowed or denied actions and resources as well as the conditions under which actions are allowed or denied. Aurora supports specific actions, resources, and condition keys.
+
+    #### Rationale
+    Connecting the RDS instances to IAM helps administrators to setup control on who can access/perform actions on the resources/data.
+
+    #### Remediation
+    Set the `iam_database_authentication_enabled` to `true`. This flag specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
+
+    Terraform example
+    ```
+    resource "aws_rds_cluster" "postgresql" {
+        cluster_identifier                   = "aurora-cluster-demo"
+        engine                               = "aurora-postgresql"
+        availability_zones                   = ["us-west-2a", "us-west-2b", "us-west-2c"]
+        database_name                        = "mydb"
+        master_username                      = "foo"
+        master_password                      = "bar"
+        backup_retention_period              = 5
+        preferred_backup_window              = "07:00-09:00"
+    +   iam_database_authentication_enabled  = true
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+      "Type" : "AWS::RDS::DBCluster",
+      "Properties" : {
+          "AvailabilityZones" : ["us-west-2a", "us-west-2b", "us-west-2c"],
+          "BackupRetentionPeriod" : 5,
+          "DatabaseName" : "mydb",
+          "StorageEncrypted" : true,
+    +     "EnableIAMDatabaseAuthentication": true,
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster#iam_database_authentication_enabled
+    * https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html
+    * https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAM.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_128
+severity: Medium
+sid: ckv-aws-128
+title: "Ensure that an Amazon RDS Clusters have AWS Identity and Access Management (IAM) authentication enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: iam_database_authentication_enabled
+    resourceAttributeType: boolean
+    resourceAttributeValue: "true"
+    resourceType: [ "aws_rds_cluster" ]

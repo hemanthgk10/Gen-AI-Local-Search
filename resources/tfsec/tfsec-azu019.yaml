@@ -1,0 +1,80 @@
+---
+autofix: true
+category: Storage
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "When Auditing is configured for a SQL database, if the retention period is not set, the retention will be unlimited. If the retention period is to be explicitly set, it should be set for no less than 90 days."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/azu019.go"
+guidelines: |-
+    #### Description
+    SQL Server Audit Retention should be configured to be greater than 90 days.
+
+    #### Rationale
+    Audit Logs can be used to check for anomalies and give insight into suspected breaches or misuse of information and access.
+
+    #### Remediation
+    Set the `extended_auditing_policy.retention_in_days` to something greater than 90 days.
+
+    Terraform example
+    ```
+    resource "azurerm_mssql_server" "example" {
+        name                         = "mssqlserver"
+        resource_group_name          = azurerm_resource_group.example.name
+        location                     = azurerm_resource_group.example.location
+        version                      = "12.0"
+        administrator_login          = "missadministrator"
+        administrator_login_password = "thisIsKat11"
+        minimum_tls_version          = "1.2"
+
+        extended_auditing_policy {
+          storage_endpoint                        = azurerm_storage_account.example.primary_blob_endpoint
+          storage_account_access_key              = azurerm_storage_account.example.primary_access_key
+          storage_account_access_key_is_secondary = true
+    +     retention_in_days                       =  120
+       }
+        ...
+        ...
+    }
+    ```
+
+    From *Azure Console*
+      1. Go to `SQL servers`
+      2. For each server instance
+      3. Click on `Auditing`
+      4. Select `Storage Details`
+      5. Set `Retention (days)`` setting `greater than 90 days`
+      6. Select `OK`
+      7. Select `Save`
+
+    By default, SQL Server audit storage is disabled.
+
+    #### References
+    * https://docs.microsoft.com/en-us/azure/sql-database/sql-database-auditing
+    * https://docs.microsoft.com/en-us/powershell/module/azurerm.sql/get-azurermsqlserverauditing?view=azurermps-5.2.0
+    * https://docs.microsoft.com/en-us/powershell/module/azurerm.sql/set-azurermsqlserverauditing?view=azurermps-5.2.0
+    * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-logging-threat-detection#lt-6-configure-log-storage-retention
+    * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/mssql_server#extended_auditing_policy
+lwid:
+  - Azure_CIS_131_4_1_3
+  - Azure_CIS_4_1_6
+  - Azure_CIS_4_2_7
+provider: Azure
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: extended_auditing_policy.retention_in_days
+        resourceAttributeType: blockAttribute
+        resourceAttributeValue: "120"
+        resourceType:
+          - azurerm_mssql_server
+ruleId: AZU019
+severity: Low
+sid: tfsec-azu019
+title: "Database auditing rentention period should be longer than 90 days"

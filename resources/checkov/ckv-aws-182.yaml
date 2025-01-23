@@ -1,0 +1,47 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon DocumentDB is a fast, reliable, and fully managed database service with data is represented as a JSON document because it is more intuitive for developers to think of their data model as a document.
+
+    You can encrypt data at rest in your Amazon DocumentDB cluster by specifying the storage encryption option when you create your cluster. Storage encryption is enabled cluster-wide and is applied to all instances, including the primary instance and any replicas. It is also applied to your cluster’s storage volume, data, indexes, logs, automated backups, and snapshots.
+extra:
+  entity: aws_docdb_cluster
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon DocumentDB is a fast, reliable, and fully managed database service with data is represented as a JSON document because it is more intuitive for developers to think of their data model as a document.
+
+    You can encrypt data at rest in your Amazon DocumentDB cluster by specifying the storage encryption option when you create your cluster. Storage encryption is enabled cluster-wide and is applied to all instances, including the primary instance and any replicas. It is also applied to your cluster’s storage volume, data, indexes, logs, automated backups, and snapshots.
+
+    #### Rationale
+    Encryption helps you protect your stored data against unauthorized access and other security risks.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_docdb_cluster`.
+
+    Terraform example
+    ```
+    resource "aws_docdb_cluster" "docdb" {
+        cluster_identifier      = "my-docdb-cluster"
+        engine                  = "docdb"
+        backup_retention_period = 5
+        preferred_backup_window = "07:00-09:00"
+        skip_final_snapshot     = true
+    +   kms_key_id              = ${aws_kms_key.example.arn}
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/docdb_cluster#kms_key_id
+    * https://docs.aws.amazon.com/documentdb/latest/developerguide/encryption-at-rest.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_182
+severity: High
+sid: ckv-aws-182
+title: "Ensure Doc DB is encrypted by KMS using a customer managed Key (CMK)"

@@ -1,0 +1,69 @@
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure that standard pricing tier is selected
+extra:
+  entity: Microsoft.Security/pricings
+  type: resource
+guidelines: |-
+  #### Description
+  Turning on Azure Defender enables threat detection for Server, providing threat intelligence, anomaly detection, and behavior analytics in the Azure Security Center.
+
+  #### Rationale
+  Enabling Azure Defender for VirtualMachines allows for greater defense-in-depth, with threat detection provided by the Microsoft Security Response Center (MSRC).
+
+
+  #### Remediation
+  Set the `azurerm_security_center_subscription_pricing.tier` to `standard`. Possible values are
+    * Free
+    * Standard
+
+  Terraform example
+  ```
+    resource "azurerm_security_center_subscription_pricing" "example" {
+  +   tier          = "Standard"
+      resource_type = "VirtualMachines"
+    }
+  ```
+
+  Manual steps:
+    1. Go to `Security Center`
+    2. Select `Pricing & settings` blade
+    3. Click on the subscription name
+    4. Select the `Azure Defender plans` blade
+    5. On the line in the table for `Servers` Select On under `Plan.`
+    6. Select `Save`
+
+  Azure Command Line Interface
+  Use the below command to enable Azure Defender for Servers
+
+  ```
+  az account get-access-token --query "{subscription:subscription,accessToken:accessToken}" --out tsv | xargs -L1 bash -c 'curl -X PUT -H "Authorization: Bearer $1" -H "Content-Type: application/json" https://management.azure.com/subscriptions/$0/providers/Microsoft.Security/pr icings/VirtualMachines?api-version=2018-06-01 -d@"input.json"'
+  ```
+
+  Where input.json contains the Request body json data as mentioned below.
+  ```
+  {
+    "id":
+    "/subscriptions/<Your_Subscription_Id>/providers/Microsoft.Security/pricings/ VirtualMachines",
+    "name": "VirtualMachines",
+    "type": "Microsoft.Security/pricings", "properties": {
+        "pricingTier": "Standard"
+      }
+  }
+  ```
+  By default, Azure Defender off is selected.
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/security_center_subscription_pricing#tier
+  * https://docs.microsoft.com/en-us/azure/security-center/security-center-detection-capabilities
+  * https://docs.microsoft.com/en-us/rest/api/securitycenter/pricings/updatesubscriptionpricing
+lwid:
+  - Azure_CIS_2_1
+provider: Azure
+ruleId: CKV_AZURE_19
+severity: Low
+sid: ckv-azure-19
+title: Ensure that standard pricing tier is selected

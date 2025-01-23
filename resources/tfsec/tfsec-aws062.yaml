@@ -1,0 +1,64 @@
+---
+category: Logging
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "EC2 instance data is used to pass start up information into the EC2 instance. This userdata must not contain access key credentials. Instead use an IAM Instance Profile assigned to the instance to grant access to other AWS Services."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws062.go"
+guidelines: |-
+    #### Description
+    Ensure no hard coded AWS access & secret keys exists in EC2 user data. If you have applications running on EC2 that also access other AWS services like Amazon S3 or Amazon DynamoDB, then these applications require credentials out on the EC2 instance.  You can hard-code AWS access keys into your application, but you’re faced with the added responsibility of distributing them to the instance securely and then the management headache of regularly rotating them within large, autoscaling fleets.
+
+    Instead of embedding long-term AWS credentials in your code, you can use the IAM Roles for EC2 feature to automatically get the credentials you need to access S3 at runtime.
+
+    #### Rationale
+    For Infrastructure as Code (IaC) Static credentials are committed to repository that others can have access too. This can fall in the hands of a person who shouldn't have permissions to know them, causing security breaches.
+
+    #### Remediation
+    Do not provide the AWS static credentials in the EC2 user data. Hard-coding credentials poses a risk of exposing your access key ID and secret access key.
+
+    Terraform example:
+    ```
+    resource "aws_iam_role" "role" {
+     ...
+     ...
+    }
+
+    resource "aws_iam_instance_profile" "test_profile" {
+      name = "test_profile"
+      role = aws_iam_role.role.name
+    }
+
+    resource "aws_instance" "web" {
+        ami                  = data.aws_ami.ubuntu.id
+        instance_type        = "t3.micro"
+        tags = {
+          Name = "HelloWorld"
+        }
+
+    +  iam_instance_profile = aws_iam_instance_profile.test_profile.arn
+        user_data << EOF
+      		#! /bin/bash
+                      sudo apt-get update
+      		sudo apt-get install -y apache2
+      		sudo systemctl start apache2
+      		sudo systemctl enable apache2
+      		echo "<h1>Deployed via Terraform</h1>" | sudo tee /var/www/html/index.html
+    -     export AWS_ACCESS_KEY_ID     = "xyz"
+    -     export AWS_SECRET_ACCESS_KEY = "abc"
+      	EOF
+      ...
+      ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance#iam_instance_profile
+    * https://aws.amazon.com/blogs/security/how-to-find-update-access-keys-password-mfa-aws-management-console/
+lwid: []
+provider: AWS
+ruleId: AWS062
+severity: Critical
+sid: tfsec-aws062
+title: "User data for EC2 instances must not contain sensitive AWS keys"

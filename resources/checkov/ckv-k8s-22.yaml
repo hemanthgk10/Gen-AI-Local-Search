@@ -1,0 +1,60 @@
+category: Storage
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: Use read-only filesystem for containers where possible
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  Having a read-only filesystem for containers ensures that we follow the principal of immutable infrastructure and prevents someone from tampering the filesystem.
+
+  #### Rationale
+  Ensure that containers use read-only filesystem. This reduces security risk when the container is hacked, since the container’s filesystem cannot be tampered with without explicit read-write permissions.
+
+  #### Remediation
+  Set the `securityContext.readOnlyRootFilesystem` to `true` for `containers` and `initContainers`.
+
+  Example of a Pod
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  spec:
+    containers:
+    - image: nginx:v1.0
+      name: nginx
+  +   securityContext:
+  +     readOnlyRootFilesystem: true
+      resources:
+       requests:
+          cpu: 100m
+          memory: 100m
+       limits:
+          cpu: 200m
+          memory: 200m
+    initContainers:
+    - name: init-pod
+      image: busybox:1.28
+  +   securityContext:
+  +     readOnlyRootFilesystem: true
+      ...
+      ...
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/concepts/policy/pod-security-policy/#volumes-and-file-systems
+provider: Kubernetes
+ruleId: CKV_K8S_22
+severity: High
+sid: ckv-k8s-22
+title: Use read-only filesystem for containers where possible
+autofix: true
+remediation:
+- checkType: Kubernetes
+  steps:
+  - action: modify
+    resource: [ "Pod", "Deployment", "ReplicaSet", "StatefulSet", "DaemonSet", "Job", "CronJob", "ReplicationController" ]
+    resourceAttribute: securityContext.readOnlyRootFilesystem
+    resourceAttributeType: nestedBlock
+    resourceAttributeValue: "true"
+    resourceType: [ "containers", "initContainers" ]

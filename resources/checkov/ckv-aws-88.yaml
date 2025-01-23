@@ -1,0 +1,71 @@
+---
+autofix: true
+category: Compute
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "Amazon Elastic Compute Cloud (Amazon EC2) provides scalable computing capacity without having to purchase a dedicated hardware and maintain it our selves. EC2 allow a private IP or Public IP to be associated to it's network interface. A public IP address means that the instances can be reached from anywhere in the internet."
+extra:
+  entity: aws_launch_template
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elastic Compute Cloud (Amazon EC2) provides scalable computing capacity without having to purchase a dedicated hardware and maintain it our selves. EC2 allow a private IP or Public IP to be associated to it's network interface. A public IP address means that the instances can be reached from anywhere in the internet.
+
+    #### Rationale
+    Having a public reachable IP address can invite hackers to access your instance and look for vulnerable points to fetch any sensitive information from your EC2 instance. So ensure that EC2 instance should not have public IP address.
+
+    #### Remediation
+    Set the `associate_public_ip_address` argument to `false` for preventing a public ip address is assigned to an instance in a VPC.
+
+    Terraform example:
+    ```
+    resource "aws_instance" "web" {
+        ami                         = data.aws_ami.ubuntu.id
+        instance_type               = "t3.micro"
+    -   associate_public_ip_address = true
+    +   associate_public_ip_address = false
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example:
+    ```
+    {
+       "Type" : "AWS::EC2::Instance",
+       "Properties" : {
+          "InstanceType" : "t3.micro",
+    -     "AssociatePublicIpAddress": true
+    +     "AssociatePublicIpAddress": false
+          ...
+          ...
+       }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance#associate_public_ip_address
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_template#associate_public_ip_address
+    * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html
+lwid:
+  - LW_AWS_NETWORKING_47
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: associate_public_ip_address
+        resourceAttributeType: boolean
+        resourceAttributeValue: "false"
+        resourceType:
+          - aws_instance
+ruleId: CKV_AWS_88
+severity: Critical
+sid: ckv-aws-88
+title: "EC2 instance should not have public IP"

@@ -1,0 +1,64 @@
+---
+autofix: true
+category: Storage
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "When enabling Performance Insights on an RDS cluster or RDS DB Instance, and encryption key should be provided. The encryption key specified in `performance_insights_kms_key_id` references a KMS ARN"
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws053.go"
+guidelines: |-
+    #### Description
+    Amazon Relational Database Service (Amazon RDS) is a web service that makes it easier to set up, operate, and scale a relational database in the AWS Cloud. It provides cost-efficient, resizable capacity for an industry-standard relational database and manages common database administration tasks.
+
+    Performance Insights for RDS provides metrics such as DB load, Active sessions, wait events, maximum cpu etc. If it is enabled, it aggregates performance insights data from more than one DB instance.
+
+    #### Rationale
+    Performance Insights expands on existing Amazon RDS monitoring features to illustrate your database's performance and help you analyze any issues that affect it. With the Performance Insights dashboard, you can visualize the database load and filter the load by waits, SQL statements, hosts, or users.
+
+    #### Remediation
+    Set `performance_insights_enabled` flag as true. When `performance_insights_enabled` is set, then we should also provide `performance_insights_kms_key_id` as well.
+
+    Terraform example
+    ```
+    resource "aws_rds_cluster_instance" "example" {
+        name                 = "myDb"
+    +   performance_insights_enabled = true
+    +   performance_insights_kms_key_id = "arn:aws:kms:us-west-2:1111111111:key/xyz"
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PerfInsights.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster_instance#performance_insights_enabled
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/rds_cluster_instance#performance_insights_kms_key_id
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: performance_insights_enabled
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_rds_cluster_instance
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: performance_insights_kms_key_id
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide the ARN of the KMS key>"
+        resourceType:
+          - aws_rds_cluster_instance
+ruleId: AWS053
+severity: Medium
+sid: tfsec-aws053
+title: "Encryption for RDS Perfomance Insights should be enabled"

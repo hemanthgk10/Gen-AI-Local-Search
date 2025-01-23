@@ -1,0 +1,67 @@
+---
+autofix: true
+category: Network
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Opening up ACLs to the public internet is potentially dangerous. You should restrict access to IP addresses or ranges that explicitly require it where possible."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws049.go"
+guidelines: |-
+    #### Description
+    The Network Access Control List (NACL) function provide stateless filtering of ingress and egress network traffic to AWS resources. It is recommended that no NACL allows unrestricted ingress access from anywhere.
+
+    #### Rationale
+    Public access to any AWS resource should be restricted to specific IP block rather than to every IP address. Opening to every IP address increases resource attack surface and unnecessarily raises the risk of resource compromise.
+
+    #### Remediation
+    Set the `cidr_block` to specific subnet block rather than allowing `0.0.0.0/0`
+
+    Terraform example:
+    ```
+    resource "aws_network_acl_rule" "example" {
+        egress         = false
+        protocol       = "tcp"
+        from_port      = 22
+        to_port        = 22
+        rule_action    = "allow"
+    -   cidr_block     = "0.0.0.0/0"
+    +   cidr_block     = "10.0.0.0/16"
+        ...
+        ...
+    }
+    ```
+
+    From *AWS Console*:
+    1. Login to the [AWS Management Console](https://console.aws.amazon.com/vpc/home)
+    2. In the left pane, click `Network ACLs`
+    3. For each network ACL to remediate, perform the following:
+       a. Select the network ACL
+       b. Click the `Inbound Rules` tab
+       c. Click Edit `Inbound rules`
+       d. Either update the `Source` field to a range other than `0.0.0.0/0`, or, click `Delete` to remove the offending inbound rule
+       e. Click `Save`
+
+    #### References
+    * https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/network_acl_rule#cidr_block
+    * https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Security.html#VPC_Security_Comparison
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: cidr_block
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide a specific cidr block>"
+        resourceType:
+          - aws_network_acl_rule
+ruleId: AWS049
+severity: High
+sid: tfsec-aws049
+title: "An ingress Network ACL rule allows specific ports from /0"

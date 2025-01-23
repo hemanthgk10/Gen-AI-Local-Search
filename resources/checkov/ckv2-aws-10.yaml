@@ -1,0 +1,46 @@
+---
+category: Logging
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - CIS
+description: "AWS CloudTrail is a web service that records AWS API calls made in a given AWS account. The recorded information includes the identity of the API caller, the time of the API call, the source IP address of the API caller, the request parameters, and the response elements returned by the AWS service. CloudTrail uses Amazon S3 for log file storage and delivery, so log files are stored durably. In addition to capturing CloudTrail logs within a specified S3 bucket for long term analysis, realtime analysis can be performed by configuring CloudTrail to send logs to CloudWatch Logs. For a trail that is enabled in all regions in an account, CloudTrail sends log files from all those regions to a CloudWatch Logs log group. It is recommended that CloudTrail logs be sent to CloudWatch Logs."
+extra:
+  entity: aws_cloudtrail
+  type: resource
+guidelines: |-
+    #### Description
+    AWS CloudTrail is a web service that records AWS API calls made in a given AWS account. The recorded information includes the identity of the API caller, the time of the API call, the source IP address of the API caller, the request parameters, and the response elements returned by the AWS service. CloudTrail uses Amazon S3 for log file storage and delivery, so log files are stored durably. In addition to capturing CloudTrail logs within a specified S3 bucket for long term analysis, realtime analysis can be performed by configuring CloudTrail to send logs to CloudWatch Logs. For a trail that is enabled in all regions in an account, CloudTrail sends log files from all those regions to a CloudWatch Logs log group. It is recommended that CloudTrail logs be sent to CloudWatch Logs.
+
+    #### Rationale
+    Sending CloudTrail logs to CloudWatch Logs will facilitate real-time and historic activity logging based on user, API, resource, and IP address, and provides opportunity to establish alarms and notifications for anomalous or sensitivity account activity.
+
+    #### Impact
+    *Note:* By default, CloudWatch Logs will store Logs indefinitely unless a specific retention period is defined for the log group. When choosing the number of days to retain, keep in mind the average days it takes an organization to realize they have been breached is 210 days (at the time of this writing). Since additional time is required to research a breach, a minimum 365 day retention policy allows time for detection and research. You may also wish to archive the logs to a cheaper storage service rather than simply deleting them.
+
+    #### Remediation
+    Set the `cloud_watch_logs_group_arn` in `aws_cloudtrail`.
+
+    Terraform example
+    ```
+    resource "aws_cloudtrail" "example" {
+        name                       = "example-trail"
+        s3_bucket_name             = aws_s3_bucket.foo.id
+        s3_key_prefix              = "prefix"
+    +   cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.example.arn}:*"
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudtrail#cloud_watch_logs_group_arn
+    * https://aws.amazon.com/cloudtrail/
+    * https://aws.amazon.com/about-aws/whats-new/2015/03/aws-cloudtrail-integration-with-amazon-cloudwatch-logs-now-available-in-syd-sing-frank-tokyo-regions/#:~:text=To%20configure%20CloudTrail%20integration%20with,go%20to%20CloudWatch%20pricing%20page
+lwid:
+  - AWS_CIS_2_4
+provider: AWS
+ruleId: CKV2_AWS_10
+severity: Low
+sid: ckv2-aws-10
+title: "Ensure CloudTrail trails are integrated with CloudWatch Logs"

@@ -1,0 +1,66 @@
+---
+category: Security
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Opening up ports to the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that explicitly require it where possible."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws008.go"
+guidelines: |-
+    #### Description
+    Security groups provide stateful filtering of ingress/egress network traffic to AWS resources. It is recommended that no security group allows unrestricted ingress access to all ports. For updating an existing environment, care should be taken to ensure that administrators currently relying on an existing ingress from 0.0.0.0/0 have access to ports 22 and/or 3389 through another security group.
+
+    #### Rationale
+    Removing unfettered connectivity to aws resources to all ports and from all IP addresses is risky and it should be avoided to prevent any security breaches.
+
+    #### Remediation
+    You should restrict access to IP addresses or ranges that explicitly require it where possible.
+
+    Manual Remediation:
+    1. Login to the [AWS Management Console](https://console.aws.amazon.com/vpc/home).
+    2. In the left pane, click `Security Groups`
+    3. For each security group, perform the following:
+    4. Select the security group
+    5. Click the `Inbound Rules` tab
+    6. Identify the ingress rule that allows ingress from `0.0.0.0/0`
+    7. Click the `x` in the `Remove` column
+    8. Click `Save`
+
+    Terraform example:
+    ```
+    resource "aws_security_group" "my-group" {
+        name        = "allow_tls"
+        description = "Allow TLS inbound traffic"
+        ingress = [
+        {
+          description      = "TLS from VPC"
+          from_port        = 443
+          to_port          = 443
+          protocol         = "tcp"
+    -     cidr_blocks = ["0.0.0.0/0"]
+    +     cidr_blocks = [10.20.20.1/32]
+        }]
+        ...
+        ...
+    }
+    ```
+
+    From *CLI*:
+    Run the below command to remove the ingress rule for port 22.
+    ```
+    aws ec2 revoke-security-group-ingress --group-id <group-id-value> --protocol <protocol> --port 22 --cidr 0.0.0.0/0
+    ```
+
+    #### Impact
+    If you are updating an existing environment, ensure that administrators who currently rely on ingress from 0.0.0.0/0 have access to ports 22 and 3389 through another security group.
+
+    #### References
+    * https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#AddRemoveRules
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-security-group-ingress.html
+    * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-security-groups.html#deleting-security-group-rule
+lwid: []
+provider: AWS
+ruleId: AWS005
+severity: Critical
+sid: tfsec-aws008
+title: "An inline ingress security group rule allows traffic from `/0`"

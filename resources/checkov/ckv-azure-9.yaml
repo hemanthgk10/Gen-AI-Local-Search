@@ -1,0 +1,48 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+- HIPAA
+description: Disable RDP access on network security groups (NSG) from the Internet.
+  Azure NSG do not allow access to everyone (0.0.0.0/0) on TCP 3389 in order to protect
+  from security attacks. TCP port 3389 is used for remote GUI login to Microsoft VMs
+  by connecting a Remote Desktop Protocol (RDP) client application with an RDP server.
+extra:
+  entity: Microsoft.Network/networkSecurityGroups/securityRules
+  type: resource
+guidelines: |-
+  #### Description
+  Disable RDP access on network security groups (NSG) from the Internet. Azure NSG do not allow access to everyone (0.0.0.0/0) on TCP 3389 in order to protect from security attacks.
+  TCP port 3389 is used for remote GUI login to Microsoft VMs by connecting a Remote Desktop Protocol (RDP) client application with an RDP server.
+
+  #### Rationale
+  The potential security problem with using RDP over the Internet is that attackers can use various brute force techniques to gain access to Azure Virtual Machines. Once the attackers gain access, they can use a virtual machine as a launch point for compromising other machines on an Azure Virtual Network or even attack networked devices outside of Azure.
+
+  #### Remediation
+  Disable direct RDP access to your Azure Virtual Machines from the Internet. After direct RDP access from the Internet is disabled, you have other options you can use to access these virtual machines for remote management:
+   * [Point-to-site VPN](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-point-to-site-resource-manager-portal)
+   * [Site-to-site VPN](https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-site-to-site-resource-manager-portal)
+   * [ExpressRoute](https://docs.microsoft.com/en-us/azure/expressroute/)
+
+  By default, RDP access from internet is not enabled.
+
+  Manual Remediation:
+  From Azure console,
+  1. For each VM, open the Networking blade
+  2. Verify that the `INBOUND PORT RULES` does not have a rule for RDP such as
+       * port = 3389,
+       * protocol = TCP,
+       * Source = Any OR Internet
+
+  #### References
+  * https://docs.microsoft.com/en-us/azure/security/azure-security-network-security-best-practices#disable-rdpssh-access-to-azure-virtual-machines
+  * https://docs.microsoft.com/en-us/azure/security/benchmarks/security-controls-v2-network-security#ns-1-implement-security-for-internal-traffic
+lwid:
+  - Azure_CIS_131_6_1
+  - Azure_CIS_6_1
+provider: Azure
+ruleId: CKV_AZURE_9
+severity: High
+sid: ckv-azure-9
+title: Ensure that RDP access is restricted from the internet

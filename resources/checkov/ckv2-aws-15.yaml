@@ -1,0 +1,55 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon EC2 Auto Scaling group (ASG) contains a collection of Amazon EC2 instances that are treated as a logical grouping for the purposes of automatic scaling and management. An Auto Scaling group also enables you to use Amazon EC2 Auto Scaling features such as health check replacements and scaling policies.
+
+    The health status of an Auto Scaling instance is either healthy or unhealthy. All instances in your Auto Scaling group start in the healthy state. Instances are assumed to be healthy unless Amazon EC2 Auto Scaling receives notification that they are unhealthy. This notification can come from one or more of the following sources: Amazon EC2, Elastic Load Balancing, or a custom health check.
+extra:
+  entity: aws_autoscaling_group
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon EC2 Auto Scaling group (ASG) contains a collection of Amazon EC2 instances that are treated as a logical grouping for the purposes of automatic scaling and management. An Auto Scaling group also enables you to use Amazon EC2 Auto Scaling features such as health check replacements and scaling policies.
+
+    The health status of an Auto Scaling instance is either healthy or unhealthy. All instances in your Auto Scaling group start in the healthy state. Instances are assumed to be healthy unless Amazon EC2 Auto Scaling receives notification that they are unhealthy. This notification can come from one or more of the following sources: Amazon EC2, Elastic Load Balancing, or a custom health check.
+
+    #### Rationale
+    Using the appropriate health check types allows, replacing the unhealthy instances in the auto scaling group.
+
+    #### Remediation
+    Make sure to set `health_check_type` to `ELB` when the autoscaling group is attached to a load balancer. Available options are `EC2` or `ELB`.
+
+    Terraform example
+    ```
+    resource "aws_autoscaling_group" "bar" {
+        name                      = "foobar3-terraform-test"
+        max_size                  = 5
+        min_size                  = 2
+        health_check_grace_period = 300
+    +   health_check_type         = "ELB"
+        desired_capacity          = 4
+        force_delete              = true
+        ...
+        ...
+    }
+
+    resource "aws_autoscaling_attachment" "asg_attachment_bar" {
+        autoscaling_group_name = aws_autoscaling_group.bar.id
+        elb                    = aws_elb.test.id
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_group#health_check_type
+    * https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-add-elb-healthcheck.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_15
+severity: Low
+sid: ckv2-aws-15
+title: "Ensure that auto Scaling groups that are associated with a load balancer, are using Elastic Load Balancing health checks"

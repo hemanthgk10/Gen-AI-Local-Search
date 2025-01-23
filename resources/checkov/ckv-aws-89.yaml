@@ -1,0 +1,78 @@
+---
+category: Storage
+checkTool: checkov
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "AWS Database Migration Service (AWS DMS) is a managed service to help in migrating relational databases, data warehouses, NoSQL databases, and other types of data stores. This is also useful in migrating data from on-prem to cloud or vice-versa. Having a publicly accessible DMS replication instances can make it accessible to everyone on internet."
+extra:
+  entity: aws_dms_replication_instance
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Database Migration Service (AWS DMS) is a managed service to help in migrating relational databases, data warehouses, NoSQL databases, and other types of data stores. This is also useful in migrating data from on-prem to cloud or vice-versa. Having a publicly accessible DMS replication instances can make it accessible to everyone on internet.
+
+    #### Rationale
+    Having a public accessibility can invite hackers to access DMS and look for vulnerable points to fetch any sensitive information from the replicas. So ensure that DMS replication instance should not be publicly accessible.
+
+    #### Remediation
+    Set the `publicly_accessible` argument to `false` for preventing it to be reachable by anyone outside of the VPC.
+
+    Terraform example:
+    ```
+    resource "aws_dms_replication_instance" "test" {
+        allocated_storage           = 30
+        engine_version              = "3.1.4"
+    +   publicly_accessible         = false
+    -   publicly_accessible         = true
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example;
+    ```json
+    {
+        "Type" : "AWS::DMS::ReplicationInstance",
+        "Properties" : {
+            "AllocatedStorage" : 30,
+            "AllowMajorVersionUpgrade" : true,
+            "AutoMinorVersionUpgrade" : true,
+            "EngineVersion" : "3.1.4",
+    -       "PubliclyAccessible" : false,
+    +       "PubliclyAccessible" : true,
+            ...
+            ...
+        }
+    }
+    ```
+
+    Manual Remediation:
+
+    To disable public access to your replication instance, delete the replication instance and recreate it. Before deleting a
+    replication instance, you must also delete all of the tasks that use the replication instance.
+
+    Instead of recreating the replication instance, you can change the subnets that are in the subnet group that are associated
+    with the replication instance to private subnets. A private subnet is a subnet that isn't routed to an internet gateway.
+    Instances in a private subnet can't communicate with a public IP address, even if they have a public IP address.
+
+    #### References
+    * https://aws.amazon.com/premiumsupport/knowledge-center/dms-disable-public-access/
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dms_replication_instance#publicly_accessible
+    * https://aws.amazon.com/premiumsupport/knowledge-center/dms-disable-public-access/
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_89
+severity: Critical
+sid: ckv-aws-89
+title: "DMS replication instance should not be publicly accessible"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: publicly_accessible
+    resourceAttributeType: boolean
+    resourceAttributeValue: "false"
+    resourceType: [ "aws_dms_replication_instance" ]

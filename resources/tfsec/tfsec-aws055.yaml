@@ -1,0 +1,66 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Node-to-node encryption provides an additional layer of security on top of the default features of Amazon ES. By default, domains do not use node-to-node encryption, and you can’t configure existing domains to use the feature. Node-to-node encryption enables TLS 1.2 encryption for all communications within the VPC."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws055.go"
+guidelines: |-
+    #### Description
+    Ensure that node-to-node encryption is enabled for the Amazon Elasticsearch domains (clusters). This feature enforces the use of Transport Layer Security (TLS) for all Elasticsearch node intercommunication. This ensures data transmitted by Elasticsearch is always encrypted in transit.
+
+    #### Rationale
+    Each Amazon ES domain resides within its own dedicated VPC.
+    This architecture prevents potential attackers from intercepting traffic between Elasticsearch nodes and keeps the cluster secure.
+    By default, however, traffic within the VPC is unencrypted. Node-to-node encryption enables TLS 1.2 encryption for all communications within the Elasticsearch VPC.
+
+    #### Remediation
+    Set the `node_to_node_encryption.enabled` to true. By default not having the option is false.
+
+    Terraform example:
+    ```
+    resource "aws_elasticsearch_domain" "es" {
+       domain_name           = "${var.es_domain_name}"
+       elasticsearch_version = "${var.es_version}"
+
+       # Encryption not enabled for all instance types
+       encrypt_at_rest {
+         enabled = "true"
+         kms_key_id = data.aws_kms_alias.es.target_key_id
+       }
+
+    +  node_to_node_encryption {
+    +    enabled = "true"
+    +  }
+       ...
+       ...
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/ntn.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticsearch_domain#node_to_node_encryption
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: node_to_node_encryption
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            node_to_node_encryption {
+               enabled = true
+            }
+        resourceType:
+          - aws_elasticsearch_domain
+ruleId: AWS055
+severity: Medium
+sid: tfsec-aws055
+title: "ElasticSearch nodes should communicate with node to node encryption enabled"

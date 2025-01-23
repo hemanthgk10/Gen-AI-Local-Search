@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that Managed identity provider is enabled for app services"
+extra:
+  entity: azurerm_app_service
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_71
+severity: Low
+sid: ckv-azure-71
+title: "Ensure that Managed identity provider is enabled for app services"

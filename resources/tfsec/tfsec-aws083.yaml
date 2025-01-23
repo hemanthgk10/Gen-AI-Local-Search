@@ -1,0 +1,60 @@
+---
+autofix: true
+category: "Load Balancers"
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: |-
+    A load balancer serves as the single point of contact for clients. Clients send requests to the load balancer, and the load balancer sends them to targets, such as EC2 instances. To configure your load balancer, you create target groups, and then register targets with your target groups. You also create listeners to check for connection requests from clients, and listener rules to route requests from clients to the targets in one or more target groups.
+
+    Elastic Load Balancer requires that message http header contain only alphanumeric characters and hyphens, any header without those valid characters are considered invalid and not sent to the target if the `drop_invalid_header_fields` is set to `true`. Passing unknown or invalid headers through to the target poses a potential risk of compromise. By setting drop_invalid_header_fields to true, anything that doe not conform to well known, defined headers will be removed by the load balancer.
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws083.go"
+guidelines: |-
+    #### Description
+    A load balancer serves as the single point of contact for clients. Clients send requests to the load balancer, and the load balancer sends them to targets, such as EC2 instances. To configure your load balancer, you create target groups, and then register targets with your target groups. You also create listeners to check for connection requests from clients, and listener rules to route requests from clients to the targets in one or more target groups.
+
+    Elastic Load Balancer requires that message http header contain only alphanumeric characters and hyphens, any header without those valid characters are considered invalid and not sent to the target if the `drop_invalid_header_fields` is set to `true`. Passing unknown or invalid headers through to the target poses a potential risk of compromise. By setting drop_invalid_header_fields to true, anything that doe not conform to well known, defined headers will be removed by the load balancer.
+
+    #### Rationale
+    Allowing any values in the http header may open up a vulnerable backend server to request smuggling attacks.
+
+    #### Remediation
+    When LoadBalancer type is `application`, the http headers with header fields that are not valid are removed by the load balancer when `drop_invalid_header_fields` is to `true` or routed to targets when set to `false`.
+
+    Terraform example:
+    ```
+    resource "aws_lb" "test" {
+        name                        = "test-lb-tf"
+        load_balancer_type          = "application"
+        subnets                     = aws_subnet.public.*.id
+    -   drop_invalid_header_fields  = false
+    +   drop_invalid_header_fields  = true
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lb#drop_invalid_header_fields
+    * https://tools.ietf.org/html/rfc7230#section-3.2
+    * https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: drop_invalid_header_fields
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_lb
+ruleId: AWS083
+severity: Medium
+sid: tfsec-aws083
+title: "Load balancers should drop invalid headers"

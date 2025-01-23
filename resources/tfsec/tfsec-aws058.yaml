@@ -1,0 +1,56 @@
+---
+autofix: true
+category: Compute
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "When the principal is an AWS service, the ARN of the specific resource within that service to grant permission to. Without this, any resource from principal will be granted permission – even if that resource is from another account. For S3, this should be the ARN of the S3 Bucket. For CloudWatch Events, this should be the ARN of the CloudWatch Events Rule. For API Gateway, this should be the ARN of the API."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/master/internal/app/tfsec/checks/aws058.go"
+guidelines: |-
+    #### Description
+    AWS Lambda is a serverless compute service that lets you run code without provisioning or managing servers, creating workload-aware cluster scaling logic, maintaining event integrations, or managing runtimes.
+
+    AWS Lambda supports resource-based permissions policies for Lambda functions and layers. Resource-based policies let you grant usage permission to other AWS accounts on a per-resource basis.
+
+    #### Rationale
+    With lambda permissions, you also allow an AWS service to invoke your function on your behalf.
+
+    #### Remediation
+    Set the `source_arn` field when the principal is an AWS service, the ARN of the specific resource.
+
+    Terraform example:
+    ```
+    resource "aws_lambda_permission" "with_sns" {
+        statement_id  = "AllowExecutionFromSNS"
+        action        = "lambda:InvokeFunction"
+        function_name = aws_lambda_function.func.function_name
+        principal     = "sns.amazonaws.com"
+    +   source_arn    = aws_sns_topic.default.arn
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission#source_arn
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-permission.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: add
+        resource:
+          - resource
+        resourceAttribute: source_arn
+        resourceAttributeType: string
+        resourceAttributeValue: "<Provide the ARN for SNS topic>"
+        resourceType:
+          - aws_lambda_permission
+ruleId: AWS058
+severity: Low
+sid: tfsec-aws058
+title: "Ensure that lambda function permission has a source arn specified"

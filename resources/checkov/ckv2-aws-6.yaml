@@ -1,0 +1,53 @@
+---
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Amazon S3 provides `Block public access (bucket settings)` and `Block public access (account settings)` to help you manage public access to Amazon S3 resources. By default, S3 buckets and objects are created with public access disabled. However, an IAM principle with sufficient S3 permissions can enable public access at the bucket and/or object level. While enabled, `Block public access (bucket settings)` prevents an individual bucket, and its contained objects, from becoming publicly accessible. Similarly, `Block public access (account settings)` prevents all buckets, and contained objects, from becoming publicly accessible across the entire account."
+extra:
+  entity: aws_s3_bucket_public_access_block
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon S3 provides `Block public access (bucket settings)` and `Block public access (account settings)` to help you manage public access to Amazon S3 resources. By default, S3 buckets and objects are created with public access disabled. However, an IAM principle with sufficient S3 permissions can enable public access at the bucket and/or object level. While enabled, `Block public access (bucket settings)` prevents an individual bucket, and its contained objects, from becoming publicly accessible. Similarly, `Block public access (account settings)` prevents all buckets, and contained objects, from becoming publicly accessible across the entire account.
+
+    #### Rationale
+    Amazon S3 `Block public access (bucket settings)` prevents the accidental or malicious public exposure of data contained within the respective bucket(s).
+
+    Amazon S3 `Block public access (account settings)` prevents the accidental or malicious public exposure of data contained within all buckets of the respective AWS account.
+
+    Whether blocking public access to all or some buckets is an organizational decision that should be based on data sensitivity, least privilege, and use case.
+
+    #### Remediation
+    Make sure that `block_public_acls` is set to `true` in `aws_s3_bucket_public_access_block`.
+
+    Terraform example
+    ```
+    resource "aws_s3_bucket" "example" {
+        bucket = "example"
+        ...
+        ...
+    }
+
+    resource "aws_s3_bucket_public_access_block" "example" {
+        bucket = aws_s3_bucket.example.id
+
+    +   block_public_acls   = true
+        block_public_policy = true
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block
+    * https://aws.amazon.com/s3/features/block-public-access/#:~:text=In%20order%20to%20ensure%20that,all%20current%20and%20future%20buckets.
+
+    #### Impact:
+    When you apply Block Public Access settings to an account, the settings apply to all AWS Regions globally. The settings might not take effect in all Regions immediately or simultaneously, but they eventually propagate to all Regions.
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_6
+severity: High
+sid: ckv2-aws-6
+title: "Ensure that S3 bucket has a Public Access block"

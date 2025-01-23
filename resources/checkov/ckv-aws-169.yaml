@@ -1,0 +1,59 @@
+---
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Simple Notification Service (Amazon SNS) is a managed service that provides message delivery from publishers to subscribers (also known as producers and consumers). Publishers communicate asynchronously with subscribers by sending messages to a topic, which is a logical access point and communication channel. Clients can subscribe to the SNS topic and receive published messages using a supported endpoint type, such as Amazon Kinesis Data Firehose, Amazon SQS, AWS Lambda, HTTP, email, mobile push notifications, and mobile text messages (SMS).
+
+    Amazon Simple Notification Service integrates with AWS Identity and Access Management (IAM) so that you can specify which Amazon SNS actions a user in your AWS account can perform with Amazon SNS resources.
+extra:
+  entity: aws_sns_topic_policy
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Simple Notification Service (Amazon SNS) is a managed service that provides message delivery from publishers to subscribers (also known as producers and consumers). Publishers communicate asynchronously with subscribers by sending messages to a topic, which is a logical access point and communication channel. Clients can subscribe to the SNS topic and receive published messages using a supported endpoint type, such as Amazon Kinesis Data Firehose, Amazon SQS, AWS Lambda, HTTP, email, mobile push notifications, and mobile text messages (SMS).
+
+    Amazon Simple Notification Service integrates with AWS Identity and Access Management (IAM) so that you can specify which Amazon SNS actions a user in your AWS account can perform with Amazon SNS resources.
+
+    #### Rationale
+    AWS SNS topic can contain sensitive information, so it should be restricted from public access / access to everyone.
+
+    #### Remediation
+    Do not set the `Principal` in the access policy to `*`. This will enable access to everyone and every can publish or subscribe to the sensitive content
+
+    Terraform example
+    ```
+    resource "aws_sns_topic_policy" "default" {
+        arn = aws_sns_topic.test.arn
+        policy = <<POLICY
+        {
+          "Version": "2012-10-17",
+          "Id": "snspolicy",
+          "Statement": [
+            {
+              "Sid": "First",
+              "Effect": "Allow",
+    -         "Principal": "*",
+    +             "Principal": {
+    +             "AWS": [
+    +                "arn:aws:iam::123456789012:test-user"
+    +             ]},
+              "Action": "SNS:Publish",
+              "Resources": ["${aws_sns_topic.test.arn}"]
+            }
+          ]
+        }
+        POLICY
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_policy
+    * https://docs.aws.amazon.com/sns/latest/dg/sns-access-policy-use-cases.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_169
+severity: High
+sid: ckv-aws-169
+title: "Ensure SNS topic policy is not public by only allowing specific services or principals to access it"

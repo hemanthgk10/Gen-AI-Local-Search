@@ -1,0 +1,48 @@
+category: IAM
+checkTool: checkov
+checkType: Kubernetes
+compliance:
+- CIS
+description: The default service account should not be used to ensure that rights
+  granted to applications can be more easily audited and reviewed. Ensure that default
+  service accounts are not actively used in ClusterRoleBinding or RoleBinding.
+extra:
+  entity: ClusterRoleBinding
+guidelines: |-
+  #### Description
+  The default service account should not be used to ensure that rights granted to applications can be more easily audited and reviewed. Ensure that default service accounts are not actively used in ClusterRoleBinding or RoleBinding.
+
+  #### Rationale
+  Kubernetes provides a default service account which is used by cluster workloads where no specific service account is assigned to the pod.
+  Where access to the Kubernetes API from a pod is required, a specific service account should be created for that pod, and rights granted to that service account.
+  The default service account should be configured such that it does not provide a service account token and does not have any explicit rights assignments.
+
+  #### Remediation
+  Do not use `default` ServiceAccount for binding in any `RoleBinding` or `ClusterRoleBinding`.
+
+  For example,
+
+  ```yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: read-pods
+      namespace: default
+    subjects:
+  - - kind: ServiceAccount
+  -   name: default
+  -   apiGroup: rbac.authorization.k8s.io
+    roleRef:
+      kind: Role #this must be Role or ClusterRole
+      name: pod-reader # this must match the name of the Role or ClusterRole you wish to bind to
+      apiGroup: rbac.authorization.k8s.io
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  * https://github.com/kubernetes/kubernetes/issues/57601
+provider: Kubernetes
+ruleId: CKV_K8S_42
+severity: Low
+sid: ckv-k8s-42
+title: Ensure that default service accounts are not actively used

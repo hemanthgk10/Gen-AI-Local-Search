@@ -1,0 +1,49 @@
+---
+category: "Backup & Recovery"
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "AWS Backup is a fully-managed service that makes it easy to centralize and automate data protection across AWS services, in the cloud, and on premises. It is a policy expression that defines when, how and for what AWS resources, you want to back up."
+extra:
+  entity: aws_backup_selection
+  type: resource
+guidelines: |-
+    #### Description
+    AWS Backup is a fully-managed service that makes it easy to centralize and automate data protection across AWS services, in the cloud, and on premises. It is a policy expression that defines when, how and for what AWS resources, you want to back up.
+
+    #### Rationale
+    AWS Backup helps in reducing risk for data loss or service availability, as we can use the backups to restore the service or data.
+
+    #### Remediation
+    Make sure that each EBS volumes have an AWS Backup plan enabled.
+
+    Terraform example
+    ```
+    resource "aws_efs_file_system" "foo" {
+        creation_token = "my-product"
+        ...
+        ...
+    }
+
+    resource "aws_backup_selection" "example" {
+        iam_role_arn = aws_iam_role.example.arn
+        name         = "tf_example_backup_selection"
+        plan_id      = aws_backup_plan.example.id
+        resources = [
+           aws_rds_cluster.default.arn,
+    +      aws_efs_file_system.foo.arn,
+        ]
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/backup_selection#resources
+    * https://docs.aws.amazon.com/aws-backup/latest/devguide/API_BackupSelection.html
+lwid: []
+provider: AWS
+ruleId: CKV2_AWS_18
+severity: Low
+sid: ckv2-aws-18
+title: "Ensure that Elastic File System (Amazon EFS) file systems are added in the backup plans of AWS Backup"

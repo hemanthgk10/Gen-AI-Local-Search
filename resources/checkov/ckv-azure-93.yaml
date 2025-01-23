@@ -1,0 +1,14 @@
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure that managed disks use a specific set of disk encryption sets for the customer-managed key encryption"
+extra:
+  entity: azurerm_managed_disk
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_93
+severity: Medium
+sid: ckv-azure-93
+title: "Ensure that managed disks use a specific set of disk encryption sets for the customer-managed key encryption"

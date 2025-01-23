@@ -1,0 +1,14 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure MSSQL is using the latest version of TLS encryption"
+extra:
+  entity: azurerm_mssql_server
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_52
+severity: High
+sid: ckv-azure-52
+title: "Ensure MSSQL is using the latest version of TLS encryption"

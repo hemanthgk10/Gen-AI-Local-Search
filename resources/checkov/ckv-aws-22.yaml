@@ -1,0 +1,78 @@
+category: SageMaker
+checkTool: checkov
+checkType: Terraform
+compliance:
+- HIPAA
+description: To protect your Amazon SageMaker Studio notebooks and SageMaker notebook
+  instances, along with your model-building data and model artifacts, SageMaker uses
+  the AWS Key Management Service (AWS KMS) to encrypt the notebooks and data. SageMaker
+  uses AWS managed customer master keys (CMKs) by default.
+extra:
+  entity: aws_sagemaker_notebook_instance
+  type: resource
+guidelines: |-
+  #### Description
+  To protect your Amazon SageMaker Studio notebooks and SageMaker notebook instances, along with your model-building data and model artifacts, SageMaker uses the AWS Key Management Service (AWS KMS) to encrypt the notebooks and data. SageMaker uses AWS managed customer master keys (CMKs) by default.
+
+  #### Rationale
+  Ensure all data stored in the Sagemaker is securely encrypted at rest. This prevents any sensitive information from leaking. AWS KMS allows to securely encrypt the storage volumes, endpoints and jobs.
+
+  #### Remediation
+  set `aws_sagemaker_notebook_instance.kms_key_id` argument to encrypt the sagemaker notebook instance
+
+  Terraform example
+  ```
+  data "aws_sagemaker_default_kms_key" "current" {}
+
+  resource "aws_sagemaker_notebook_instance" "ni" {
+     name          = "my-notebook-instance"
+     role_arn      = aws_iam_role.role.arn
+     instance_type = "ml.t2.medium"
+  +  kms_key_id    = "arn:aws:kms:us-west-2:111122223333:key/example"
+
+     tags = {
+       Name = "foo"
+     }
+     ...
+     ...
+  }
+  ```
+
+  CloudFormation example
+
+  ```
+  {
+      "Type" : "AWS::SageMaker::NotebookInstance",
+      "Properties" : {
+          "DefaultCodeRepository" : "ni",
+          "InstanceType" : "ml.t2.medium",
+  +       "KmsKeyId" : "arn:aws:kms:us-west-2:111122223333:key/example",
+          "VolumeSizeInGB" : 20
+          ...
+          ...
+        }
+        ...
+        ...
+  }
+  ```
+
+  #### References
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sagemaker_notebook_instance#kms_key_id
+  * https://docs.aws.amazon.com/sagemaker/latest/dg/encryption-at-rest.html
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sagemaker-notebookinstance.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_22
+severity: Medium
+sid: ckv-aws-22
+title: Ensure all data stored in the Sagemaker is securely encrypted at rest
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: kms_key_id
+    resourceAttributeType: string
+    resourceAttributeValue: "<Provide the ARN for KMS key>"
+    resourceType: [ "aws_sagemaker_notebook_instance" ]

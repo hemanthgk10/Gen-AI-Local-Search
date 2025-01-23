@@ -1,0 +1,83 @@
+---
+category: IAM
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "IAM policies that have a statement with 'Effect': 'Allow' with 'Action': '*' over 'Resource': '*' should be removed. It is very risky to give all the permissions on resources. Determine what users need to do and then craft policies for them that let the users perform only those tasks, instead of allowing all actions."
+extra:
+  entity: serverless_aws
+  type: resource
+guidelines: |-
+    #### Description
+    IAM policies that have a statement with "Effect": "Allow" with "Action": "*" over "Resource": "*" should be removed. It is very risky to give all the permissions on resources. Determine what users need to do and then craft policies for them that let the users perform only those tasks, instead of allowing all actions.
+
+    #### Rationale
+    It's more secure to start with a minimum set of permissions and grant additional actions as necessary, rather than starting with actions that are too lenient and then trying to tighten them later. Providing all actions instead of restricting to the minimum set of actions that the user is required to do exposes the resources to potentially unwanted actions.
+
+    #### Remediation
+    Replace policies with actions `*` to minimum set of actions required for the user.
+
+    Terraform example:
+    ```
+    data "aws_iam_policy_document" "example" {
+      statement {
+    -   actions   = ["*"]
+    -   resources = ["*"]
+    +   actions   = [
+    +      "s3:ListAllMyBuckets",
+    +      "s3:GetBucketLocation",
+    +   ]
+    +   resources = [ "arn:aws:s3:::my-bucket" ]
+      }
+    }
+
+    resource "aws_iam_policy" "example" {
+      policy = data.aws_iam_policy_document.example.json
+      ...
+      ...
+    }
+    ```
+
+    CloudFormation example:
+
+    ```json
+    {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+          "PolicyName" : "example",
+          "PolicyDocument" : {
+              "Type": "AWS::IAM::Policy",
+              "Properties": {
+                  "PolicyName": "CFNUsers",
+                  "PolicyDocument": {
+                      "Version": "2012-10-17",
+                      "Statement": [
+                          {
+                              "Effect": "Allow",
+                              "Action": [
+    +                             "s3:ListAllMyBuckets",
+    +                             "s3:GetBucketLocation"
+                              ],
+    +                         "Resource": [ "arn:aws:s3:::my-bucket" ]
+                          }
+                      ]
+                  }
+                  ...
+                  ...
+              }
+          },
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * http://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
+    * http://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-vs-inline.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_49
+severity: High
+sid: ckv-aws-49
+title: "Ensure no IAM policies documents allow '*' as a statement's actions"

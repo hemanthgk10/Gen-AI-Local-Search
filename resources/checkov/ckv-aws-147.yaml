@@ -1,0 +1,72 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    AWS CodeBuild is a fully managed build service in the cloud. CodeBuild compiles your source code, runs unit tests, and produces artifacts that are ready to deploy. CodeBuild eliminates the need to provision, manage, and scale your own build servers. It provides prepackaged build environments for popular programming languages and build tools such as Apache Maven, Gradle, and more.
+
+    Encryption is an important part of CodeBuild security. Some encryption, such as for data in-transit, is provided by default and does not require you to do anything. Other encryption, such as for data at-rest, you can configure when you create your project or build.
+
+    Build artifacts, such as a cache, logs, exported raw test report data files, and build results, are encrypted by default using customer master keys (CMKs) for Amazon S3 that are managed by the AWS Key Management Service (KMS).
+extra:
+  entity: aws_codebuild_project
+  type: resource
+guidelines: |-
+    #### Description
+    AWS CodeBuild is a fully managed build service in the cloud. CodeBuild compiles your source code, runs unit tests, and produces artifacts that are ready to deploy. CodeBuild eliminates the need to provision, manage, and scale your own build servers. It provides prepackaged build environments for popular programming languages and build tools such as Apache Maven, Gradle, and more.
+
+    Encryption is an important part of CodeBuild security. Some encryption, such as for data in-transit, is provided by default and does not require you to do anything. Other encryption, such as for data at-rest, you can configure when you create your project or build.
+
+    Build artifacts, such as a cache, logs, exported raw test report data files, and build results, are encrypted by default using customer master keys (CMKs) for Amazon S3 that are managed by the AWS Key Management Service (KMS).
+
+    #### Rationale
+    Encrypting the data at rest and build artificats can protect from sensitive information leak in case of hack. This also protects from any data leakage from the diagnostic logs.
+
+    #### Remediation
+    set `encryption_key` to KMS key ARN for encrypting the build project's build output artifacts.
+
+    Terraform example
+    ```
+    resource "aws_kms_key" "artifact_encryption_key" {
+        description             = "artifact-encryption-key"
+        deletion_window_in_days = 10
+    }
+
+    resource "aws_codebuild_project" "project-with-cache" {
+        name           = "test-project-cache"
+        description    = "test_codebuild_project_cache"
+        build_timeout  = "5"
+        queued_timeout = "5"
+
+        service_role = aws_iam_role.example.arn
+    +   encryption_key = aws_kms_key.artifact_encryption_key.arn
+        ...
+        ...
+    }
+    ```
+
+    CloudFormation example
+    ```json
+    {
+      "Type" : "AWS::CodeBuild::Project",
+      "Properties" : {
+          "BadgeEnabled" : true,
+          "Description" : "test_codebuild_project_cache",
+          "Name" : "test-project-cache",
+    +     "EncryptionKey" : "alias/cloudbuild/my-project",
+          ...
+          ...
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codebuild_project#encryption_key
+    * https://docs.aws.amazon.com/codebuild/latest/userguide/data-protection.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_147
+severity: Medium
+sid: ckv-aws-147
+title: "Ensure that CodeBuild projects are encrypted"

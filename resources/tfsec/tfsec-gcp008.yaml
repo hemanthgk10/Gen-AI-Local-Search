@@ -1,0 +1,62 @@
+---
+autofix: true
+category: IAM
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "It is recommended to use Serivce Accounts and OAuth as authentication methods for accessing the master in the container cluster. Basic authentication should be disabled by explicitly unsetting the <code>username</code> and <code>password</code> on the <code>master_auth</code> block."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/gcp008.go"
+guidelines: |-
+    #### Description
+    It is recommended to use Serivce Accounts and OAuth as authentication methods for accessing the master in the container cluster.
+
+    Basic authentication should be disabled by explicitly unsetting the `username` and `password` on the `master_auth` block.
+
+    #### Rationale
+    `master_auth` provides the authentication information for accessing the Kubernetes master nodes. Providing the basic authenticaion is not secure and has been deprecated since GKE 1.19.
+
+    #### Remediation
+    Terraform example:
+    ```
+    resource "google_container_cluster" "gke" {
+         name      = "my-gke-cluster"
+         location  = "us-central1"
+
+         master_auth {
+    -       username = "admin"
+    -       password = "password"
+    +       username = ""
+    +       password = ""
+         }
+         ...
+         ...
+    }
+    ```
+
+    #### References
+    * https://www.terraform.io/docs/providers/google/r/container_cluster.html#master_auth
+    * https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster#restrict_authn_methods
+lwid: []
+provider: GCP
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: master_auth
+        resourceAttributeType: block
+        resourceAttributeValue: |-
+            master_auth {
+               username = ""
+               password = ""
+            }
+        resourceType:
+          - google_container_cluster
+ruleId: GCP008
+severity: Medium
+sid: tfsec-gcp008
+title: "Legacy client authentication methods utilized"

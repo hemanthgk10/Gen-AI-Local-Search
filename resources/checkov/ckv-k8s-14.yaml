@@ -1,0 +1,52 @@
+category: Containers
+checkTool: checkov
+checkType: Kubernetes
+compliance: []
+description: |-
+  Container images are executables software binaries that encapsulates an application and all it's dependencies. A kubernetes manifest requires the image name to determine the application that needs to run.
+  Image tag represents the specific build or code that is used to build this binary. Image tags should be unique to identify the different versions of the same series of image. So ensure that Container image should use digest instead of latest or name.
+extra:
+  entity: initContainers
+guidelines: |-
+  #### Description
+  Container images are executables software binaries that encapsulates an application and all it's dependencies. A kubernetes manifest requires the image name to determine the application that needs to run.
+
+  Image tag represents the specific build or code that is used to build this binary. Image tags should be unique to identify the different versions of the same series of image. So ensure that Container image should use digest instead of latest or name.
+
+  #### Rationale
+  If we use *latest* tag, it is harder to track which version of the image is running and more difficult to roll back to a working version in case of any issue. So, we should specify a meaningful tag such as v1.0.1 to uniquely identify a specific version.
+
+  #### Remediation
+  Specify the version of image you want to use in `containers` and `initContainers`.
+
+  Example:
+
+  ```yaml
+  apiVersion: v1
+  kind: Pod
+  spec:
+    containers:
+  - - image: nginx
+  + - image: nginx:v1.0
+      name: nginx
+      resources:
+       requests:
+          cpu: 100m
+          memory: 100m
+      ...
+      ...
+    initContainers:
+  - - image: nginx-preconfig
+  + - image: nginx-preconfig:v1.0
+      name: configeditor
+      ...
+      ...
+  ```
+
+  #### References
+  * https://kubernetes.io/docs/concepts/containers/images/
+provider: Kubernetes
+ruleId: CKV_K8S_14
+severity: Low
+sid: ckv-k8s-14
+title: Image Tag should be fixed - not latest or blank

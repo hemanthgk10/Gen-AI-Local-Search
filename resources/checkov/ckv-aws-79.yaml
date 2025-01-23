@@ -1,0 +1,95 @@
+---
+category: General
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon Elastic Compute Cloud (Amazon EC2) provides scalable computing capacity in the Amazon Web Services (AWS) Cloud. Using Amazon EC2 eliminates your need to invest in hardware up front, so you can develop and deploy applications faster. You can use Amazon EC2 to launch as many or as few virtual servers as you need, configure security and networking, and manage storage.
+
+    AWS EC2 offers an metadata service that gives the metadata about the instance. You can access the information from a running instance using:
+
+    * Instance Metadata Service Version 1 (IMDSv1) – a request/response method
+    * Instance Metadata Service Version 2 (IMDSv2) – a session-oriented method
+
+    Metadata service recognizes the IMDSv1 and IMDSv2 requests based on whether, for any given request, either the PUT or GET headers, which are unique to IMDSv2, are present in that request. IMDSv2 adds new `belt & suspenders` protections. So it is always better to enable IMDSv2. When IMDSv2 is enabled, IMDSv1 will no longer work in that instance.
+extra:
+  entity: aws_launch_template
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon Elastic Compute Cloud (Amazon EC2) provides scalable computing capacity in the Amazon Web Services (AWS) Cloud. Using Amazon EC2 eliminates your need to invest in hardware up front, so you can develop and deploy applications faster. You can use Amazon EC2 to launch as many or as few virtual servers as you need, configure security and networking, and manage storage.
+
+    AWS EC2 offers an metadata service that gives the metadata about the instance. You can access the information from a running instance using:
+
+    * Instance Metadata Service Version 1 (IMDSv1) – a request/response method
+    * Instance Metadata Service Version 2 (IMDSv2) – a session-oriented method
+
+    Metadata service recognizes the IMDSv1 and IMDSv2 requests based on whether, for any given request, either the PUT or GET headers, which are unique to IMDSv2, are present in that request. IMDSv2 adds new `belt & suspenders` protections. So it is always better to enable IMDSv2. When IMDSv2 is enabled, IMDSv1 will no longer work in that instance.
+
+    #### Rationale
+    IMDSv1 is a fully secure service but IMDSv2 supports new `belts & suspenders` protections for four types of vulnerabilities that could be used to try to access the IMDS. IMDSv2, every request is now protected by session authentication. IMDSv2 returns a secret token to the software running on the EC2 instance, which will use the token as a password to make requests to IMDSv2 for metadata and credentials. IMDSv2 go beyond the other type of mitigations while working with existing mitigations. So it is always safe to use the IMDSv2 instead of IMDSv1.
+
+    IMDS v2 (Instance Metadata Service) introduced session authentication tokens which improve security when talking to IMDS. By default aws_instance resource sets IMDS session auth tokens to be optional. To fully protect IMDS you need to enable session tokens by using metadata_options block and its `http_tokens` variable set to `required`.
+
+    #### Remediation
+    Set the `metadata_options.http_endpoint` to `disabled` in `aws_instance` & `aws_launch_template` or set the `http_tokens` to `required`.
+
+    Terraform example:
+    ```
+    resource "aws_launch_template" "example" {
+       name = "example"
+       metadata_options {
+    -     http_endpoint               = "enabled"
+    +     http_endpoint               = "disabled"
+    +     http_tokens                 = "required"
+          http_put_response_hop_limit = 1
+       }
+       ...
+       ...
+    }
+    ```
+
+    CloudFormation example:
+    ```json
+    {
+        "Type" : "AWS::EC2::LaunchTemplate",
+        "Properties" : {
+            "LaunchTemplateData" : {
+               "MetadataOptions" : {
+    -               "HttpEndpoint" : "enabled",
+    +               "HttpEndpoint" : "disabled",
+    +               "HttpTokens" : "required",
+               }
+            },
+            "LaunchTemplateName" : "example",
+            "TagSpecifications" : [ LaunchTemplateTagSpecification, ... ]
+        }
+    }
+    ```
+
+    #### References
+    * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_template#metadata_options
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance#metadata-options
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_79
+severity: Low
+sid: ckv-aws-79
+title: "Ensure Instance Metadata Service Version 1 is not enabled"
+autofix: true
+remediation:
+- checkType: Terraform
+  steps:
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: metadata_options.http_endpoint
+    resourceAttributeType: blockAttribute
+    resourceAttributeValue: "disabled"
+    resourceType: [ "aws_launch_template", "aws_instance" ]
+  - action: modify
+    resource: [ "resource" ]
+    resourceAttribute: metadata_options.http_tokens
+    resourceAttributeType: blockAttribute
+    resourceAttributeValue: "required"
+    resourceType: [ "aws_launch_template", "aws_instance" ]

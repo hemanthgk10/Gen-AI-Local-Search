@@ -1,0 +1,59 @@
+---
+autofix: true
+category: Encryption
+checkTool: tfsec
+checkType: Terraform
+compliance:
+  - HIPAA
+description: "You should ensure your Elasticache data is encrypted at rest to help prevent sensitive information from being read by unauthorised users."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws035.go"
+guidelines: |-
+    #### Description
+    Ensure all data stored in the Elasticache Replication Group is securely encrypted at rest. ElastiCache for Redis offers default (service managed) encryption at rest, as well as ability to use your own symmetric customer managed customer master keys in KMS.
+
+    #### Rationale
+    At-rest encryption increases data security by encrypting on-disk data. When enabled on a replication group, it encrypts the following resources as well:
+      * Disk during sync, backup and swap operations
+      * Backups stored in Amazon S3
+
+    #### Remediation
+    Enable the attribute `at_rest_encryption_enabled` to true.
+
+    Terraform example:
+    ```
+    resource "aws_elasticache_replication_group" "baz" {
+      replication_group_id          = "tf-redis-cluster"
+      replication_group_description = "test description"
+      node_type                     = "cache.t2.small"
+      port                          = 6379
+      automatic_failover_enabled    = true
+
+    + at_rest_encryption_enabled    = true
+      ...
+      ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_replication_group#at_rest_encryption_enabled
+    * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticache-replicationgroup.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: at_rest_encryption_enabled
+        resourceAttributeType: boolean
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_elasticache_replication_group
+ruleId: AWS035
+severity: Medium
+sid: tfsec-aws035
+title: "Unencrypted Elasticache Replication Group"

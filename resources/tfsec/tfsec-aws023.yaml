@@ -1,0 +1,60 @@
+---
+autofix: true
+category: Security
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Repository image scans should be enabled to ensure vulnerable software can be discovered and remediated as soon as possible."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws023.go"
+guidelines: |-
+    #### Description
+    Amazon ECR image scanning helps in identifying software vulnerabilities in your container images. Amazon ECR uses the Common Vulnerabilities and Exposures (CVEs) database from the open-source Clair project and provides a list of scan findings.
+
+    You can manually scan container images stored in Amazon ECR. Or, alternatively, you can configure your repositories to scan images when you push them to a repository. You can configure the image scan settings either for a new repository during creation or for an existing repository.
+
+    When scan on push is enabled, images are scanned after being pushed to a repository.
+
+    #### Rationale
+    If scan on push is disabled on a repository, then there is a chance that an image with vulnerabilities is deployed into production without notice, which can lead to a security breach.
+
+    #### Remediation
+    `scan_on_push` indicates whether images are scanned after being pushed to the repository (true) or not scanned (false).
+
+    Set the `image_scanning_configuration.scan_on_push` to `true`.
+
+    Terraform example:
+    ```
+    resource "aws_ecr_repository" "foo" {
+        name                 = "bar"
+        image_tag_mutability = "MUTABLE"
+
+        image_scanning_configuration {
+    -     scan_on_push = false
+    +     scan_on_push = true
+        }
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository#scan_on_push
+    * https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html
+lwid: []
+provider: AWS
+remediation:
+  -
+    checkType: Terraform
+    steps:
+      -
+        action: modify
+        resource:
+          - resource
+        resourceAttribute: image_scanning_configuration.scan_on_push
+        resourceAttributeType: blockAttribute
+        resourceAttributeValue: "true"
+        resourceType:
+          - aws_ecr_repository
+ruleId: AWS023
+severity: Medium
+sid: tfsec-aws023
+title: "ECR repository has image scans disabled"

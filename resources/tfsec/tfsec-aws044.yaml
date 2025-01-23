@@ -1,0 +1,42 @@
+---
+category: Security
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "The AWS provider block should not contain hardcoded credentials. These can be passed in securely as runtime using environment variables."
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/aws044.go"
+guidelines: |-
+    #### Description
+    Ensure no hard coded AWS access & secret keys exists in the provider. Most of these are easy targets for an attacker. Committing them to a repository or leaving them in the code increases the chance of exposing to unauthorized users.
+
+    #### Rationale
+    For Infrastructure as Code (IaC) Static credentials are committed to repository that others can have access too. This can fall in the hands of a person who shouldn't have permissions to know them, causing security breaches.
+
+    #### Remediation
+    Instead of providing the static credentials in the provider such as terraform or cloudformation, use environmental variables.
+
+    Terraform example:
+    ```
+    provider "aws" {
+       region     = "us-west-2"
+    -  access_key = "my-access-key"
+    -  secret_key = "my-secret-key"
+    }
+    ```
+
+    ```
+    # Instead of providing above use environmental variables
+    $ export AWS_ACCESS_KEY_ID="anaccesskey"
+    $ export AWS_SECRET_ACCESS_KEY="asecretkey"
+    ```
+
+    #### References
+    * https://www.terraform.io/docs/providers/aws/index.html#static-credentials
+    * https://docs.aws.amazon.com/general/latest/gr/aws-access-keys-best-practices.html
+lwid: []
+provider: AWS
+ruleId: AWS044
+severity: Critical
+sid: tfsec-aws044
+title: "AWS provider has access credentials specified"

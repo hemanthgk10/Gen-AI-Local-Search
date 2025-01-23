@@ -1,0 +1,95 @@
+category: Storage
+checkTool: checkov
+checkType: CloudFormation
+compliance: []
+description: Ensure that node-to-node encryption is enabled for AWS ElasticSearch
+  domains (clusters). This ensures ES data is always encrypted in transit during node-to-node
+  communication and replication.
+extra:
+  entity: AWS::Elasticsearch::Domain
+  type: resource
+guidelines: |-
+  #### Description
+  Ensure that node-to-node encryption is enabled for the Amazon Elasticsearch domains (clusters). This feature enforces the use of Transport Layer Security (TLS) for all Elasticsearch node intercommunication. This ensures data transmitted by Elasticsearch is always encrypted in transit.
+
+  #### Rationale
+  Each Amazon ES domain resides within its own dedicated VPC. This architecture prevents potential attackers from intercepting traffic between Elasticsearch nodes and keeps the cluster secure. By default, however, traffic within the VPC is unencrypted. Node-to-node encryption enables TLS 1.2 encryption for all communications within the Elasticsearch VPC.
+
+  #### Remediation
+  Set the `node_to_node_encryption.enabled` to true. By default not having the option is false.
+
+  Terraform Example:
+  ```
+  resource "aws_elasticsearch_domain" "es" {
+     domain_name           = "${var.es_domain_name}"
+     elasticsearch_version = "${var.es_version}"
+
+     # Encryption not enabled for all instance types
+     encrypt_at_rest {
+       enabled = "true"
+       kms_key_id = data.aws_kms_alias.es.target_key_id
+     }
+
+  +  node_to_node_encryption {
+  +    enabled = true
+  +  }
+     ...
+     ...
+  }
+  ```
+
+  CloudFormation Example:
+  ```json
+  {
+      "Type" : "AWS::Elasticsearch::Domain",
+      "Properties" : {
+          "DomainName" : "sample-domain-example",
+          "ElasticsearchVersion" : "2.3",
+          "EncryptionAtRestOptions" : {
+             "Enabled" : true,
+             "KmsKeyId" : "<Provide the ARN for KMS Key"
+          },
+  +       "NodeToNodeEncryptionOptions" : {
+  +          "Enabled" : true
+  +       }
+          ...
+          ...
+        }
+  }
+  ```
+
+  #### References
+  * https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/ntn.html
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticsearch_domain#node_to_node_encryption
+  * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticsearch-domain.html#cfn-elasticsearch-domain-elasticsearchversion
+  * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearch_domain
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_6
+severity: Medium
+sid: ckv-aws-6
+title: Ensure Elasticsearch has node-to-node encryption enabled
+autofix: true
+remediation:
+- checkType: CloudFormation
+  steps:
+  - actions: add
+    resource: [ "resource" ]
+    resourceAttribute: NodeToNodeEncryptionOptions
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+      {
+          "Enabled" = true
+      }
+    resourceType: [ "AWS::Elasticsearch::Domain", "AWS::OpenSearchService::Domain" ]
+- checkType: Terraform
+  steps:
+  - action: add
+    resource: [ "resource" ]
+    resourceAttribute: node_to_node_encryption
+    resourceAttributeType: block
+    resourceAttributeValue: |-
+        node_to_node_encryption {
+          enabled = true
+        }
+    resourceType: [ "aws_elasticsearch_domain", "aws_opensearch_domain" ]

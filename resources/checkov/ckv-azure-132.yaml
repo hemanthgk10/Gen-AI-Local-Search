@@ -1,0 +1,14 @@
+category: Security
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: "Ensure cosmosdb does not allow privileged escalation by restricting management plane changes"
+extra:
+  entity: azurerm_cosmosdb_account
+  type: resource
+lwid: []
+provider: Azure
+ruleId: CKV_AZURE_132
+severity: Low
+sid: ckv-azure-132
+title: "Ensure cosmosdb does not allow privileged escalation by restricting management plane changes"

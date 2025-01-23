@@ -1,0 +1,40 @@
+---
+category: Security
+checkTool: tfsec
+checkType: Terraform
+compliance: []
+description: "Sensitive attributes such as passwords and API tokens should not be available in your templates, especially in a plaintext form. You can declare variables to hold the secrets, assuming you can provide values for those variables in a secure fashion. Alternatively, you can store these secrets in a secure secret store, such as AWS KMS. *NOTE: It is also recommended to store your Terraform state in an encrypted form.*"
+extra:
+  srcUrl: "https://github.com/tfsec/tfsec/blob/4e68e1c5b3bc66982e4b7e6c5cc1c1642c87f83d/internal/app/tfsec/checks/gen001.go"
+guidelines: |-
+    #### Description
+    Sensitive attributes such as passwords and API tokens should not be available in your templates, especially in a plaintext form. You can declare variables to hold the secrets, assuming you can provide values for those variables in a secure fashion. Alternatively, you can store these secrets in a secure secret store, such as AWS KMS.
+
+    #### Rationale
+    Checking the password in to the code is dangerous and exposes the password to every one. This might also check-in into the source control increasing the risk of accidental leak to un-intended users.
+
+    #### Remediation
+    Terraform example
+    ```
+    variable "password" {
+        description = "The root password for our VM"
+        type        = string
+    -   default     = "p4ssw0rd"
+    }
+
+    resource "evil_corp" "virtual_machine" {
+        root_password = var.password
+    }
+    ```
+
+    #### References
+    * https://www.terraform.io/docs/state/sensitive-data.html
+
+    #### Note
+    It is also recommended to store your Terraform state in an encrypted form.
+lwid: []
+provider: GCP
+ruleId: GEN001
+severity: Critical
+sid: tfsec-gen001
+title: "Potentially sensitive data stored in 'default' value of variable"

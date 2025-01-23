@@ -1,0 +1,50 @@
+---
+category: Encryption
+checkTool: checkov
+checkType: Terraform
+compliance: []
+description: |-
+    Amazon ElastiCache is a web service that makes it easy to set up, manage, and scale a distributed in-memory data store or cache environment in the cloud.
+
+    Replication groups are designed to support multi-data center deployments and disaster recovery scenarios. Redis fully supports replication groups.
+
+    For data protection purposes, it is recommened to encrypt the data at rest and in transit for ElastiCache and ElastiCache replication group.
+extra:
+  entity: aws_elasticache_replication_group
+  type: resource
+guidelines: |-
+    #### Description
+    Amazon ElastiCache is a web service that makes it easy to set up, manage, and scale a distributed in-memory data store or cache environment in the cloud.
+
+    Replication groups are designed to support multi-data center deployments and disaster recovery scenarios. Redis fully supports replication groups.
+
+    For data protection purposes, it is recommened to encrypt the data at rest and in transit for ElastiCache and ElastiCache replication group.
+
+    #### Rationale
+    Encryption helps you protect your stored data against unauthorized access and other security risks.
+
+    #### Remediation
+    Set the `kms_key_id` to encrypt the content in `aws_elasticache_replication_group`.
+
+    Terraform example
+    ```
+    resource "aws_elasticache_replication_group" "example" {
+        automatic_failover_enabled    = true
+        availability_zones            = ["us-west-2a", "us-west-2b"]
+        replication_group_id          = "tf-rep-group-1"
+        replication_group_description = "test description"
+    +   kms_key_id                    = ${aws_kms_key.example.arn}
+        ...
+        ...
+    }
+    ```
+
+    #### References
+    * https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/elasticache_replication_group#kms_key_id
+    * https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/data-protection.html
+lwid: []
+provider: AWS
+ruleId: CKV_AWS_191
+severity: High
+sid: ckv-aws-191
+title: "Ensure Elasticache replication group is encrypted by KMS using a customer managed Key (CMK)"

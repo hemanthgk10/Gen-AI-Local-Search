@@ -1,0 +1,80 @@
+category: Network
+checkTool: checkov
+checkType: Terraform
+compliance:
+- CIS
+description: Ensure Kubernetes Cluster is created with Alias IP ranges enabled
+extra:
+  entity: google_container_cluster
+  type: resource
+guidelines: |-
+  #### Description
+  Google Cloud Platform Alias IP Ranges lets you assign ranges of internal IP addresses as aliases to a virtual machine's network interfaces. This is useful if you have multiple services running on a VM and you want to assign each service a different IP address.
+
+  #### Rationale
+  With Alias IPs ranges enabled, Kubernetes Engine clusters can allocate IP addresses from a CIDR block known to Google Cloud Platform. This makes your cluster more scalable and allows your cluster to better interact with other GCP products and entities. Using Alias IPs has several benefits:
+
+    * Pod IPs are reserved within the network ahead of time, which prevents conflict with other compute resources.
+    * The networking layer can perform anti-spoofing checks to ensure that egress traffic is not sent with arbitrary source IPs.
+    * Firewall controls for Pods can be applied separately from their nodes.
+    * Alias IPs allow Pods to directly access hosted services without using a NAT gateway
+
+  #### Remediation
+  By default, VPC native (using alias IP) is enabled when you create a new cluster.
+
+  Add `ip_allocation_policy` in `google_container_cluster`. Adding this block enables [IP Aliasing](https://cloud.google.com/kubernetes-engine/docs/how-to/ip-aliases) making the cluster VPC native instead of route-based.
+
+  The ip_allocation_policy block supports:
+
+    * cluster_secondary_range_name
+    * services_secondary_range_name
+    * cluster_ipv4_cidr_block
+    * services_ipv4_cidr_block
+
+  Terraform example
+  ```
+  resource "google_container_cluster" "primary" {
+      name               = "marcellus-wallace"
+      location           = "us-central1-a"
+      initial_node_count = 3
+
+  +   ip_allocation_policy {
+  +    ...
+  +    ...
+  +   }
+      ...
+      ...
+  }
+  ```
+
+  Using *Console*
+    1. Go to [Kubernetes GCP Console](https://console.cloud.google.com/kubernetes/list)
+    2. Click on `CREATE CLUSTER`
+    3. Choose required name/value for cluster fields
+    4. Click on `More`
+    5. Set `VPC native (using alias IP)` to `Enabled`.
+    6. Click on `Create`
+
+  Using *Command Line*
+
+  To enable Alias IP for an existing cluster, run the following command:
+
+  ```
+  gcloud container clusters create [CLUSTER_NAME] --zone [COMPUTE_ZONE] --enable-ip-alias
+  ```
+
+  #### Impact
+  You cannot currently migrate an existing cluster that uses routes for Pod routing to a cluster that uses Alias IPs. Cluster IPs for internal Services remain only available from within the cluster. If you want to access a Kubernetes Service from within the VPC, but from outside of the cluster, use an internal load balancer.
+
+  #### References
+  * https://cloud.google.com/kubernetes-engine/docs/how-to/alias-ips
+  * https://cloud.google.com/vpc/docs/alias-ip
+  * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster#ip_allocation_policy
+lwid:
+  - GCP_CIS_7_13
+  - GCP_K8S_1_13
+provider: GCP
+ruleId: CKV_GCP_23
+severity: Medium
+sid: ckv-gcp-23
+title: Ensure Kubernetes Cluster is created with Alias IP ranges enabled
