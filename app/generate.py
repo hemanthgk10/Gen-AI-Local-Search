@@ -7,7 +7,7 @@ load_dotenv()
 
 class GenerativeAI:
     def __init__(self):
-        self.api_url = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api")
+        self.api_url = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
         self.model_name = os.getenv("OLLAMA_MODEL", "llama3.2")
 
     def generate_response(self, query, search_results):
